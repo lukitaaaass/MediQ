@@ -1,0 +1,595 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Soporte IA clínico — MediQ"
+  description="MediQ resume historiales, sugiere diagnósticos diferenciales y verifica interacciones en segundos, entrenado sobre literatura médica revisada por pares."
+  navActive="/"
+>
+
+<!-- ─── Estilos específicos de index ─── -->
+<!--
+  Usamos is:global porque este bloque contiene selectores sobre :root,
+  [data-theme], [data-type], [data-style] y elementos de nivel html/body
+  que Astro no puede escopar a nivel de componente.
+-->
+<style is:global>
+  :root {
+    /* CLINICAL (default) */
+    --bg: #f6f5f1;
+    --bg-2: #efede6;
+    --ink: #161a1d;
+    --ink-soft: #3c4246;
+    --ink-mute: #7a7f82;
+    --rule: #1e23270d;
+    --rule-2: #1e232714;
+    --accent: oklch(54% 0.09 195);
+    --accent-ink: #ffffff;
+    --surface: #ffffff;
+    --warn: oklch(62% 0.14 40);
+
+    --f-display: "Fraunces", "Newsreader", Georgia, serif;
+    --f-body: "Inter", system-ui, -apple-system, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --container: 1240px;
+    --pad: clamp(20px, 4vw, 56px);
+  }
+
+  [data-theme="paper"] {
+    --bg: #f3ecdf; --bg-2: #e8dfcd; --ink: #211a13; --ink-soft: #4a3f32;
+    --ink-mute: #8a7d6a; --rule: #2b1f0f10; --rule-2: #2b1f0f18;
+    --accent: oklch(52% 0.13 45); --surface: #fbf6ec;
+  }
+  [data-theme="ink"] {
+    --bg: #0e1113; --bg-2: #14181b; --ink: #f2f0ea; --ink-soft: #c6c3ba;
+    --ink-mute: #7f837f; --rule: #f2f0ea14; --rule-2: #f2f0ea22;
+    --accent: oklch(78% 0.13 155); --accent-ink: #0e1113; --surface: #191d20;
+  }
+
+  [data-type="editorial"] { --f-display: "Fraunces", Georgia, serif; --f-body: "Inter", system-ui, sans-serif; }
+  [data-type="serif-soft"] { --f-display: "Instrument Serif", Georgia, serif; --f-body: "Newsreader", Georgia, serif; }
+  [data-type="plex"] { --f-display: "IBM Plex Sans", system-ui, sans-serif; --f-body: "IBM Plex Sans", system-ui, sans-serif; }
+
+  /* Type scale (valores propios de index, más grandes que global.css) */
+  h1 { font-size: clamp(48px, 7.2vw, 112px); line-height: 0.98; }
+  h2 { font-size: clamp(36px, 5vw, 68px); line-height: 1.02; }
+  h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.15; }
+  .lede { font-size: clamp(17px, 1.3vw, 20px); line-height: 1.5; }
+  .italic { font-style: italic; }
+
+  /* Hero */
+  .hero { padding: clamp(40px, 8vw, 96px) 0 clamp(56px, 10vw, 120px); position: relative; overflow: hidden; }
+  .hero-grid { display: grid; grid-template-columns: 1fr; gap: 40px; align-items: end; }
+  @media (min-width: 960px) { .hero-grid { grid-template-columns: 1.3fr 1fr; gap: 64px; } }
+  .hero h1 .wa { display: inline-block; }
+  .hero h1 em { font-family: var(--f-display); font-style: italic; font-weight: 300; color: var(--accent); }
+  .hero-meta { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; font-family: var(--f-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.04em; margin-top: 32px; }
+  .hero-meta .dot { width: 4px; height: 4px; background: var(--ink-mute); border-radius: 50%; }
+  .hero-cta { margin-top: 36px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .hero-card { background: var(--surface); border: 1px solid var(--rule-2); border-radius: 18px; padding: 22px; box-shadow: 0 1px 0 var(--rule), 0 20px 60px -40px #0000001a; font-family: var(--f-mono); font-size: 13px; color: var(--ink-soft); position: relative; }
+  .hero-card .head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--rule); }
+  .hero-card .pill { background: var(--bg-2); color: var(--ink-soft); padding: 4px 10px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; }
+  .hero-card .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); animation: pulse 2s infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .msg { display: flex; gap: 10px; margin: 10px 0; }
+  .msg .role { width: 16px; color: var(--ink-mute); }
+  .msg p { color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+  .msg.ai p { color: var(--ink-soft); }
+  .msg.ai p b { color: var(--ink); font-weight: 600; }
+  .typing { display: inline-flex; gap: 3px; }
+  .typing i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-mute); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+
+  /* Section chrome */
+  section { padding: clamp(64px, 10vw, 140px) 0; border-top: 1px solid var(--rule); position: relative; }
+  .section-head { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 900px; margin-bottom: clamp(40px, 6vw, 72px); }
+  .section-head .lede { margin-top: 8px; }
+
+  /* Steps */
+  .steps { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .step { display: grid; grid-template-columns: 64px 1fr; gap: 32px; padding: 36px 0; border-bottom: 1px solid var(--rule); align-items: start; }
+  @media (min-width: 820px) { .step { grid-template-columns: 96px 1.6fr 2fr 1fr; gap: 48px; align-items: center; } }
+  .step .num { font-family: var(--f-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .step h3 { font-family: var(--f-display); font-weight: 400; }
+  .step p { color: var(--ink-soft); max-width: 48ch; }
+  .step .tag { font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* Features */
+  .features { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--rule-2); border: 1px solid var(--rule-2); border-radius: 14px; overflow: hidden; }
+  @media (min-width: 720px) { .features { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1040px) { .features { grid-template-columns: 1fr 1fr 1fr; } }
+  .feat { background: var(--bg); padding: clamp(24px, 3vw, 36px); min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+  .feat .num { font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.12em; }
+  .feat h3 { font-size: clamp(22px, 1.7vw, 26px); }
+  .feat p { color: var(--ink-soft); font-size: 15px; line-height: 1.55; }
+  .feat .glyph { width: 44px; height: 44px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; color: var(--ink); font-family: var(--f-display); font-size: 20px; font-style: italic; }
+
+  /* FAQ */
+  .faq-grid { display: grid; grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--rule); }
+  details.q { border-bottom: 1px solid var(--rule); padding: 24px 0; }
+  details.q summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; font-family: var(--f-display); font-size: clamp(18px, 1.5vw, 22px); line-height: 1.3; }
+  details.q summary::-webkit-details-marker { display: none; }
+  details.q .ans { color: var(--ink-soft); max-width: 70ch; margin-top: 12px; font-size: 15.5px; line-height: 1.55; }
+  details.q .ic { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--rule-2); display: grid; place-items: center; font-family: var(--f-mono); font-size: 14px; color: var(--ink-soft); flex-shrink: 0; transition: transform .25s ease, background .2s ease; }
+  details.q[open] .ic { transform: rotate(45deg); background: var(--bg-2); }
+
+  /* Resources */
+  .resources { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  @media (min-width: 820px) { .resources { grid-template-columns: repeat(3, 1fr); } }
+  .post { display: flex; flex-direction: column; gap: 14px; padding: 24px; border: 1px solid var(--rule-2); border-radius: 14px; background: var(--surface); min-height: 320px; transition: transform .3s ease, border-color .3s ease; }
+  .post:hover { transform: translateY(-3px); border-color: var(--ink-soft); }
+  .post .cover { aspect-ratio: 16/10; background: repeating-linear-gradient(135deg, var(--bg-2) 0 2px, transparent 2px 10px), var(--bg); border: 1px solid var(--rule); border-radius: 8px; display: grid; place-items: center; color: var(--ink-mute); font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .post .meta { font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; display: flex; gap: 12px; }
+  .post h3 { font-size: 20px; line-height: 1.25; }
+  .post p { color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+
+  /* CTA strip */
+  .cta-strip { padding: clamp(56px, 9vw, 120px) 0; text-align: center; }
+  .cta-strip h2 em { font-family: var(--f-display); font-style: italic; font-weight: 300; color: var(--accent); }
+  .cta-strip .lede { margin: 20px auto 28px; text-align: center; }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--rule); padding: 48px 0 36px; color: var(--ink-soft); font-size: 14px; }
+  .foot-grid { display: grid; grid-template-columns: 1fr; gap: 32px; }
+  @media (min-width: 820px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr 1fr; } }
+  .foot-col h4 { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-mute); text-transform: uppercase; font-weight: 400; margin-bottom: 14px; }
+  .foot-col a { display: block; padding: 4px 0; color: var(--ink-soft); }
+  .foot-col a:hover { color: var(--ink); }
+  .foot-bot { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; }
+
+  /* Scroll animations */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
+  .reveal.in { opacity: 1; transform: none; }
+  .word-reveal .w { display: inline-block; opacity: 0; transform: translateY(.4em); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
+  .word-reveal.in .w { opacity: 1; transform: none; }
+
+  /* Tweaks panel */
+  .tweaks-panel { position: fixed; right: 20px; bottom: 20px; z-index: 100; width: 300px; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 14px; padding: 18px; box-shadow: 0 30px 60px -30px #00000040; display: none; font-family: var(--f-body); }
+  .tweaks-panel.open { display: block; }
+  .tweaks-panel h4 { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute); font-weight: 400; margin: 0 0 14px; display: flex; justify-content: space-between; align-items: center; }
+  .tweaks-panel .row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .tweaks-panel label { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 3px; background: var(--bg-2); border-radius: 8px; }
+  .seg button { padding: 8px 6px; font-size: 12px; font-weight: 500; border-radius: 6px; color: var(--ink-soft); }
+  .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 0 var(--rule-2); }
+  .tweaks-panel input[type=text] { border: 1px solid var(--rule-2); border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); outline: none; }
+  .tweaks-panel input[type=text]:focus { border-color: var(--ink-soft); }
+  .swatch-row { display: flex; gap: 6px; }
+  .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+  .swatch.on { border-color: var(--ink); }
+
+  /* Visual style: technical */
+  [data-style="technical"] h1, [data-style="technical"] h2, [data-style="technical"] h3 { font-family: var(--f-body); font-weight: 500; letter-spacing: -0.03em; }
+  [data-style="technical"] h1 em { font-family: var(--f-display); }
+  [data-style="technical"] .hero-card, [data-style="technical"] .plan, [data-style="technical"] .post, [data-style="technical"] .features { border-radius: 6px; }
+
+  .ico { width: 16px; height: 16px; flex-shrink: 0; }
+</style>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<header id="top" class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow reveal">Soporte clínico con IA · Beta 2026</span>
+      <h1 class="word-reveal" style="margin-top:20px;">
+        La segunda opinión que <em>nunca duerme</em>, para médicos que sí.
+      </h1>
+      <p class="lede reveal" style="--d:160ms; margin-top:28px;">
+        <span data-brand>MediQ</span> resume historiales, sugiere diagnósticos diferenciales y verifica interacciones
+        en segundos — entrenado sobre literatura médica revisada por pares y guías clínicas vigentes.
+      </p>
+      <div class="hero-cta reveal" style="--d:240ms;">
+        <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="#how">Ver cómo funciona</a>
+      </div>
+      <div class="hero-meta reveal" style="--d:320ms;">
+        <span>HIPAA · GDPR</span><span class="dot"></span>
+        <span>ISO 27001</span><span class="dot"></span>
+        <span>Auditable por especialistas</span>
+      </div>
+    </div>
+
+    <div class="hero-card reveal" style="--d:200ms;">
+      <div class="head">
+        <span><span class="pulse"></span><span data-brand>MediQ</span> · sesión #4812</span>
+        <span class="pill">Cardiología</span>
+      </div>
+      <div class="msg">
+        <span class="role">Dr.</span>
+        <p>Varón 58a, dolor torácico opresivo 40 min, irradia a brazo izquierdo. ECG: supradesnivel ST en DII, DIII, aVF.</p>
+      </div>
+      <div class="msg ai">
+        <span class="role" style="color:var(--accent);">AI</span>
+        <p>
+          <b>Hallazgo:</b> IAM de cara inferior. <b>Acción prioritaria:</b> ASA 300 mg, oxígeno si SatO₂&lt;94%, activar código infarto.
+          <br />Riesgo de compromiso de VD (50%) — revisar V4R antes de nitratos.
+        </p>
+      </div>
+      <div class="msg">
+        <span class="role">Dr.</span>
+        <p>¿Protocolo local para PCI primario?</p>
+      </div>
+      <div class="msg ai">
+        <span class="role" style="color:var(--accent);">AI</span>
+        <p><span class="typing"><i></i><i></i><i></i></span></p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+<section id="how">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Cómo funciona</span>
+      <h2>Tres pasos entre una duda clínica y una respuesta fundamentada.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="num">01 —</span>
+        <h3>Describe el caso</h3>
+        <p>Ingresa síntomas, laboratorios o la historia clínica completa. Acepta voz, texto, PDFs y DICOM para imágenes.</p>
+        <span class="tag">30s</span>
+      </div>
+      <div class="step reveal" style="--d:80ms;">
+        <span class="num">02 —</span>
+        <h3>Revisa el razonamiento</h3>
+        <p>La IA devuelve diferenciales ordenados por probabilidad, con la evidencia y guía clínica que los respalda — no una caja negra.</p>
+        <span class="tag">&lt; 8s</span>
+      </div>
+      <div class="step reveal" style="--d:160ms;">
+        <span class="num">03 —</span>
+        <h3>Decide con contexto</h3>
+        <p>Contrasta interacciones farmacológicas, dosificación por peso y protocolos locales antes de firmar. Tú decides; nunca la IA.</p>
+        <span class="tag">En tu flujo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Capacidades</span>
+      <h2>Construido para la <span style="font-style:italic; color:var(--accent);">realidad</span> del turno, no para el paper.</h2>
+      <p class="lede">Cada función nace de entrevistas con médicos de urgencias, internistas y residentes. Sin plantillas genéricas.</p>
+    </div>
+    <div class="features">
+      <div class="feat reveal">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">Σ</div><span class="num">01</span></div>
+        <div><h3>Resumen de historial en 10s</h3><p>Convierte 40 páginas de HC en un briefing con evolución, medicación activa, alergias y riesgos pendientes.</p></div>
+      </div>
+      <div class="feat reveal" style="--d:60ms;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">Δ</div><span class="num">02</span></div>
+        <div><h3>Diagnóstico diferencial</h3><p>Lista probabilística con evidencia enlazada a UpToDate, NEJM y guías locales. Siempre con nivel de certeza.</p></div>
+      </div>
+      <div class="feat reveal" style="--d:120ms;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">℞</div><span class="num">03</span></div>
+        <div><h3>Verificador de interacciones</h3><p>Cruza polifarmacia, función renal y embarazo. Detecta riesgos que los vademécums estándar pasan por alto.</p></div>
+      </div>
+      <div class="feat reveal" style="--d:180ms;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">π</div><span class="num">04</span></div>
+        <div><h3>Calculadoras clínicas</h3><p>CHA₂DS₂-VASc, Wells, CURB-65 y 200 más — integradas en el chat, sin cambiar de ventana.</p></div>
+      </div>
+      <div class="feat reveal" style="--d:240ms;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">∮</div><span class="num">05</span></div>
+        <div><h3>Modo estudiante</h3><p>Explica cada razonamiento paso a paso, con preguntas tipo OSCE. Ideal para internado y preparación de exámenes.</p></div>
+      </div>
+      <div class="feat reveal" style="--d:300ms;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">◌</div><span class="num">06</span></div>
+        <div><h3>Privacidad por diseño</h3><p>Datos anonimizados antes del procesamiento. Nunca se entrenan modelos con tus casos. Cumplimiento HIPAA y GDPR.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FAQ ═══════════════════ -->
+<section id="faq">
+  <div class="container" style="display:grid; grid-template-columns:1fr; gap:48px;">
+    <div class="section-head reveal" style="margin-bottom:0;">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Lo que los médicos nos preguntan primero.</h2>
+    </div>
+    <div class="faq-grid reveal">
+      <details class="q" open>
+        <summary>¿Reemplaza al juicio clínico? <span class="ic">+</span></summary>
+        <p class="ans">No. <span data-brand>MediQ</span> es una herramienta de apoyo. Todas las sugerencias requieren validación del profesional sanitario responsable del paciente. La firma y la decisión siempre son humanas.</p>
+      </details>
+      <details class="q">
+        <summary>¿Con qué evidencia trabaja? <span class="ic">+</span></summary>
+        <p class="ans">Entrenado sobre literatura médica revisada por pares (PubMed, Cochrane), guías de sociedades científicas (AHA, ESC, SEMICYUC, WHO) y UpToDate. Cada respuesta enlaza la fuente original con fecha de última revisión.</p>
+      </details>
+      <details class="q">
+        <summary>¿Cómo se protegen los datos del paciente? <span class="ic">+</span></summary>
+        <p class="ans">Cifrado de extremo a extremo, anonimización antes del procesamiento y residencia de datos en la UE. No entrenamos modelos con casos de usuarios. Cumplimos HIPAA, GDPR e ISO 27001.</p>
+      </details>
+      <details class="q">
+        <summary>¿Se integra con mi HCE? <span class="ic">+</span></summary>
+        <p class="ans">Sí, a través de FHIR y HL7 v2. Integraciones nativas con Epic, Cerner, SELENE y HP-HIS. Para otras plataformas ofrecemos API REST y conectores personalizados en el plan Institución.</p>
+      </details>
+      <details class="q">
+        <summary>¿Está certificado como producto sanitario? <span class="ic">+</span></summary>
+        <p class="ans">Actualmente en proceso de marcado CE como MDR clase IIa. En Estados Unidos, solicitud FDA 510(k) prevista para Q3 2026. Hasta entonces, funciona como herramienta de apoyo no-diagnóstica.</p>
+      </details>
+      <details class="q">
+        <summary>¿Puedo probarlo antes de pagar? <span class="ic">+</span></summary>
+        <p class="ans">Sí — 14 días gratis en el plan Práctica clínica, sin tarjeta de crédito. Los estudiantes acceden gratis de forma permanente durante su formación.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ RESOURCES ═══════════════════ -->
+<section id="resources">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Recursos</span>
+      <h2>Del laboratorio clínico al borde de la cama.</h2>
+    </div>
+    <div class="resources">
+      <article class="post reveal">
+        <div class="cover">Figura 01 · validación</div>
+        <div class="meta"><span>Estudio</span><span>12 min</span></div>
+        <h3>Precisión diagnóstica en 4.200 casos reales</h3>
+        <p>Comparativa contra médicos de urgencias en H. Universitario La Paz. Concordancia del 94% en diferenciales top-3.</p>
+      </article>
+      <article class="post reveal" style="--d:80ms;">
+        <div class="cover">Imagen · consulta</div>
+        <div class="meta"><span>Guía</span><span>7 min</span></div>
+        <h3>Cómo prompt-ear como un residente de medicina interna</h3>
+        <p>Seis patrones de consulta que devuelven diferenciales más útiles — con ejemplos reales del turno de guardia.</p>
+      </article>
+      <article class="post reveal" style="--d:160ms;">
+        <div class="cover">Ilustración · ética</div>
+        <div class="meta"><span>Ensayo</span><span>9 min</span></div>
+        <h3>IA y responsabilidad: quién firma cuando hay duda</h3>
+        <p>Marco ético de uso, basado en el consenso del Comité de Bioética de la SEMES (2025).</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section id="cta" class="cta-strip">
+  <div class="container">
+    <span class="eyebrow reveal">Únete a la beta</span>
+    <h2 class="reveal" style="--d:80ms; max-width: 18ch; margin: 18px auto 0;">
+      Deja que la evidencia <em>trabaje contigo</em>.
+    </h2>
+    <p class="lede reveal" style="--d:160ms;">
+      Solicitud de acceso · aprobación en 48h · sin tarjeta.
+    </p>
+    <div class="reveal" style="--d:240ms; display:inline-flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+      <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost" href="/login">Hablar con un médico de producto</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <a class="brand" href="/"><span class="brand-mark"></span><span data-brand>MediQ</span></a>
+        <p style="max-width: 32ch; margin-top:14px; font-size:13.5px; line-height:1.55;">
+          Soporte clínico con IA, construido con y para médicos de habla hispana.
+        </p>
+      </div>
+      <div class="foot-col">
+        <h4>Producto</h4>
+        <a href="#how">Cómo funciona</a>
+        <a href="#features">Capacidades</a>
+        <a href="/pricing">Precios</a>
+        <a href="#">Cambios (changelog)</a>
+      </div>
+      <div class="foot-col">
+        <h4>Compañía</h4>
+        <a href="#">Sobre nosotros</a>
+        <a href="#resources">Recursos</a>
+        <a href="#">Comité clínico</a>
+        <a href="#">Contacto</a>
+      </div>
+      <div class="foot-col">
+        <h4>Legal</h4>
+        <a href="#">Privacidad</a>
+        <a href="#">Términos</a>
+        <a href="#">Cumplimiento</a>
+        <a href="#">Aviso clínico</a>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 <span data-brand>MediQ</span> Health Systems S.L.</span>
+      <span>Madrid, España</span>
+      <span>Made with 🩺 por médicos + ingenieros</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════ TWEAKS PANEL ═══════════════════ -->
+<aside class="tweaks-panel" id="tweaks">
+  <h4>Tweaks <button id="t-close" style="font-family:inherit; font-size:14px; color:var(--ink-mute);">×</button></h4>
+  <div class="row">
+    <label>Nombre de la marca</label>
+    <input id="t-brand" type="text" autocomplete="off" />
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+      <button data-name="MediQ"     class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">MediQ</button>
+      <button data-name="Clínica.ai" class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Clínica.ai</button>
+      <button data-name="Pulso"     class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Pulso</button>
+      <button data-name="Latido"    class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Latido</button>
+      <button data-name="Soma"      class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Soma</button>
+      <button data-name="Ren"       class="btn btn-ghost" style="padding:4px 10px; font-size:12px;">Ren</button>
+    </div>
+  </div>
+  <div class="row">
+    <label>Paleta</label>
+    <div class="swatch-row">
+      <button class="swatch" data-theme="clinical" title="Clinical" style="background: linear-gradient(135deg,#f6f5f1 50%, oklch(54% 0.09 195) 50%);"></button>
+      <button class="swatch" data-theme="paper"    title="Paper"    style="background: linear-gradient(135deg,#f3ecdf 50%, oklch(52% 0.13 45) 50%);"></button>
+      <button class="swatch" data-theme="ink"      title="Deep ink" style="background: linear-gradient(135deg,#0e1113 50%, oklch(78% 0.13 155) 50%);"></button>
+    </div>
+  </div>
+  <div class="row">
+    <label>Tipografía</label>
+    <div class="seg" id="t-type">
+      <button data-val="editorial">Editorial</button>
+      <button data-val="serif-soft">Serif</button>
+      <button data-val="plex">Plex</button>
+    </div>
+  </div>
+  <div class="row">
+    <label>Estilo visual</label>
+    <div class="seg" id="t-style">
+      <button data-val="editorial">Editorial</button>
+      <button data-val="technical">Técnico</button>
+    </div>
+  </div>
+</aside>
+
+<!--
+  Scripts de index.astro.
+  Al ser is:inline en <body>, Astro los re-ejecuta en cada navegación SPA
+  hacia esta página. Los guardamos con flags en window para evitar
+  duplicación de listeners globales (window.addEventListener).
+-->
+<script is:inline>
+  /* ───────── TWEAKS defaults ─────────
+     Se usa window.TWEAKS (no const) para que persista entre navegaciones
+     SPA y sea accesible desde cualquier contexto de script.
+     El bloque EDITMODE-BEGIN/END lo preserva el design tool.
+  */
+  if (!window.TWEAKS) {
+    window.TWEAKS = /*EDITMODE-BEGIN*/{
+      "brandName": "MediQ",
+      "theme": "clinical",
+      "typePair": "serif-soft",
+      "visualStyle": "technical"
+    }/*EDITMODE-END*/;
+  }
+
+  const root = document.documentElement;
+
+  function applyTweaks(t) {
+    root.setAttribute('data-theme', t.theme);
+    root.setAttribute('data-type',  t.typePair);
+    root.setAttribute('data-style', t.visualStyle);
+    document.querySelectorAll('[data-brand]').forEach(el => el.textContent = t.brandName);
+    document.title = t.brandName + ' — soporte clínico con IA';
+
+    document.querySelectorAll('.swatch').forEach(b   => b.classList.toggle('on', b.dataset.theme === t.theme));
+    document.querySelectorAll('#t-type button').forEach(b => b.classList.toggle('on', b.dataset.val === t.typePair));
+    document.querySelectorAll('#t-style button').forEach(b => b.classList.toggle('on', b.dataset.val === t.visualStyle));
+    const brandInput = document.getElementById('t-brand');
+    if (brandInput && document.activeElement !== brandInput) brandInput.value = t.brandName;
+  }
+
+  applyTweaks(window.TWEAKS);
+
+  /* ───────── Word-reveal split ─────────
+     Guardamos el flag .split-done en el elemento para no volver a
+     procesar los spans en navegaciones SPA de vuelta a esta página.
+  */
+  document.querySelectorAll('.word-reveal:not([data-split-done])').forEach(el => {
+    el.dataset.splitDone = '1';
+    const tmp  = document.createElement('div');
+    tmp.innerHTML = el.innerHTML;
+    const walk = (node, out) => {
+      node.childNodes.forEach(n => {
+        if (n.nodeType === 3) {
+          n.textContent.split(/(\s+)/).forEach(part => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { out.appendChild(document.createTextNode(part)); return; }
+            const s = document.createElement('span');
+            s.className = 'w'; s.textContent = part;
+            out.appendChild(s);
+          });
+        } else {
+          const clone = n.cloneNode(false);
+          if (n.nodeType === 1 && n.tagName === 'EM') {
+            n.childNodes.forEach(ch => {
+              if (ch.nodeType === 3) {
+                ch.textContent.split(/(\s+)/).forEach(part => {
+                  if (!part) return;
+                  if (/^\s+$/.test(part)) { clone.appendChild(document.createTextNode(part)); return; }
+                  const s = document.createElement('span');
+                  s.className = 'w'; s.textContent = part;
+                  clone.appendChild(s);
+                });
+              }
+            });
+          } else { walk(n, clone); }
+          out.appendChild(clone);
+        }
+      });
+    };
+    const container = document.createElement('span');
+    walk(tmp, container);
+    el.innerHTML = container.innerHTML;
+    el.querySelectorAll('.w').forEach((w, i) => { w.style.transitionDelay = (i * 55) + 'ms'; });
+  });
+
+  /* ───────── Scroll reveal ─────────
+     Desconectamos el observer anterior si lo hay (evita observar elementos
+     duplicados en re-ejecuciones por navegación SPA).
+  */
+  if (window.__revealObserver) window.__revealObserver.disconnect();
+  window.__revealObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); window.__revealObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.14, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal, .word-reveal').forEach(el => {
+    el.classList.remove('in'); // permite re-animar al volver via SPA
+    window.__revealObserver.observe(el);
+  });
+
+  /* ───────── Tweak-mode host protocol ─────────
+     Solo registramos el listener de postMessage UNA VEZ por sesión.
+     En re-ejecuciones SPA eliminamos el anterior antes de añadir el nuevo.
+  */
+  if (window.__tweakMsgHandler) window.removeEventListener('message', window.__tweakMsgHandler);
+  window.__tweakMsgHandler = (e) => {
+    const d = e.data || {};
+    const panel = document.getElementById('tweaks');
+    if (!panel) return;
+    if (d.type === '__activate_edit_mode')   panel.classList.add('open');
+    if (d.type === '__deactivate_edit_mode') panel.classList.remove('open');
+  };
+  window.addEventListener('message', window.__tweakMsgHandler);
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+  document.getElementById('t-close').addEventListener('click', () => {
+    document.getElementById('tweaks').classList.remove('open');
+  });
+
+  function setTweak(patch) {
+    Object.assign(window.TWEAKS, patch);
+    applyTweaks(window.TWEAKS);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
+  }
+
+  document.getElementById('t-brand').addEventListener('input', (e) => {
+    setTweak({ brandName: e.target.value || 'MediQ' });
+  });
+  document.querySelectorAll('.tweaks-panel [data-name]').forEach(b => {
+    b.addEventListener('click', () => setTweak({ brandName: b.dataset.name }));
+  });
+  document.querySelectorAll('.swatch').forEach(b => {
+    b.addEventListener('click', () => setTweak({ theme: b.dataset.theme }));
+  });
+  document.querySelectorAll('#t-type button').forEach(b => {
+    b.addEventListener('click', () => setTweak({ typePair: b.dataset.val }));
+  });
+  document.querySelectorAll('#t-style button').forEach(b => {
+    b.addEventListener('click', () => setTweak({ visualStyle: b.dataset.val }));
+  });
+</script>
+
+</Layout>

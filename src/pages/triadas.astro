@@ -1,0 +1,604 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const triadas = [
+  // ── Cardiología / Urgencias ──────────────────────────────────
+  {
+    id: 'beck',
+    nombre: 'Tríada de Beck',
+    condicion: 'Taponamiento cardiaco',
+    especialidad: 'cardiología',
+    componentes: ['Hipotensión arterial', 'Ingurgitación yugular', 'Ruidos cardíacos apagados'],
+    nota: 'Emergencia. Requiere pericardiocentesis urgente.',
+    mnemonica: 'Bajo, Bomba llena, Boom apagado',
+  },
+  {
+    id: 'cushing-iicp',
+    nombre: 'Tríada de Cushing',
+    condicion: 'Hipertensión intracraneal grave',
+    especialidad: 'neurología',
+    componentes: ['Hipertensión arterial', 'Bradicardia refleja', 'Respiración irregular (Cheyne-Stokes)'],
+    nota: 'Signo tardío de herniación transtentorial inminente.',
+    mnemonica: null,
+  },
+  {
+    id: 'virchow',
+    nombre: 'Tríada de Virchow',
+    condicion: 'Trombosis venosa profunda / TEP',
+    especialidad: 'hematología',
+    componentes: ['Estasis venosa', 'Hipercoagulabilidad', 'Lesión endotelial'],
+    nota: 'Marco etiopatogénico fundamental para toda trombosis.',
+    mnemonica: null,
+  },
+
+  // ── Gastroenterología / Cirugía ──────────────────────────────
+  {
+    id: 'charcot',
+    nombre: 'Tríada de Charcot',
+    condicion: 'Colangitis bacteriana aguda',
+    especialidad: 'gastro',
+    componentes: ['Fiebre con escalofríos', 'Ictericia obstructiva', 'Dolor en hipocondrio derecho (cólico biliar)'],
+    nota: 'La pentada de Reynolds añade shock y alteración del nivel de consciencia.',
+    mnemonica: null,
+  },
+  {
+    id: 'whipple',
+    nombre: 'Tríada de Whipple',
+    condicion: 'Insulinoma',
+    especialidad: 'endocrinología',
+    componentes: ['Síntomas de hipoglucemia durante el ayuno', 'Glucemia < 45 mg/dL durante los síntomas', 'Alivio inmediato al administrar glucosa'],
+    nota: 'Confirma hipoglucemia orgánica; no es diagnóstica de insulinoma por sí sola.',
+    mnemonica: null,
+  },
+  {
+    id: 'murphy-ap',
+    nombre: 'Tríada de Murphy (apendicitis)',
+    condicion: 'Apendicitis aguda',
+    especialidad: 'cirugía',
+    componentes: ['Dolor periumbilical que migra a fosa ilíaca derecha', 'Náuseas y vómitos', 'Fiebre de bajo grado'],
+    nota: null,
+    mnemonica: null,
+  },
+  {
+    id: 'saint',
+    nombre: 'Tríada de Saint',
+    condicion: 'Coexistencia de tres patologías benignas',
+    especialidad: 'gastro',
+    componentes: ['Diverticulosis colónica', 'Colelitiasis', 'Hernia de hiato'],
+    nota: 'Frecuente en pacientes obesos de mediana edad. No implica relación causal.',
+    mnemonica: null,
+  },
+  {
+    id: 'zollinger',
+    nombre: 'Tríada de Zollinger-Ellison',
+    condicion: 'Síndrome de Zollinger-Ellison',
+    especialidad: 'gastro',
+    componentes: ['Úlceras pépticas múltiples y refractarias', 'Hipersecreción ácida gástrica', 'Gastrinoma pancreático o duodenal'],
+    nota: 'Asociado a MEN1 en el 25 % de los casos.',
+    mnemonica: null,
+  },
+
+  // ── Neurología ───────────────────────────────────────────────
+  {
+    id: 'wernicke',
+    nombre: 'Tríada de Wernicke',
+    condicion: 'Encefalopatía de Wernicke',
+    especialidad: 'neurología',
+    componentes: ['Confusión y deterioro cognitivo agudo', 'Oftalmoplegia (parálisis de VI par, nistagmo)', 'Ataxia de la marcha'],
+    nota: 'Déficit de tiamina (B1). Tratar con tiamina IV antes de administrar glucosa.',
+    mnemonica: 'COA: Confusión, Ojos, Ataxia',
+  },
+  {
+    id: 'hakim',
+    nombre: 'Tríada de Hakim-Adams',
+    condicion: 'Hidrocefalia normotensiva',
+    especialidad: 'neurología',
+    componentes: ['Deterioro cognitivo (demencia)', 'Incontinencia urinaria', 'Alteración de la marcha (marcha magnética)'],
+    nota: 'Potencialmente reversible con derivación ventrículo-peritoneal.',
+    mnemonica: '"Loca, mojada y titubeante"',
+  },
+  {
+    id: 'meningea',
+    nombre: 'Tríada meníngea',
+    condicion: 'Meningitis',
+    especialidad: 'neurología',
+    componentes: ['Fiebre', 'Cefalea intensa', 'Rigidez de nuca (meningismo)'],
+    nota: 'La tríada completa solo se da en el 44 % de los casos. No esperar a completarla para tratar.',
+    mnemonica: null,
+  },
+  {
+    id: 'hutchinson',
+    nombre: 'Tríada de Hutchinson',
+    condicion: 'Sífilis congénita tardía',
+    especialidad: 'infectología',
+    componentes: ['Queratitis intersticial', 'Sordera por afectación del VIII par craneal', 'Dientes de Hutchinson (incisivos en cuña con muesca)'],
+    nota: 'Manifestación de sífilis congénita no tratada.',
+    mnemonica: null,
+  },
+
+  // ── Reumatología ─────────────────────────────────────────────
+  {
+    id: 'reiter',
+    nombre: 'Tríada de Reiter',
+    condicion: 'Artritis reactiva (síndrome de Reiter)',
+    especialidad: 'reumatología',
+    componentes: ['Uretritis (o cervicitis)', 'Artritis asimétrica de grandes articulaciones', 'Conjuntivitis (o uveítis)'],
+    nota: 'Desencadenada habitualmente por Chlamydia trachomatis o infecciones entéricas.',
+    mnemonica: '"Can\'t pee, can\'t see, can\'t climb a tree"',
+  },
+  {
+    id: 'felty',
+    nombre: 'Síndrome de Felty',
+    condicion: 'Complicación de artritis reumatoide',
+    especialidad: 'reumatología',
+    componentes: ['Artritis reumatoide seropositiva', 'Esplenomegalia', 'Neutropenia'],
+    nota: 'Aumenta el riesgo de infecciones bacterianas graves.',
+    mnemonica: null,
+  },
+
+  // ── Endocrinología ───────────────────────────────────────────
+  {
+    id: 'men1',
+    nombre: 'Tríada de MEN1 (Wermer)',
+    condicion: 'Neoplasia endocrina múltiple tipo 1',
+    especialidad: 'endocrinología',
+    componentes: ['Hiperparatiroidismo primario (paratiroides)', 'Tumores pancreáticos endocrinos (gastrinoma, insulinoma)', 'Adenoma hipofisario (prolactinoma)'],
+    nota: 'Mutación en MEN1 (menina). Herencia autosómica dominante.',
+    mnemonica: '3P: Paratiroides, Páncreas, Pituitaria',
+  },
+  {
+    id: 'men2a',
+    nombre: 'Tríada de MEN2A (Sipple)',
+    condicion: 'Neoplasia endocrina múltiple tipo 2A',
+    especialidad: 'endocrinología',
+    componentes: ['Carcinoma medular de tiroides (calcitonina)', 'Feocromocitoma bilateral', 'Hiperparatiroidismo'],
+    nota: 'Mutación en RET. El CMT puede ser el primer signo. Screening genético familiar obligatorio.',
+    mnemonica: null,
+  },
+
+  // ── Neumología / ORL ─────────────────────────────────────────
+  {
+    id: 'samter',
+    nombre: 'Tríada de Samter',
+    condicion: 'Enfermedad respiratoria exacerbada por AAS',
+    especialidad: 'neumología',
+    componentes: ['Asma bronquial', 'Poliposis nasal', 'Intolerancia a AAS y AINEs'],
+    nota: 'Evitar toda la clase de inhibidores COX-1. Montelukast como alternativa.',
+    mnemonica: null,
+  },
+  {
+    id: 'kartagener',
+    nombre: 'Síndrome de Kartagener',
+    condicion: 'Discinesia ciliar primaria',
+    especialidad: 'neumología',
+    componentes: ['Bronquiectasias', 'Sinusitis crónica', 'Situs inversus totalis'],
+    nota: 'Defecto en la dineína ciliar. Infertilidad masculina por inmovilidad espermática.',
+    mnemonica: null,
+  },
+  {
+    id: 'meniere',
+    nombre: 'Tríada de Ménière',
+    condicion: 'Enfermedad de Ménière',
+    especialidad: 'orl',
+    componentes: ['Vértigo episódico intenso (> 20 min)', 'Hipoacusia neurosensorial fluctuante', 'Acúfenos (tinnitus)'],
+    nota: 'Producida por hidrops endolinfático. Plenitud ótica como síntoma acompañante frecuente.',
+    mnemonica: null,
+  },
+
+  // ── Hematología ──────────────────────────────────────────────
+  {
+    id: 'ttp',
+    nombre: 'Tríada de la PTT',
+    condicion: 'Púrpura Trombótica Trombocitopénica',
+    especialidad: 'hematología',
+    componentes: ['Trombocitopenia', 'Anemia hemolítica microangiopática', 'Daño orgánico (renal / neurológico)'],
+    nota: 'La pentada clásica añade fiebre y alteraciones neurológicas. Déficit de ADAMTS13.',
+    mnemonica: null,
+  },
+
+  // ── Traumatología / Ortopedia ────────────────────────────────
+  {
+    id: 'odonoghue',
+    nombre: "Tríada de O'Donoghue",
+    condicion: 'Lesión combinada de rodilla ("rodilla infeliz")',
+    especialidad: 'traumatología',
+    componentes: ['Rotura del ligamento cruzado anterior (LCA)', 'Rotura del ligamento lateral interno (LLI)', 'Desgarro del menisco medial interno'],
+    nota: 'Mecanismo típico: valgo forzado en pie fijo (fútbol, esquí).',
+    mnemonica: null,
+  },
+  {
+    id: 'waddell',
+    nombre: 'Tríada de Waddell',
+    condicion: 'Trauma pediátrico por atropello',
+    especialidad: 'urgencias',
+    componentes: ['Fractura de fémur contralateral al impacto', 'Traumatismo torácico ipsilateral', 'Traumatismo craneoencefálico contralateral'],
+    nota: 'Patrón de lesiones en niño atropellado. Evaluar siempre los tres puntos.',
+    mnemonica: null,
+  },
+
+  // ── Ginecología ──────────────────────────────────────────────
+  {
+    id: 'meigs',
+    nombre: 'Síndrome de Meigs',
+    condicion: 'Tumor ovárico benigno con derrames',
+    especialidad: 'ginecología',
+    componentes: ['Fibroma ovárico (o tecoma)', 'Ascitis', 'Derrame pleural (generalmente derecho)'],
+    nota: 'Resolución espontánea tras resección tumoral. CA-125 puede elevarse falsamente.',
+    mnemonica: null,
+  },
+
+  // ── Pediatría ────────────────────────────────────────────────
+  {
+    id: 'pierre-robin',
+    nombre: 'Secuencia de Pierre Robin',
+    condicion: 'Malformación craneofacial congénita',
+    especialidad: 'pediatría',
+    componentes: ['Micrognatia / retrognatia', 'Glosoptosis (caída de lengua hacia atrás)', 'Fisura palatina en U'],
+    nota: 'La micrognatia causa la glosoptosis y el paladar en U; no es un síndrome genético único.',
+    mnemonica: null,
+  },
+  {
+    id: 'currarino',
+    nombre: 'Tríada de Currarino',
+    condicion: 'Anomalía congénita presacra',
+    especialidad: 'pediatría',
+    componentes: ['Agenesia sacra parcial (hemisacro en "hoz de sable")', 'Masa presacra (teratoma, meningocele anterior)', 'Malformación anorrectal'],
+    nota: 'Herencia autosómica dominante. Mutación en MNX1. Diagnóstico frecuentemente tardío.',
+    mnemonica: null,
+  },
+
+  // ── Infectología ─────────────────────────────────────────────
+  {
+    id: 'sepsis',
+    nombre: 'Tríada de la disfunción orgánica (sepsis)',
+    condicion: 'Shock séptico',
+    especialidad: 'urgencias',
+    componentes: ['Hipoperfusión tisular (lactato > 2 mmol/L)', 'Vasoplejía refractaria a volumen', 'Disfunción orgánica (SOFA ≥ 2)'],
+    nota: 'Criterios Sepsis-3. Requiere vasopresores y antibióticos en la primera hora.',
+    mnemonica: null,
+  },
+];
+
+const especialidades = [
+  { key: 'todas', label: 'Todas' },
+  { key: 'cardiología', label: 'Cardiología' },
+  { key: 'neurología', label: 'Neurología' },
+  { key: 'gastro', label: 'Gastro' },
+  { key: 'reumatología', label: 'Reumatología' },
+  { key: 'endocrinología', label: 'Endocrinología' },
+  { key: 'hematología', label: 'Hematología' },
+  { key: 'neumología', label: 'Neumología' },
+  { key: 'orl', label: 'ORL' },
+  { key: 'traumatología', label: 'Traumatología' },
+  { key: 'ginecología', label: 'Ginecología' },
+  { key: 'infectología', label: 'Infectología' },
+  { key: 'cirugía', label: 'Cirugía' },
+  { key: 'urgencias', label: 'Urgencias' },
+  { key: 'pediatría', label: 'Pediatría' },
+];
+
+const colorMap: Record<string, string> = {
+  cardiología:    'oklch(58% 0.18 25)',
+  neurología:     'oklch(55% 0.15 290)',
+  gastro:         'oklch(58% 0.15 60)',
+  reumatología:   'oklch(55% 0.13 230)',
+  endocrinología: 'oklch(54% 0.09 195)',
+  hematología:    'oklch(52% 0.16 350)',
+  neumología:     'oklch(56% 0.12 200)',
+  orl:            'oklch(55% 0.12 170)',
+  traumatología:  'oklch(52% 0.12 80)',
+  ginecología:    'oklch(56% 0.15 330)',
+  infectología:   'oklch(52% 0.14 145)',
+  cirugía:        'oklch(48% 0.10 210)',
+  urgencias:      'oklch(58% 0.18 40)',
+  pediatría:      'oklch(55% 0.14 260)',
+};
+---
+
+<Layout
+  title="Tríadas clínicas — MediQ"
+  description="Base de datos de tríadas clínicas con búsqueda y filtro por especialidad. Referencia rápida para el médico."
+  navActive="/triadas"
+>
+
+  <style is:global>
+    /* ── Hero ── */
+    .triadas-hero {
+      padding: clamp(48px, 7vw, 88px) 0 clamp(28px, 4vw, 48px);
+    }
+    .triadas-hero h1 { margin-bottom: 14px; }
+    .triadas-hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .triadas-hero .lede { margin-top: 6px; }
+
+    /* ── Search ── */
+    .search-wrap {
+      margin-top: 32px;
+      position: relative;
+      max-width: 560px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 16px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-mute); pointer-events: none;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 999px;
+      padding: 13px 20px 13px 46px;
+      font-size: 15px; color: var(--ink); font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search-wrap input::placeholder { color: var(--ink-mute); }
+    .search-wrap input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent);
+    }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 20px; padding-bottom: 32px;
+    }
+    .filter-btn {
+      font-family: var(--f-mono);
+      font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 7px 14px; border-radius: 999px;
+      border: 1px solid var(--rule-2);
+      color: var(--ink-soft); background: transparent;
+      cursor: pointer; transition: all .15s ease;
+    }
+    .filter-btn:hover { border-color: var(--ink-soft); color: var(--ink); background: var(--surface); }
+    .filter-btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+    /* ── Grid ── */
+    .triadas-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding-bottom: 80px;
+    }
+    @media (max-width: 1060px) { .triadas-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .triadas-grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .triada-card {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      padding: 22px 22px 18px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .triada-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px rgba(0,0,0,.1);
+      border-color: color-mix(in oklab, var(--ink) 15%, transparent);
+    }
+    .triada-card.hidden { display: none; }
+
+    .card-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    }
+    .spec-badge {
+      font-family: var(--f-mono);
+      font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 999px;
+      background: color-mix(in oklab, var(--spec-color, var(--ink-mute)) 12%, var(--bg-2));
+      color: var(--spec-color, var(--ink-mute));
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .triad-label {
+      font-family: var(--f-mono);
+      font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.04em;
+      line-height: 1.4;
+    }
+
+    .card-condition {
+      font-family: var(--f-display);
+      font-size: clamp(17px, 2vw, 21px);
+      font-weight: 400; letter-spacing: -0.015em; line-height: 1.15;
+      color: var(--ink);
+    }
+
+    .card-components {
+      display: flex; flex-direction: column; gap: 8px;
+      flex: 1;
+    }
+    .component {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 8px; align-items: start;
+      font-size: 14px; color: var(--ink-soft); line-height: 1.4;
+    }
+    .component .num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--bg-2);
+      border: 1px solid var(--rule);
+      font-family: var(--f-mono); font-size: 10px; color: var(--ink-mute);
+      display: grid; place-items: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+
+    .card-footer { border-top: 1px solid var(--rule); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .card-mnemonica {
+      font-family: var(--f-display); font-style: italic;
+      font-size: 13px; color: var(--accent);
+    }
+    .card-nota {
+      font-size: 12.5px; color: var(--ink-mute); line-height: 1.5;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      grid-column: 1 / -1;
+      padding: 64px 24px; text-align: center;
+      display: none;
+    }
+    .empty-state.visible { display: block; }
+    .empty-state h3 { font-family: var(--f-display); font-size: 22px; margin-bottom: 8px; }
+    .empty-state p { color: var(--ink-mute); font-size: 14px; }
+
+    /* ── Count ── */
+    .result-count {
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--ink-mute); margin-bottom: 20px;
+    }
+  </style>
+
+  <!-- ── Hero ── -->
+  <section class="triadas-hero">
+    <div class="container">
+      <p class="eyebrow">Referencia clínica</p>
+      <h1>Tríadas <em>clínicas</em></h1>
+      <p class="lede">
+        Las tríadas y síndromes de tres signos más relevantes de la medicina interna,
+        organizadas por especialidad. Búsqueda instantánea.
+      </p>
+
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          id="triada-search"
+          type="search"
+          placeholder="Buscar por síntoma, nombre o condición…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="filters" id="filters">
+        {especialidades.map(e => (
+          <button
+            class:list={['filter-btn', { on: e.key === 'todas' }]}
+            data-specialty={e.key}
+            type="button"
+          >
+            {e.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Grid ── -->
+  <section>
+    <div class="container">
+      <p class="result-count" id="result-count">{triadas.length} tríadas</p>
+
+      <div class="triadas-grid" id="triadas-grid">
+        {triadas.map(t => {
+          const color = colorMap[t.especialidad] ?? 'var(--ink-mute)';
+          const searchable = [t.nombre, t.condicion, ...t.componentes, t.nota ?? '', t.mnemonica ?? '']
+            .join(' ').toLowerCase();
+          return (
+            <article
+              class="triada-card"
+              data-specialty={t.especialidad}
+              data-searchable={searchable}
+            >
+              <div class="card-top">
+                <span class="triad-label">{t.nombre}</span>
+                <span
+                  class="spec-badge"
+                  style={`--spec-color: ${color};`}
+                >
+                  {t.especialidad}
+                </span>
+              </div>
+
+              <h2 class="card-condition">{t.condicion}</h2>
+
+              <div class="card-components">
+                {t.componentes.map((c, i) => (
+                  <div class="component">
+                    <span class="num">{i + 1}</span>
+                    <span>{c}</span>
+                  </div>
+                ))}
+              </div>
+
+              {(t.nota || t.mnemonica) && (
+                <div class="card-footer">
+                  {t.mnemonica && <p class="card-mnemonica">"{t.mnemonica}"</p>}
+                  {t.nota && <p class="card-nota">{t.nota}</p>}
+                </div>
+              )}
+            </article>
+          );
+        })}
+
+        <div class="empty-state" id="empty-state">
+          <h3>Sin resultados</h3>
+          <p>Prueba con otro término o cambia el filtro de especialidad.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      const searchEl  = document.getElementById('triada-search');
+      const filtersEl = document.getElementById('filters');
+      const countEl   = document.getElementById('result-count');
+      const emptyEl   = document.getElementById('empty-state');
+      const cards     = document.querySelectorAll('.triada-card');
+
+      let currentQuery    = '';
+      let currentSpecialty = 'todas';
+
+      function applyFilters() {
+        let visible = 0;
+
+        cards.forEach(card => {
+          const matchSearch = !currentQuery ||
+            card.dataset.searchable.includes(currentQuery);
+          const matchFilter = currentSpecialty === 'todas' ||
+            card.dataset.specialty === currentSpecialty;
+
+          const show = matchSearch && matchFilter;
+          card.classList.toggle('hidden', !show);
+          if (show) visible++;
+        });
+
+        countEl.textContent = visible === 1
+          ? '1 tríada'
+          : `${visible} tríadas`;
+        emptyEl.classList.toggle('visible', visible === 0);
+      }
+
+      searchEl.addEventListener('input', () => {
+        currentQuery = searchEl.value.trim().toLowerCase();
+        applyFilters();
+      });
+
+      filtersEl.addEventListener('click', e => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        filtersEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        currentSpecialty = btn.dataset.specialty;
+        applyFilters();
+      });
+
+      // Mantener estado de filtros en navegación SPA
+      if (window.__triadasSearchEl !== searchEl) {
+        window.__triadasSearchEl = searchEl;
+        searchEl.value = '';
+        currentQuery = '';
+        currentSpecialty = 'todas';
+        filtersEl.querySelectorAll('.filter-btn').forEach(b =>
+          b.classList.toggle('on', b.dataset.specialty === 'todas')
+        );
+        applyFilters();
+      }
+    })();
+  </script>
+
+</Layout>

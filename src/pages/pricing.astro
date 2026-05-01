@@ -1,0 +1,359 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Precios — MediQ" navActive="/pricing">
+
+  <style is:global>
+    .price-hero {
+      padding: clamp(48px, 8vw, 96px) 0 clamp(24px, 4vw, 48px);
+      text-align: center;
+    }
+    .price-hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .price-hero .lede { margin: 22px auto 0; }
+
+    .billing-toggle {
+      display: inline-flex; gap: 4px;
+      background: var(--bg-2); padding: 4px; border-radius: 999px;
+      margin-top: 32px; align-items: center;
+    }
+    .billing-toggle button {
+      padding: 10px 18px; border-radius: 999px;
+      font-size: 13px; font-weight: 500; color: var(--ink-soft);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .billing-toggle button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 0 var(--rule-2); }
+    .badge-save {
+      font-family: var(--f-mono); font-size: 10px;
+      background: var(--accent); color: var(--accent-ink);
+      padding: 2px 6px; border-radius: 4px; letter-spacing: 0.04em;
+    }
+
+    .pricing-section { padding: clamp(32px, 5vw, 64px) 0 clamp(64px, 8vw, 96px); }
+    .pricing { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 900px) { .pricing { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .plan {
+      background: var(--surface); border: 1px solid var(--rule-2);
+      border-radius: 16px; padding: clamp(24px, 2.6vw, 36px);
+      display: flex; flex-direction: column; gap: 22px;
+      position: relative;
+      transition: transform .25s ease, border-color .25s ease;
+    }
+    .plan:hover { border-color: var(--ink-soft); transform: translateY(-2px); }
+    .plan.featured { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .plan.featured:hover { transform: translateY(-2px) scale(1.005); }
+    .plan-tag {
+      position: absolute; top: -12px; left: 24px;
+      background: var(--accent); color: var(--accent-ink);
+      font-family: var(--f-mono); font-size: 10.5px;
+      padding: 5px 10px; border-radius: 999px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .plan-name {
+      font-family: var(--f-mono); font-size: 12px;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-mute);
+    }
+    .plan.featured .plan-name { color: color-mix(in oklab, var(--bg) 70%, transparent); }
+    .plan-desc { font-size: 14.5px; color: var(--ink-soft); line-height: 1.45; }
+    .plan.featured .plan-desc { color: color-mix(in oklab, var(--bg) 75%, transparent); }
+    .plan .price {
+      font-family: var(--f-display);
+      font-size: clamp(48px, 4.8vw, 64px);
+      line-height: 1; letter-spacing: -0.02em;
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .plan .price small {
+      font-family: var(--f-body); font-size: 14px;
+      color: var(--ink-mute); letter-spacing: 0; font-weight: 400;
+    }
+    .plan.featured .price small { color: color-mix(in oklab, var(--bg) 65%, transparent); }
+    .plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+    .plan li {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 14.5px; line-height: 1.5; color: var(--ink-soft);
+    }
+    .plan.featured li { color: color-mix(in oklab, var(--bg) 82%, transparent); }
+    .plan li::before {
+      content: ""; width: 14px; height: 14px; margin-top: 4px;
+      background: var(--accent);
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5l3 3 7-7' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat;
+              mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8.5l3 3 7-7' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat;
+      flex-shrink: 0;
+    }
+    .plan li.muted { color: var(--ink-mute); }
+    .plan li.muted::before {
+      background: var(--ink-mute);
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><line x1='3' y1='8' x2='13' y2='8' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>") center/contain no-repeat;
+              mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><line x1='3' y1='8' x2='13' y2='8' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>") center/contain no-repeat;
+    }
+    .plan .btn { align-self: stretch; justify-content: center; padding: 13px 18px; }
+    .plan.featured .btn-primary { background: var(--bg); color: var(--ink); }
+
+    .compare-section { padding: clamp(56px, 8vw, 100px) 0; border-top: 1px solid var(--rule); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--rule-2); border-radius: 14px; background: var(--surface); }
+    table.compare { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14.5px; }
+    table.compare th, table.compare td {
+      padding: 16px 20px; text-align: left;
+      border-bottom: 1px solid var(--rule); vertical-align: middle;
+    }
+    table.compare thead th {
+      font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-mute); font-weight: 400;
+      background: var(--bg-2); position: sticky; top: 64px;
+    }
+    table.compare thead th:first-child { width: 40%; }
+    table.compare thead th.featured-col { color: var(--ink); background: color-mix(in oklab, var(--accent) 12%, var(--bg-2)); }
+    table.compare tbody td:first-child { font-weight: 500; color: var(--ink); }
+    table.compare tbody tr.section td {
+      background: var(--bg); font-family: var(--f-mono); font-size: 11px;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 14px 20px;
+    }
+    .check-y, .check-n { width: 18px; height: 18px; display: inline-block; }
+    .check-y { color: var(--accent); }
+    .check-n { color: var(--ink-mute); opacity: .5; }
+
+    .faq-section { padding: clamp(56px, 8vw, 100px) 0; border-top: 1px solid var(--rule); }
+    .faq-grid { display: grid; grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--rule); }
+    details.q { border-bottom: 1px solid var(--rule); padding: 22px 0; }
+    details.q summary {
+      list-style: none; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; gap: 24px;
+      font-family: var(--f-display); font-size: clamp(17px, 1.4vw, 21px); line-height: 1.3;
+    }
+    details.q summary::-webkit-details-marker { display: none; }
+    details.q .ans { color: var(--ink-soft); max-width: 70ch; margin-top: 12px; font-size: 15px; line-height: 1.55; }
+    details.q .ic {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 1px solid var(--rule-2); display: grid; place-items: center;
+      font-family: var(--f-mono); font-size: 14px; color: var(--ink-soft);
+      flex-shrink: 0; transition: transform .25s ease, background .2s ease;
+    }
+    details.q[open] .ic { transform: rotate(45deg); background: var(--bg-2); }
+
+    .cta-strip {
+      padding: clamp(56px, 9vw, 120px) 0;
+      text-align: center; border-top: 1px solid var(--rule);
+    }
+    .cta-strip h2 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .cta-strip .lede { margin: 18px auto 28px; }
+
+    footer { border-top: 1px solid var(--rule); padding: 32px 0; color: var(--ink-mute); font-size: 13px; }
+    footer .row {
+      display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em;
+    }
+
+    .section-head { display: grid; gap: 16px; max-width: 800px; margin-bottom: clamp(32px, 5vw, 56px); }
+    .section-head.center { text-align: center; margin-left: auto; margin-right: auto; }
+    .section-head.center .eyebrow { justify-content: center; }
+  </style>
+
+  <!-- ─────── HERO ─────── -->
+  <header class="price-hero">
+    <div class="container">
+      <span class="eyebrow" style="justify-content:center;">Precios</span>
+      <h1 style="margin-top:18px;">Precios <em>justos</em>, sin letra pequeña.</h1>
+      <p class="lede" style="margin-left:auto; margin-right:auto;">
+        Empieza gratis si estás en formación. Paga solo cuando ejerces. Las instituciones tienen un plan a medida con todo incluido.
+      </p>
+      <div class="billing-toggle" role="tablist">
+        <button id="bm" class="on" role="tab" aria-selected="true">Mensual</button>
+        <button id="ba" role="tab" aria-selected="false">Anual <span class="badge-save">−20%</span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────── PLANS ─────── -->
+  <section class="pricing-section">
+    <div class="container">
+      <div class="pricing">
+
+        <article class="plan">
+          <div>
+            <div class="plan-name">Estudiante</div>
+            <p class="plan-desc" style="margin-top:6px;">Para alumnos de medicina y enfermería en formación.</p>
+          </div>
+          <div class="price">0€<small>/siempre</small></div>
+          <ul>
+            <li>Consultas ilimitadas a la IA</li>
+            <li>Modo estudiante con explicaciones paso a paso</li>
+            <li>Calculadoras clínicas (200+)</li>
+            <li>Banco de casos OSCE</li>
+            <li class="muted">Sin integración con HCE</li>
+            <li class="muted">Sin historial cifrado de larga duración</li>
+          </ul>
+          <a class="btn btn-ghost" href="/login">Verificar matrícula</a>
+        </article>
+
+        <article class="plan featured">
+          <span class="plan-tag">Más elegido</span>
+          <div>
+            <div class="plan-name">Práctica clínica</div>
+            <p class="plan-desc" style="margin-top:6px;">Para médicos en ejercicio, todas las especialidades.</p>
+          </div>
+          <div class="price">
+            <span data-price-monthly="59€" data-price-yearly="47€">59€</span><small data-period="/mes">/mes</small>
+          </div>
+          <ul>
+            <li>Todo lo del plan estudiante</li>
+            <li>Diferenciales con evidencia enlazada</li>
+            <li>Verificador de interacciones farmacológicas</li>
+            <li>Subida de PDFs e imágenes DICOM</li>
+            <li>Integración con HCE (FHIR, HL7)</li>
+            <li>Historial cifrado por 10 años</li>
+            <li>Soporte por email en &lt; 24h</li>
+          </ul>
+          <a class="btn btn-primary" href="/login">Empezar prueba de 14 días</a>
+        </article>
+
+        <article class="plan">
+          <div>
+            <div class="plan-name">Institución</div>
+            <p class="plan-desc" style="margin-top:6px;">Hospitales, clínicas y redes asistenciales.</p>
+          </div>
+          <div class="price">A medida</div>
+          <ul>
+            <li>Todo lo del plan Práctica clínica</li>
+            <li>Despliegue on-premise o nube privada</li>
+            <li>Protocolos y guías institucionales</li>
+            <li>Panel de auditoría y analítica de uso</li>
+            <li>SSO, SCIM y roles personalizados</li>
+            <li>SLA del 99.95% y soporte 24/7</li>
+            <li>Comité clínico dedicado</li>
+          </ul>
+          <a class="btn btn-ghost" href="#contact">Contactar con ventas</a>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── COMPARE TABLE ─────── -->
+  <section class="compare-section">
+    <div class="container">
+      <div class="section-head center">
+        <span class="eyebrow">Comparativa completa</span>
+        <h2>Lo que incluye cada plan, sin sorpresas.</h2>
+      </div>
+      <div class="table-wrap">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th>Funcionalidad</th>
+              <th>Estudiante</th>
+              <th class="featured-col">Práctica clínica</th>
+              <th>Institución</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="section"><td colspan="4">IA clínica</td></tr>
+            <tr><td>Consultas a la IA</td><td>Ilimitadas</td><td>Ilimitadas</td><td>Ilimitadas</td></tr>
+            <tr><td>Diagnóstico diferencial con evidencia</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Verificador de interacciones</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Resumen de historial clínico</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Modo estudiante (explicaciones)</td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+
+            <tr class="section"><td colspan="4">Datos e integraciones</td></tr>
+            <tr><td>Subida de PDFs y DICOM</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Integración HCE (FHIR/HL7)</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Despliegue on-premise</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+
+            <tr class="section"><td colspan="4">Seguridad y cumplimiento</td></tr>
+            <tr><td>Cifrado en reposo y tránsito</td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>SSO + SCIM</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+            <tr><td>Panel de auditoría</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+
+            <tr class="section"><td colspan="4">Soporte</td></tr>
+            <tr><td>Soporte</td><td>Comunidad</td><td>Email &lt; 24h</td><td>Dedicado 24/7</td></tr>
+            <tr><td>SLA</td><td>—</td><td>99.5%</td><td>99.95%</td></tr>
+            <tr><td>Comité clínico dedicado</td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-n" viewBox="0 0 16 16"><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></td><td><svg class="check-y" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── FAQ ─────── -->
+  <section class="faq-section" id="faq">
+    <div class="container" style="display:grid; gap:48px; grid-template-columns:1fr;">
+      <div class="section-head">
+        <span class="eyebrow">Sobre la facturación</span>
+        <h2>Las dudas más comunes.</h2>
+      </div>
+      <div class="faq-grid">
+        <details class="q" open>
+          <summary>¿Puedo cambiar de plan en cualquier momento? <span class="ic">+</span></summary>
+          <p class="ans">Sí. El cambio se aplica de inmediato y se prorratea sobre la facturación del mes en curso.</p>
+        </details>
+        <details class="q">
+          <summary>¿Hay periodo de prueba? <span class="ic">+</span></summary>
+          <p class="ans">14 días gratis en el plan Práctica clínica, sin tarjeta. Los estudiantes con matrícula verificada acceden gratis de forma permanente durante toda su formación.</p>
+        </details>
+        <details class="q">
+          <summary>¿Qué métodos de pago aceptan? <span class="ic">+</span></summary>
+          <p class="ans">Tarjeta de crédito y débito, transferencia SEPA, y facturación corporativa para instituciones (NET-30).</p>
+        </details>
+        <details class="q">
+          <summary>¿Cómo puedo cancelar? <span class="ic">+</span></summary>
+          <p class="ans">Desde la configuración de tu cuenta, en un clic. Mantienes acceso hasta el final del periodo facturado y puedes exportar tu historial completo.</p>
+        </details>
+        <details class="q">
+          <summary>¿Aplican impuestos? <span class="ic">+</span></summary>
+          <p class="ans">Los precios mostrados no incluyen IVA. Se añade según la legislación aplicable a tu país de facturación.</p>
+        </details>
+        <details class="q">
+          <summary>¿Hay descuentos por equipos? <span class="ic">+</span></summary>
+          <p class="ans">Sí — desde 5 licencias se aplica un 10% de descuento. Para más de 25, hablamos contigo en el plan Institución.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────── CTA ─────── -->
+  <section class="cta-strip" id="contact">
+    <div class="container">
+      <span class="eyebrow" style="justify-content:center;">¿Hablamos?</span>
+      <h2 style="margin-top:18px; max-width:18ch; margin-left:auto; margin-right:auto;">
+        ¿Eres una <em>institución</em>? Diseñamos tu plan.
+      </h2>
+      <p class="lede" style="margin-left:auto; margin-right:auto;">
+        Cuéntanos cuántos profesionales tienes y qué HCE usáis. Te responderemos en 48h con una propuesta concreta.
+      </p>
+      <div style="margin-top:28px; display:inline-flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <a class="btn btn-primary" href="mailto:hola@mediq.health">Contactar con ventas →</a>
+        <a class="btn btn-ghost" href="/chat">Probar el chat</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container row">
+      <span>© 2026 MediQ Health Systems S.L.</span>
+      <span><a href="#">Privacidad</a> · <a href="#">Términos</a> · <a href="#">Cumplimiento</a></span>
+      <span>Madrid · CDMX · Bogotá</span>
+    </div>
+  </footer>
+
+  <script is:inline>
+    const bm = document.getElementById('bm');
+    const ba = document.getElementById('ba');
+    const priceEls = document.querySelectorAll('[data-price-monthly]');
+    const periodEl = document.querySelector('[data-period]');
+
+    function setBilling(b) {
+      bm.classList.toggle('on', b === 'm');
+      ba.classList.toggle('on', b === 'a');
+      bm.setAttribute('aria-selected', b === 'm');
+      ba.setAttribute('aria-selected', b === 'a');
+      priceEls.forEach(el => {
+        el.textContent = b === 'm' ? el.dataset.priceMonthly : el.dataset.priceYearly;
+      });
+      if (periodEl) periodEl.textContent = b === 'm' ? '/mes' : '/mes, anual';
+    }
+    bm.addEventListener('click', () => setBilling('m'));
+    ba.addEventListener('click', () => setBilling('a'));
+  </script>
+
+</Layout>

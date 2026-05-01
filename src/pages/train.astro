@@ -1,0 +1,380 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout title="Entrenar IA — MediQ" navActive="/train" includePdfJs={true}>
+
+  <style is:global>
+    .train-hero { padding: clamp(40px, 6vw, 72px) 0 clamp(24px, 3vw, 40px); }
+    .train-hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .train-hero .lede { margin-top: 18px; }
+
+    .train-grid {
+      display: grid; grid-template-columns: 1fr; gap: 24px;
+      padding-bottom: 64px;
+    }
+    @media (min-width: 920px) { .train-grid { grid-template-columns: 1.4fr 1fr; gap: 40px; } }
+
+    .dropzone {
+      background: var(--surface);
+      border: 2px dashed var(--rule-2);
+      border-radius: 14px;
+      padding: clamp(32px, 5vw, 56px);
+      text-align: center; cursor: pointer;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .dropzone:hover, .dropzone.over {
+      border-color: var(--accent);
+      background: color-mix(in oklab, var(--accent) 5%, var(--surface));
+    }
+    .dropzone .ic {
+      width: 56px; height: 56px; margin: 0 auto 18px;
+      background: var(--bg-2); border-radius: 50%;
+      display: grid; place-items: center; color: var(--accent);
+    }
+    .dropzone h3 { font-family: var(--f-display); font-size: 24px; margin-bottom: 6px; }
+    .dropzone p { color: var(--ink-soft); font-size: 14.5px; max-width: 40ch; margin: 0 auto; }
+    .dropzone .formats {
+      margin-top: 18px; font-family: var(--f-mono); font-size: 11px;
+      color: var(--ink-mute); letter-spacing: 0.1em; text-transform: uppercase;
+    }
+
+    .category-picker {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 24px;
+    }
+    @media (min-width: 600px) { .category-picker { grid-template-columns: repeat(4, 1fr); } }
+    .cat-btn {
+      background: var(--surface); border: 1px solid var(--rule-2);
+      border-radius: 10px; padding: 14px 12px;
+      text-align: center; font-size: 13px; color: var(--ink-soft);
+      transition: all .15s ease;
+    }
+    .cat-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+    .cat-btn.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .cat-btn .lbl { font-weight: 500; display: block; }
+    .cat-btn .h { font-family: var(--f-mono); font-size: 10px; opacity: .7; margin-top: 3px; letter-spacing: 0.06em; }
+
+    .file-list { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+    .file-list:empty { display: none; }
+    .file-row {
+      background: var(--surface); border: 1px solid var(--rule-2);
+      border-radius: 10px; padding: 12px 14px;
+      display: grid; grid-template-columns: 32px 1fr auto auto;
+      gap: 12px; align-items: center;
+    }
+    .file-row .ic-file { width: 28px; height: 28px; background: var(--bg-2); border-radius: 8px; display: grid; place-items: center; color: var(--accent); flex-shrink: 0; }
+    .file-row .info { min-width: 0; }
+    .file-row .name { font-size: 14px; font-weight: 500; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-row .meta { font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em; margin-top: 2px; }
+    .file-row .status {
+      font-family: var(--f-mono); font-size: 10.5px;
+      padding: 4px 8px; border-radius: 999px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .file-row .status.processing { background: color-mix(in oklab, var(--warn) 15%, transparent); color: oklch(40% 0.16 40); }
+    .file-row .status.ready { background: color-mix(in oklab, var(--ok) 15%, transparent); color: oklch(35% 0.12 155); }
+    .file-row .status.error { background: color-mix(in oklab, var(--danger) 15%, transparent); color: oklch(38% 0.16 25); }
+    .file-row .x { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-mute); }
+    .file-row .x:hover { background: var(--bg-2); color: var(--ink); }
+
+    .panel {
+      background: var(--surface); border: 1px solid var(--rule-2);
+      border-radius: 14px; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .panel h3 { font-family: var(--f-display); font-size: 22px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+    .stat-row:last-child { border-bottom: 0; }
+    .stat-row .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-mute); text-transform: uppercase; }
+    .stat-row .val { font-family: var(--f-display); font-size: 22px; }
+    .stat-row .val small { font-family: var(--f-body); font-size: 13px; color: var(--ink-mute); margin-left: 4px; }
+
+    .corpus-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .corpus-item {
+      padding: 10px 12px; background: var(--bg); border: 1px solid var(--rule);
+      border-radius: 8px; display: grid; grid-template-columns: 1fr auto auto;
+      gap: 10px; align-items: center; font-size: 13px;
+    }
+    .corpus-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+    .corpus-item .cat { font-family: var(--f-mono); font-size: 10px; padding: 3px 8px; background: var(--bg-2); border-radius: 999px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; }
+    .corpus-item .x { color: var(--ink-mute); cursor: pointer; padding: 4px; border-radius: 4px; }
+    .corpus-item .x:hover { color: var(--danger); background: var(--bg-2); }
+
+    .privacy-note {
+      background: var(--bg-2); border-radius: 10px; padding: 14px 16px;
+      font-size: 13px; color: var(--ink-soft); line-height: 1.5;
+      display: flex; gap: 10px; margin-top: 20px;
+    }
+    .privacy-note svg { flex-shrink: 0; margin-top: 2px; color: var(--accent); }
+    .empty-state { text-align: center; padding: 28px 12px; color: var(--ink-mute); font-size: 13.5px; }
+    .empty-state svg { margin: 0 auto 12px; color: var(--ink-mute); opacity: .5; }
+  </style>
+
+  <header class="train-hero container">
+    <span class="eyebrow">Entrenar IA</span>
+    <h1 style="margin-top:14px;">Alimenta a MediQ con tu <em>conocimiento</em>.</h1>
+    <p class="lede">Sube guías clínicas, protocolos institucionales, papers o casos. La IA los procesa, los indexa y razona sobre ellos en tus consultas futuras. Cuanto más específico el corpus, más útil la respuesta.</p>
+  </header>
+
+  <main class="container train-grid">
+    <section>
+      <div class="dropzone" id="dropzone">
+        <div class="ic">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Arrastra archivos o haz clic para subir</h3>
+        <p>La IA leerá el texto, lo categorizará y lo añadirá a tu corpus de entrenamiento personal.</p>
+        <p class="formats">PDF · TXT · MD · DOCX · Hasta 20 MB por archivo</p>
+        <input type="file" id="file-input" accept=".pdf,.txt,.md,.docx,application/pdf,text/plain" multiple style="display:none;"/>
+      </div>
+
+      <div style="margin-top:28px;">
+        <p style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--ink-mute); text-transform:uppercase; margin-bottom:10px;">Categoría del contenido</p>
+        <div class="category-picker" id="cat-picker">
+          <button class="cat-btn on" data-cat="guideline"><span class="lbl">Guía clínica</span><span class="h">protocolos</span></button>
+          <button class="cat-btn" data-cat="paper"><span class="lbl">Paper</span><span class="h">investigación</span></button>
+          <button class="cat-btn" data-cat="case"><span class="lbl">Caso clínico</span><span class="h">historiales</span></button>
+          <button class="cat-btn" data-cat="reference"><span class="lbl">Referencia</span><span class="h">vademecum, etc.</span></button>
+        </div>
+      </div>
+
+      <div class="file-list" id="file-list"></div>
+
+      <div class="privacy-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span><b>Privacidad:</b> tus archivos se procesan localmente y se almacenan cifrados en tu cuenta. No se usan para entrenar modelos compartidos. Anonimiza datos identificables del paciente antes de subirlos.</span>
+      </div>
+    </section>
+
+    <aside style="display:flex; flex-direction:column; gap:24px;">
+      <div class="panel">
+        <h3>Estado del corpus</h3>
+        <div>
+          <div class="stat-row"><span class="lbl">Documentos</span><span class="val" id="stat-docs">0</span></div>
+          <div class="stat-row"><span class="lbl">Páginas totales</span><span class="val" id="stat-pages">0</span></div>
+          <div class="stat-row"><span class="lbl">Tokens estimados</span><span class="val" id="stat-tokens">0<small>k</small></span></div>
+          <div class="stat-row"><span class="lbl">Categorías activas</span><span class="val" id="stat-cats">0</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Tu corpus</h3>
+        <div class="corpus-list" id="corpus-list">
+          <div class="empty-state">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            <p>Aún no has subido ningún documento.<br/>Empieza arrastrando un archivo arriba.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
+    const STORAGE_KEY = 'mediq.corpus.v1';
+    const CAT_LABELS = { guideline: 'Guía', paper: 'Paper', case: 'Caso', reference: 'Referencia' };
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let corpus = [];
+    let activeCat = 'guideline';
+    let currentUser = null;
+
+    const dropzone   = document.getElementById('dropzone');
+    const fileInput  = document.getElementById('file-input');
+    const fileListEl = document.getElementById('file-list');
+    const corpusList = document.getElementById('corpus-list');
+
+    /* ── Auth guard ── */
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) { location.href = '/login'; return; }
+      currentUser = session.user;
+      loadCorpus();
+    });
+
+    /* ── Supabase sync ── */
+    async function loadCorpus() {
+      const { data, error } = await sb
+        .from('corpus_docs')
+        .select('*')
+        .order('added_at', { ascending: false });
+
+      if (error) {
+        console.error('[train] load error', error);
+        corpus = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      } else {
+        corpus = (data || []).map(r => ({
+          id: r.id,
+          name: r.name,
+          cat: r.cat,
+          pages: r.pages,
+          size: r.size,
+          chars: r.chars,
+          addedAt: new Date(r.added_at).getTime(),
+          snippet: r.snippet,
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(corpus));
+      }
+      renderCorpus();
+    }
+
+    async function saveDocToSupabase(doc) {
+      const { error } = await sb.from('corpus_docs').upsert({
+        id: doc.id,
+        user_id: currentUser.id,
+        name: doc.name,
+        cat: doc.cat,
+        pages: doc.pages,
+        size: doc.size,
+        chars: doc.chars,
+        snippet: doc.snippet,
+      });
+      if (error) console.error('[train] save error', error);
+    }
+
+    async function deleteDocFromSupabase(id) {
+      const { error } = await sb.from('corpus_docs').delete().eq('id', id);
+      if (error) console.error('[train] delete error', error);
+    }
+
+    /* ── Category picker ── */
+    document.querySelectorAll('.cat-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+        activeCat = b.dataset.cat;
+      });
+    });
+
+    /* ── Dropzone ── */
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('over'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('over'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('over');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    /* ── Pending file rows ── */
+    const pendingFiles = [];
+
+    function renderPending() {
+      fileListEl.innerHTML = '';
+      pendingFiles.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'file-row';
+        row.innerHTML = `
+          <div class="ic-file"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" stroke-width="1.4"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.4"/></svg></div>
+          <div class="info">
+            <div class="name">${escapeHtml(f.name)}</div>
+            <div class="meta">${(f.size / 1024).toFixed(0)} KB${f.pages ? ' · ' + f.pages + ' páginas' : ''}</div>
+          </div>
+          <span class="status ${f.status}">${f.status === 'processing' ? 'Procesando' : f.status === 'ready' ? 'Guardado' : 'Error'}</span>
+          <button class="x" data-id="${f.id}" aria-label="Quitar">
+            <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>`;
+        fileListEl.appendChild(row);
+      });
+      fileListEl.querySelectorAll('.x').forEach(b => {
+        b.addEventListener('click', () => {
+          const idx = pendingFiles.findIndex(x => x.id === b.dataset.id);
+          if (idx >= 0) pendingFiles.splice(idx, 1);
+          renderPending();
+        });
+      });
+    }
+
+    /* ── PDF extraction ── */
+    async function extractPdf(file) {
+      for (let i = 0; i < 30 && !window.pdfjsLib; i++) await new Promise(r => setTimeout(r, 150));
+      if (!window.pdfjsLib) throw new Error('PDF reader no disponible');
+      const buf = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      let text = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const c = await page.getTextContent();
+        text += c.items.map(i => i.str).join(' ') + '\n';
+      }
+      return { text: text.trim(), pages: pdf.numPages };
+    }
+
+    /* ── File handling ── */
+    async function handleFiles(files) {
+      for (const file of files) {
+        if (file.size > 20 * 1024 * 1024) { alert('El archivo "' + file.name + '" supera los 20 MB.'); continue; }
+        const id = 'f_' + Math.random().toString(36).slice(2, 9);
+        const entry = { id, name: file.name, size: file.size, status: 'processing', cat: activeCat };
+        pendingFiles.push(entry);
+        renderPending();
+        try {
+          let text = '', pages = 1;
+          if (file.name.toLowerCase().endsWith('.pdf')) {
+            const r = await extractPdf(file); text = r.text; pages = r.pages;
+          } else {
+            text = await file.text();
+            pages = Math.max(1, Math.ceil(text.length / 3000));
+          }
+          entry.pages = pages;
+          const doc = { id, name: file.name, cat: activeCat, pages, size: file.size, chars: text.length, addedAt: Date.now(), snippet: text.slice(0, 8000) };
+          await saveDocToSupabase(doc);
+          corpus.unshift(doc);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(corpus));
+          entry.status = 'ready';
+          renderCorpus(); renderPending();
+        } catch (err) {
+          console.error(err);
+          entry.status = 'error';
+          renderPending();
+        }
+      }
+    }
+
+    /* ── Render corpus list ── */
+    function renderCorpus() {
+      if (corpus.length === 0) {
+        corpusList.innerHTML = `<div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          <p>Aún no has subido ningún documento.<br/>Empieza arrastrando un archivo arriba.</p>
+        </div>`;
+      } else {
+        corpusList.innerHTML = '';
+        corpus.forEach(c => {
+          const row = document.createElement('div');
+          row.className = 'corpus-item';
+          row.innerHTML = `<span class="name">${escapeHtml(c.name)}</span><span class="cat">${CAT_LABELS[c.cat] || c.cat}</span><span class="x" data-id="${c.id}" title="Quitar">×</span>`;
+          corpusList.appendChild(row);
+        });
+        corpusList.querySelectorAll('.x').forEach(x => {
+          x.addEventListener('click', async () => {
+            if (!confirm('¿Quitar este documento del corpus?')) return;
+            await deleteDocFromSupabase(x.dataset.id);
+            corpus = corpus.filter(c => c.id !== x.dataset.id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(corpus));
+            renderCorpus();
+          });
+        });
+      }
+      renderStats();
+    }
+
+    /* ── Stats ── */
+    function renderStats() {
+      document.getElementById('stat-docs').textContent = corpus.length;
+      document.getElementById('stat-pages').textContent = corpus.reduce((a, c) => a + (c.pages || 0), 0);
+      const tokens = Math.round(corpus.reduce((a, c) => a + (c.chars || 0), 0) / 4 / 1000);
+      document.getElementById('stat-tokens').innerHTML = tokens + '<small>k</small>';
+      const cats = new Set(corpus.map(c => c.cat));
+      document.getElementById('stat-cats').textContent = cats.size;
+    }
+  </script>
+
+</Layout>

@@ -1,0 +1,2479 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat clínico — MediQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" type="module"></script>
+  <script type="module">
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
+    window.pdfjsLib = pdfjsLib;
+  </script>
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    /* ─── Layout ─── */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+    }
+
+    @media (max-width: 820px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        display: none;
+      }
+    }
+
+    /* ─── Sidebar ─── */
+    .sidebar {
+      background: var(--bg-2);
+      border-right: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sb-head {
+      padding: 18px 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .new-chat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: transform .2s ease;
+    }
+
+    .new-chat:hover {
+      transform: translateY(-1px);
+    }
+
+    .sb-section {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      padding: 14px 18px 8px;
+    }
+
+    .sb-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sb-item {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 6px;
+      text-align: left;
+      transition: background .15s ease;
+      position: relative;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .sb-item:hover {
+      background: color-mix(in oklab, var(--ink) 5%, transparent);
+    }
+
+    .sb-item.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 0 var(--rule-2);
+    }
+
+    .sb-item .meta {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+
+    .sb-item .title {
+      line-height: 1.35;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .sb-item .title-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sb-item .pin-ic {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .sb-item .info {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .sb-item .more {
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      color: var(--ink-mute);
+      opacity: 0;
+      transition: opacity .15s ease;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .sb-item:hover .more,
+    .sb-item.active .more {
+      opacity: 1;
+    }
+
+    .sb-item .more:hover {
+      background: var(--bg-2);
+      color: var(--ink);
+    }
+
+    .sb-item .rename-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 13.5px;
+      color: var(--ink);
+      font-family: inherit;
+    }
+
+    /* Search */
+    .sb-search {
+      position: relative;
+      margin: 0;
+    }
+
+    .sb-search input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 8px;
+      padding: 9px 12px 9px 34px;
+      font-size: 13px;
+      color: var(--ink);
+      font-family: inherit;
+    }
+
+    .sb-search input::placeholder {
+      color: var(--ink-mute);
+    }
+
+    .sb-search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent);
+    }
+
+    .sb-search .ic-search {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-mute);
+      pointer-events: none;
+    }
+
+    .sb-search .clear-x {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: none;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--ink-mute);
+      background: var(--bg-2);
+      cursor: pointer;
+      border: 0;
+    }
+
+    .sb-search.has-value .clear-x {
+      display: grid;
+    }
+
+    .sb-search .clear-x:hover {
+      color: var(--ink);
+    }
+
+    .sb-search-info {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      padding: 0 18px 8px;
+      letter-spacing: 0.04em;
+    }
+
+    .sb-item .snippet {
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      line-height: 1.45;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .sb-item .snippet mark {
+      background: color-mix(in oklab, var(--accent) 30%, transparent);
+      color: var(--ink);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    /* Context menu (chat actions, user menu) */
+    .ctx-menu {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 10px;
+      box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.18);
+      padding: 6px;
+      min-width: 180px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      font-family: var(--f-body);
+    }
+
+    .ctx-menu button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      color: var(--ink);
+      text-align: left;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .ctx-menu button:hover {
+      background: var(--bg-2);
+    }
+
+    .ctx-menu button.danger {
+      color: var(--danger);
+    }
+
+    .ctx-menu button.danger:hover {
+      background: color-mix(in oklab, var(--danger) 10%, var(--bg-2));
+    }
+
+    .ctx-menu .sep {
+      height: 1px;
+      background: var(--rule);
+      margin: 4px 0;
+    }
+
+    .ctx-menu svg {
+      flex-shrink: 0;
+      opacity: .8;
+    }
+
+    .ctx-menu .ctx-head {
+      padding: 10px 12px 8px;
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: 4px;
+    }
+
+    .ctx-menu .ctx-head b {
+      display: block;
+      font-family: var(--f-body);
+      font-size: 13px;
+      color: var(--ink);
+      margin-top: 2px;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 500;
+    }
+
+    /* User menu trigger in nav */
+    .user-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 6px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--ink);
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    .user-trigger:hover {
+      background: var(--bg-2);
+      border-color: var(--rule-2);
+    }
+
+    .user-trigger .ava-nav {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, oklch(75% 0.1 195), oklch(58% 0.13 25));
+      display: grid;
+      place-items: center;
+      color: var(--bg);
+      font-family: var(--f-display);
+      font-size: 13px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: oklch(0% 0 0 / 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 460px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal header {
+      padding: 22px 24px 6px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .modal h2 {
+      font-family: var(--f-display);
+      font-size: 22px;
+      font-weight: 400;
+    }
+
+    .modal .sub {
+      font-size: 13px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+    }
+
+    .modal .x {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--ink-mute);
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .modal .x:hover {
+      background: var(--bg-2);
+      color: var(--ink);
+    }
+
+    .modal .body {
+      padding: 20px 24px;
+    }
+
+    .modal .row-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .modal label {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--ink);
+      font-family: inherit;
+    }
+
+    .modal input:focus,
+    .modal select:focus,
+    .modal textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent);
+    }
+
+    .modal footer {
+      padding: 14px 24px 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      border-top: 1px solid var(--rule);
+      background: var(--bg-2);
+    }
+
+    .modal .ava-big {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, oklch(75% 0.1 195), oklch(58% 0.13 25));
+      display: grid;
+      place-items: center;
+      color: var(--bg);
+      font-family: var(--f-display);
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .toggle:last-child {
+      border-bottom: 0;
+    }
+
+    .toggle .label-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 70%;
+    }
+
+    .toggle .label-stack .t {
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .toggle .label-stack .d {
+      font-size: 12px;
+      color: var(--ink-mute);
+      line-height: 1.4;
+    }
+
+    .toggle .switch {
+      width: 36px;
+      height: 20px;
+      background: var(--rule-2);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s ease;
+      flex-shrink: 0;
+      border: 0;
+    }
+
+    .toggle .switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--bg);
+      border-radius: 50%;
+      transition: transform .2s ease;
+    }
+
+    .toggle .switch.on {
+      background: var(--accent);
+    }
+
+    .toggle .switch.on::after {
+      transform: translateX(16px);
+    }
+
+    .sb-foot {
+      border-top: 1px solid var(--rule);
+      padding: 14px 18px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-mute);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .sb-foot .who {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-soft);
+    }
+
+    .ava-mini {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, oklch(75% 0.1 195), oklch(58% 0.13 25));
+      display: grid;
+      place-items: center;
+      color: var(--bg);
+      font-family: var(--f-display);
+      font-size: 12px;
+    }
+
+    .sb-foot button {
+      color: var(--ink-mute);
+      font-family: var(--f-mono);
+      font-size: 11px;
+    }
+
+    .sb-foot button:hover {
+      color: var(--ink);
+    }
+
+    /* ─── Chat pane ─── */
+    .chat {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .chat-head {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: color-mix(in oklab, var(--bg) 85%, transparent);
+      backdrop-filter: blur(8px);
+    }
+
+    .chat-head h2 {
+      font-family: var(--f-display);
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .chat-head .sub {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chat-head .pulse {
+      width: 6px;
+      height: 6px;
+      background: var(--ok);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 oklch(60% 0.12 155 / 0.5);
+      animation: cpulse 2s infinite;
+    }
+
+    @keyframes cpulse {
+      0% {
+        box-shadow: 0 0 0 0 oklch(60% 0.12 155 / 0.5);
+      }
+
+      70% {
+        box-shadow: 0 0 0 8px transparent;
+      }
+    }
+
+    .specialty {
+      background: var(--bg-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 999px;
+      padding: 6px 10px 6px 12px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .specialty:hover {
+      background: var(--surface);
+    }
+
+    /* ─── Messages ─── */
+    .messages {
+      overflow-y: auto;
+      padding: 32px 24px 24px;
+      scroll-behavior: smooth;
+    }
+
+    .msgs-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .msg {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .msg .av {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: var(--f-display);
+      font-size: 14px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .msg.user .av {
+      background: var(--bg-2);
+      color: var(--ink);
+      border: 1px solid var(--rule-2);
+    }
+
+    .msg.ai .av {
+      background: var(--ink);
+      color: var(--bg);
+      position: relative;
+    }
+
+    .msg.ai .av::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .msg .body {
+      padding-top: 4px;
+    }
+
+    .msg .role-line {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .msg .content {
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .msg.user .content {
+      color: var(--ink);
+    }
+
+    .msg.ai .content {
+      color: var(--ink-soft);
+    }
+
+    .msg.ai .content b,
+    .msg.ai .content strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .msg.ai .content em {
+      font-style: italic;
+    }
+
+    .msg.ai .content code {
+      font-family: var(--f-mono);
+      font-size: 13px;
+      background: var(--bg-2);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .msg.ai .content ul,
+    .msg.ai .content ol {
+      margin: 8px 0;
+      padding-left: 22px;
+    }
+
+    .msg.ai .content li {
+      margin: 4px 0;
+    }
+
+    .msg.ai .content h3 {
+      font-size: 16px;
+      margin: 12px 0 4px;
+      font-weight: 600;
+      font-family: var(--f-body);
+      color: var(--ink);
+    }
+
+    /* typing dots */
+    .typing {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .typing i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ink-mute);
+      animation: blink 1.2s infinite;
+    }
+
+    .typing i:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .typing i:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes blink {
+
+      0%,
+      80%,
+      100% {
+        opacity: .3;
+      }
+
+      40% {
+        opacity: 1;
+      }
+    }
+
+    /* ─── Welcome state ─── */
+    .welcome {
+      max-width: 760px;
+      margin: 40px auto 0;
+      padding: 0 4px;
+    }
+
+    .welcome h1 {
+      font-size: clamp(32px, 4vw, 44px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+
+    .welcome h1 em {
+      font-style: italic;
+      font-weight: 300;
+      color: var(--accent);
+    }
+
+    .welcome .sub {
+      color: var(--ink-soft);
+      font-size: 16px;
+      max-width: 56ch;
+    }
+
+    .suggestions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    @media (max-width: 640px) {
+      .suggestions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .suggestion {
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 12px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+    .suggestion:hover {
+      border-color: var(--ink-soft);
+      transform: translateY(-1px);
+    }
+
+    .suggestion .cat {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .suggestion .text {
+      font-size: 14.5px;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    /* ─── Composer ─── */
+    .composer-wrap {
+      border-top: 1px solid var(--rule);
+      padding: 16px 24px 22px;
+      background: color-mix(in oklab, var(--bg) 85%, transparent);
+      backdrop-filter: blur(8px);
+    }
+
+    .composer {
+      max-width: 760px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 16px;
+      padding: 6px 6px 6px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 8px;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .composer:focus-within {
+      border-color: var(--ink-soft);
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent);
+    }
+
+    .composer textarea {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      resize: none;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--ink);
+      padding: 10px 0;
+      max-height: 200px;
+      min-height: 44px;
+    }
+
+    .composer textarea::placeholder {
+      color: var(--ink-mute);
+    }
+
+    /* attach button */
+    .attach-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: var(--ink-soft);
+      display: grid;
+      place-items: center;
+      align-self: end;
+      margin-bottom: 6px;
+      transition: background .15s ease, color .15s ease;
+      flex-shrink: 0;
+    }
+
+    .attach-btn:hover {
+      background: var(--bg-2);
+      color: var(--ink);
+    }
+
+    .attach-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* attachments tray (above textarea, inside composer) */
+    .attachments {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 4px 4px;
+    }
+
+    .attachments:empty {
+      display: none;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 8px;
+      padding: 6px 8px 6px 10px;
+      font-size: 12.5px;
+      color: var(--ink);
+      max-width: 280px;
+    }
+
+    .chip .ic-file {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .chip .name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chip .meta {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+
+    .chip .x {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      color: var(--ink-mute);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .chip .x:hover {
+      background: color-mix(in oklab, var(--ink) 10%, transparent);
+      color: var(--ink);
+    }
+
+    .chip.processing {
+      color: var(--ink-mute);
+    }
+
+    .chip.processing .name::after {
+      content: " · extrayendo…";
+      color: var(--accent);
+    }
+
+    .chip.error {
+      background: color-mix(in oklab, var(--danger) 10%, transparent);
+      border-color: color-mix(in oklab, var(--danger) 25%, transparent);
+      color: oklch(38% 0.16 25);
+    }
+
+    /* attachment chip inside a chat message */
+    .msg-attach {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--ink);
+      margin-bottom: 8px;
+      margin-right: 6px;
+    }
+
+    .msg-attach .ic-file {
+      width: 14px;
+      height: 14px;
+      color: var(--accent);
+    }
+
+    .msg-attach .meta {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+
+    /* drop overlay */
+    .drop-overlay {
+      position: fixed;
+      inset: 0;
+      background: color-mix(in oklab, var(--ink) 70%, transparent);
+      display: none;
+      place-items: center;
+      z-index: 200;
+      pointer-events: none;
+      backdrop-filter: blur(6px);
+    }
+
+    .drop-overlay.on {
+      display: grid;
+    }
+
+    .drop-overlay .card {
+      background: var(--surface);
+      border: 2px dashed var(--accent);
+      border-radius: 16px;
+      padding: 36px 48px;
+      text-align: center;
+      color: var(--ink);
+    }
+
+    .drop-overlay .card h3 {
+      font-family: var(--f-display);
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .drop-overlay .card p {
+      font-family: var(--f-mono);
+      font-size: 12px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+    }
+
+    .send {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--bg);
+      display: grid;
+      place-items: center;
+      transition: transform .15s ease, opacity .15s ease;
+      align-self: end;
+      margin-bottom: 4px;
+    }
+
+    .send:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
+
+    .send:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .send svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .composer-hint {
+      max-width: 760px;
+      margin: 8px auto 0;
+      text-align: center;
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+
+    .composer-hint kbd {
+      background: var(--bg-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: var(--f-mono);
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+
+    /* Disclaimer banner */
+    .disclaimer {
+      background: color-mix(in oklab, var(--warn) 10%, transparent);
+      border: 1px solid color-mix(in oklab, var(--warn) 22%, transparent);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: oklch(38% 0.16 40);
+      line-height: 1.45;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .disclaimer svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: oklch(50% 0.18 40);
+    }
+
+    /* Specialty menu */
+    .menu {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 10px;
+      box-shadow: 0 12px 32px -16px #0000003d;
+      padding: 6px;
+      z-index: 100;
+      display: none;
+      min-width: 200px;
+    }
+
+    .menu.open {
+      display: block;
+    }
+
+    .menu button {
+      display: flex;
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+
+    .menu button:hover {
+      background: var(--bg-2);
+      color: var(--ink);
+    }
+
+    .menu button.on {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .menu button.on::after {
+      content: "✓";
+      margin-left: auto;
+      color: var(--accent);
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="top">
+    <div class="container row">
+      <a class="brand" href="index.html">
+        <span class="brand-mark"></span><span>MediQ</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html" data-i18n="nav_inicio">Inicio</a>
+        <a href="pricing.html" data-i18n="nav_precios">Precios</a>
+        <a href="index.html#features" data-i18n="nav_caracteristicas">Características</a>
+        <a href="index.html#how" data-i18n="nav_como">Cómo funciona</a>
+        <a href="chat.html" class="active" data-i18n="nav_chat">Chat</a>
+        <a href="index.html#faq">FAQ</a>
+        <a href="train.html" data-i18n="nav_entrenar">Entrenar IA</a>
+      </div>
+      <a class="btn btn-ghost user-trigger" href="#" id="account-btn" style="display:none;">
+        <span class="ava-nav" id="ava-nav">M</span>
+        <span id="account-label">Mi cuenta</span>
+        <svg width="10" height="10" viewBox="0 0 12 12">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" />
+        </svg>
+      </a>
+      <a class="btn btn-ghost" href="login.html" id="login-link" data-i18n="nav_mi_cuenta">Mi cuenta</a>
+    </div>
+  </nav>
+
+  <div class="app">
+
+    <!-- ─── Sidebar ─── -->
+    <aside class="sidebar">
+      <div class="sb-head">
+        <button class="new-chat" id="new-chat">
+          <span data-i18n="nueva_consulta">Nueva consulta</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <div class="sb-search" id="sb-search-wrap">
+          <svg class="ic-search" width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6" />
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <input type="search" id="sb-search" data-i18n-ph="buscar_ph" placeholder="Buscar en tus chats…"
+            autocomplete="off" />
+          <button type="button" class="clear-x" id="sb-clear" aria-label="Limpiar"><svg width="10" height="10"
+              viewBox="0 0 12 12">
+              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg></button>
+        </div>
+      </div>
+      <div class="sb-search-info" id="sb-search-info" style="display:none;"></div>
+      <div class="sb-section" id="sb-section" data-i18n="conv_recientes">Conversaciones recientes</div>
+      <div class="sb-list" id="sb-list">
+        <!-- chats injected here -->
+      </div>
+      <div class="sb-foot">
+        <div class="who">
+          <div class="ava-mini" id="ava-mini">M</div>
+          <span id="who-label">Invitado</span>
+        </div>
+        <button id="logout-btn" hidden>Salir</button>
+      </div>
+    </aside>
+
+    <!-- ─── Chat ─── -->
+    <section class="chat">
+
+      <header class="chat-head">
+        <div>
+          <h2 id="chat-title">Nueva consulta</h2>
+          <div class="sub"><span class="pulse"></span><span>IA conectada · responde en lenguaje natural</span><span id="corpus-badge" style="display:none; margin-left:10px; font-family:var(--f-mono); font-size:10px; letter-spacing:0.06em; background:color-mix(in oklab,var(--accent) 15%,transparent); color:var(--accent); padding:2px 8px; border-radius:999px;"></span></div>
+        </div>
+        <div style="position:relative;">
+          <button class="specialty" id="specialty-btn">
+            <span id="specialty-label">General</span>
+            <svg width="10" height="10" viewBox="0 0 12 12">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div class="menu" id="specialty-menu" style="right:0; top: calc(100% + 6px);">
+            <button data-sp="General" class="on">General</button>
+            <button data-sp="Cardiología">Cardiología</button>
+            <button data-sp="Neurología">Neurología</button>
+            <button data-sp="Pediatría">Pediatría</button>
+            <button data-sp="Urgencias">Urgencias</button>
+            <button data-sp="Medicina interna">Medicina interna</button>
+            <button data-sp="Ginecología">Ginecología</button>
+            <button data-sp="Modo estudiante">Modo estudiante</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="messages" id="messages">
+        <div class="msgs-inner" id="msgs-inner">
+          <!-- Welcome state -->
+          <div id="welcome" class="welcome">
+            <span class="eyebrow">Asistente clínico</span>
+            <h1 style="margin-top:14px;">Hola. ¿En qué te <em>ayudo</em> hoy?</h1>
+            <p class="sub">Describe el caso en lenguaje natural — síntomas, antecedentes, laboratorios — y te devolveré
+              un análisis fundamentado en evidencia.</p>
+
+            <div class="disclaimer" style="margin-top:24px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span>Este asistente es una <b>herramienta de apoyo</b>. Las decisiones clínicas siguen siendo del
+                profesional sanitario. No introduzcas datos identificables del paciente.</span>
+            </div>
+
+            <div class="suggestions">
+              <button class="suggestion"
+                data-prompt="Varón de 58 años con dolor torácico opresivo de 40 minutos que irradia a brazo izquierdo. ECG muestra supradesnivel ST en DII, DIII y aVF. ¿Diagnóstico diferencial y manejo prioritario?">
+                <div class="cat">Caso clínico</div>
+                <div class="text">Dolor torácico opresivo + supradesnivel ST inferior en varón 58a</div>
+              </button>
+              <button class="suggestion"
+                data-prompt="Paciente de 72 años con fibrilación auricular toma warfarina. Necesita iniciar amoxicilina-clavulánico por neumonía. ¿Qué interacciones debo vigilar y cómo ajusto?">
+                <div class="cat">Interacciones</div>
+                <div class="text">Warfarina + amoxi-clavulánico en paciente FA</div>
+              </button>
+              <button class="suggestion"
+                data-prompt="Explícame el score CHA2DS2-VASc paso a paso, qué evalúa, cómo se calcula y cuándo está indicado anticoagular.">
+                <div class="cat">Modo estudiante</div>
+                <div class="text">CHA₂DS₂-VASc explicado paso a paso</div>
+              </button>
+              <button class="suggestion"
+                data-prompt="Mujer de 28 años, embarazo de 16 semanas, con cefalea persistente y TA 150/95. ¿Cómo enfocar el diagnóstico diferencial?">
+                <div class="cat">Caso clínico</div>
+                <div class="text">Cefalea + HTA en embarazo de 16 semanas</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages will be appended here -->
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <form class="composer" id="composer" style="grid-template-columns: auto 1fr auto;">
+          <button type="button" class="attach-btn" id="attach-btn" aria-label="Adjuntar PDF" title="Adjuntar PDF">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+                stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <input type="file" id="file-input" accept="application/pdf,.pdf" multiple style="display:none;" />
+          <textarea id="input" rows="1"
+            placeholder="Describe el caso o pregunta…  (p. ej.: 'Diferencial de disnea aguda en paciente con EPOC')"
+            autocomplete="off" autofocus></textarea>
+          <button class="send" type="submit" id="send" disabled aria-label="Enviar">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div class="attachments" id="attachments"></div>
+        </form>
+        <p class="composer-hint">
+          <kbd>Enter</kbd> para enviar · Adjunta PDFs con <kbd>📎</kbd> o arrastrándolos · La IA puede equivocarse —
+          verifica siempre.
+        </p>
+      </div>
+
+      <div class="drop-overlay" id="drop-overlay">
+        <div class="card">
+          <h3>Suelta el PDF aquí</h3>
+          <p>Lo leeré y razonaré sobre él</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <!-- ─── Modales: Perfil y Configuración ─── -->
+  <div class="modal-backdrop" id="modal-profile">
+    <div class="modal" role="dialog" aria-labelledby="profile-title">
+      <header>
+        <div>
+          <h2 id="profile-title">Perfil</h2>
+          <p class="sub">Tus datos profesionales. Solo se almacenan en tu cuenta cifrada.</p>
+        </div>
+        <button class="x" data-close="modal-profile" aria-label="Cerrar"><svg width="14" height="14"
+            viewBox="0 0 12 12">
+            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg></button>
+      </header>
+      <div class="body">
+        <div style="display:flex; flex-direction:column; align-items:center; padding-bottom: 8px;">
+          <div class="ava-big" id="profile-ava">M</div>
+          <div
+            style="font-family:var(--f-mono); font-size:11px; color:var(--ink-mute); letter-spacing:0.06em; text-transform:uppercase;"
+            id="profile-email-display"></div>
+        </div>
+        <div class="row-field">
+          <label for="profile-name">Nombre completo</label>
+          <input type="text" id="profile-name" placeholder="Dr. Juan Pérez" />
+        </div>
+        <div class="row-field">
+          <label for="profile-role">Rol</label>
+          <select id="profile-role">
+            <option value="medico">Médico</option>
+            <option value="estudiante">Estudiante de medicina</option>
+            <option value="enfermeria">Enfermería</option>
+            <option value="residente">Residente / MIR</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="row-field">
+          <label for="profile-specialty">Especialidad</label>
+          <input type="text" id="profile-specialty" placeholder="Cardiología, Medicina interna…" />
+        </div>
+        <div class="row-field">
+          <label for="profile-institution">Institución / centro</label>
+          <input type="text" id="profile-institution" placeholder="Hospital, universidad…" />
+        </div>
+      </div>
+      <footer>
+        <button class="btn btn-ghost" data-close="modal-profile">Cancelar</button>
+        <button class="btn btn-primary" id="profile-save">Guardar cambios</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-settings">
+    <div class="modal" role="dialog" aria-labelledby="settings-title">
+      <header>
+        <div>
+          <h2 id="settings-title">Configuración</h2>
+          <p class="sub">Preferencias de la sesión y de la IA.</p>
+        </div>
+        <button class="x" data-close="modal-settings" aria-label="Cerrar"><svg width="14" height="14"
+            viewBox="0 0 12 12">
+            <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+          </svg></button>
+      </header>
+      <div class="body">
+        <div class="row-field">
+          <label for="set-language">Idioma de la interfaz</label>
+          <select id="set-language">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+            <option value="pt">Português</option>
+            <option value="fr">Français</option>
+            <option value="de">Deutsch</option>
+          </select>
+        </div>
+
+        <div class="row-field">
+          <label for="set-default-specialty">Especialidad por defecto</label>
+          <select id="set-default-specialty">
+            <option>General</option>
+            <option>Cardiología</option>
+            <option>Neurología</option>
+            <option>Pediatría</option>
+            <option>Urgencias</option>
+            <option>Medicina interna</option>
+            <option>Ginecología</option>
+            <option>Modo estudiante</option>
+          </select>
+        </div>
+
+        <div class="toggle">
+          <div class="label-stack">
+            <span class="t">Mostrar advertencia clínica</span>
+            <span class="d">Recordatorio al final de cada respuesta de que la decisión final es del profesional.</span>
+          </div>
+          <button class="switch on" data-setting="disclaimer" aria-pressed="true"></button>
+        </div>
+        <div class="toggle">
+          <div class="label-stack">
+            <span class="t">Citar guías y evidencia</span>
+            <span class="d">La IA referencia guías ESC, AHA, NICE, NEJM cuando sea posible.</span>
+          </div>
+          <button class="switch on" data-setting="cite" aria-pressed="true"></button>
+        </div>
+        <div class="toggle">
+          <div class="label-stack">
+            <span class="t">Modo conciso</span>
+            <span class="d">Respuestas más breves, sin perder rigor.</span>
+          </div>
+          <button class="switch" data-setting="concise" aria-pressed="false"></button>
+        </div>
+        <div class="toggle">
+          <div class="label-stack">
+            <span class="t">Recordar último chat al abrir</span>
+            <span class="d">Reabre la última conversación al volver a Chat.</span>
+          </div>
+          <button class="switch on" data-setting="resumeLast" aria-pressed="true"></button>
+        </div>
+
+        <div
+          style="margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule); display:flex; gap:10px; flex-wrap: wrap;">
+          <button class="btn btn-ghost" id="export-chats">Exportar mis chats (JSON)</button>
+          <button class="btn btn-ghost" id="clear-chats" style="color: var(--danger);">Borrar todos los chats</button>
+        </div>
+      </div>
+      <footer>
+        <button class="btn btn-ghost" data-close="modal-settings">Cerrar</button>
+        <button class="btn btn-primary" id="settings-save">Guardar preferencias</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ─── Floating context menu (chat actions, user menu) ─── -->
+  <div class="ctx-menu" id="ctx-menu" style="display:none;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.claude = {
+      async complete({ system, messages }) {
+        const res = await fetch('https://ivpyhvibbopqlhuekchj.supabase.co/functions/v1/claude-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system, messages }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.text || 'Error al conectar con la IA');
+        return data.text;
+      }
+    };
+  </script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════
+       STATE
+       ═══════════════════════════════════════════════════════════ */
+    const STORAGE_KEY = 'mediq.chats.v1';
+    const SESSION_KEY = 'mediq.session';
+    const PROFILE_KEY = 'mediq.profile.v1';
+    const SETTINGS_KEY = 'mediq.settings.v1';
+
+    let chats = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let activeId = null;
+    let specialty = 'General';
+    let sending = false;
+    let searchQuery = '';
+
+    /* migrate: ensure each chat has a pinned flag */
+    chats.forEach(c => { if (typeof c.pinned !== 'boolean') c.pinned = false; });
+
+    /* profile + settings */
+    let profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+    let settings = Object.assign({
+      defaultSpecialty: 'General',
+      disclaimer: true, cite: true, concise: false, resumeLast: true
+    }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
+
+    if (settings.defaultSpecialty) specialty = settings.defaultSpecialty;
+
+    /* session header — Supabase */
+    const sb = window.supabase.createClient(
+      'https://ivpyhvibbopqlhuekchj.supabase.co',
+      'sb_publishable_fLSiqBMoY9J5ssJMpCwJtw_i3VzXJjW'
+    );
+
+    let sbUser = null;
+
+    const accountBtn = document.getElementById('account-btn');
+    const accountLabel = document.getElementById('account-label');
+    const loginLink = document.getElementById('login-link');
+    const avaNav = document.getElementById('ava-nav');
+    const whoLabel = document.getElementById('who-label');
+    const avaMini = document.getElementById('ava-mini');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    function displayName() {
+      if (profile.name) return profile.name;
+      if (sbUser?.user_metadata?.name) return sbUser.user_metadata.name;
+      if (sbUser?.email) return sbUser.email.split('@')[0];
+      return 'Invitado';
+    }
+    function avaInitial() { return displayName()[0].toUpperCase(); }
+
+    function initSessionUI(user) {
+      sbUser = user;
+      if (!user) return;
+      accountBtn.style.display = '';
+      loginLink.style.display = 'none';
+      whoLabel.textContent = displayName();
+      avaMini.textContent = avaInitial();
+      avaNav.textContent = avaInitial();
+      accountLabel.textContent = displayName().split(' ')[0];
+      logoutBtn.hidden = false;
+      logoutBtn.addEventListener('click', async () => {
+        await sb.auth.signOut();
+        location.href = 'login.html';
+      });
+      accountBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openUserMenu(accountBtn);
+      });
+    }
+
+    sb.auth.getSession().then(({ data: { session } }) => initSessionUI(session?.user ?? null));
+
+    /* ═══════════════════════════════════════════════════════════
+       PROMPT
+       ═══════════════════════════════════════════════════════════ */
+    function systemPrompt() {
+      const corpus = JSON.parse(localStorage.getItem('mediq.corpus.v1') || '[]');
+      const catMeta = {
+        guideline: {
+          label: 'GUÍA CLÍNICA / PROTOCOLO',
+          instruction: 'Trátalo como protocolo oficial. Sigue sus recomendaciones con prioridad sobre tu conocimiento general. Cita el grado de recomendación si aparece en el texto.'
+        },
+        paper:    {
+          label: 'ARTÍCULO CIENTÍFICO / PAPER',
+          instruction: 'Úsalo como evidencia científica. Evalúa su relevancia para la consulta y cita los hallazgos clave con el nombre del documento.'
+        },
+        case:     {
+          label: 'CASO CLÍNICO DE REFERENCIA',
+          instruction: 'Úsalo como caso análogo para razonamiento comparativo. Si el caso actual se parece, señala similitudes y diferencias relevantes.'
+        },
+        reference: {
+          label: 'MATERIAL DE REFERENCIA',
+          instruction: 'Úsalo como fuente de consulta general. Extrae la información pertinente para la pregunta actual.'
+        },
+      };
+
+      let corpusSection = '';
+      if (corpus.length > 0) {
+        const docs = corpus.map(d => {
+          const meta = catMeta[d.cat] || { label: d.cat.toUpperCase(), instruction: 'Úsalo como referencia cuando sea relevante.' };
+          return `===== ${meta.label}: ${d.name} =====\nINSTRUCCIÓN DE USO: ${meta.instruction}\n\n${d.snippet}\n===== FIN =====`;
+        }).join('\n\n');
+        corpusSection = `
+
+BASE DE CONOCIMIENTO PERSONALIZADA (${corpus.length} documento${corpus.length > 1 ? 's' : ''} subidos por el equipo):
+Estos documentos son tu referencia prioritaria. Cuando sean relevantes para la consulta, úsalos antes que tu conocimiento general y cita el nombre del documento. Cada documento incluye una instrucción específica de cómo usarlo.
+
+${docs}
+
+---`;
+      }
+
+      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${corpusSection}
+
+INSTRUCCIONES:
+- Responde SIEMPRE en español, en lenguaje natural y profesional médico.
+- Usa lenguaje claro, estructurado con encabezados (##) y listas cuando ayude a la legibilidad.
+- Cuando se trate de un caso clínico, organiza tu respuesta así:
+  ## Resumen del caso
+  ## Diagnóstico diferencial (ordenado por probabilidad)
+  ## Acciones prioritarias
+  ## Banderas rojas a vigilar
+- Cita evidencia (guías ESC, AHA, NICE, NEJM, UpToDate) cuando sea relevante. Indica el grado/clase de recomendación si la conoces.
+- Si la consulta es de farmacología, incluye dosis estándar y ajuste por función renal/hepática y embarazo cuando aplique.
+- Si la pregunta es educativa (modo estudiante), explica paso a paso con razonamiento fisiopatológico.
+- AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"
+- Si te preguntan algo no clínico, redirige amablemente al uso clínico.
+- Cuando el usuario adjunte documentos PDF (verás bloques delimitados por "===== DOCUMENTO ADJUNTO ====="), léelos cuidadosamente, identifica si son historias clínicas, analíticas, informes, papers, guías o protocolos, y razona sobre su contenido. Cita textualmente fragmentos relevantes entre comillas cuando aporten valor. Indica si falta información para una conclusión sólida.
+- Sé conciso pero completo. No inventes referencias. Si no sabes algo, dilo.`;
+    }
+
+    function corpusCount() {
+      return JSON.parse(localStorage.getItem('mediq.corpus.v1') || '[]').length;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       RENDERING
+       ═══════════════════════════════════════════════════════════ */
+    const sbList = document.getElementById('sb-list');
+    const msgsInner = document.getElementById('msgs-inner');
+    const welcomeEl = document.getElementById('welcome');
+    const messagesEl = document.getElementById('messages');
+    const titleEl = document.getElementById('chat-title');
+
+    function saveChats() { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); }
+
+    function renderSidebar() {
+      sbList.innerHTML = '';
+      const sectionEl = document.getElementById('sb-section');
+      const infoEl = document.getElementById('sb-search-info');
+
+      if (chats.length === 0) {
+        sectionEl.style.display = '';
+        sectionEl.textContent = 'Conversaciones recientes';
+        infoEl.style.display = 'none';
+        sbList.innerHTML = '<div style="padding:12px 14px; font-size:12.5px; color:var(--ink-mute); line-height:1.5;">Aún no hay conversaciones. Inicia una nueva consulta arriba.</div>';
+        return;
+      }
+
+      const q = searchQuery.trim().toLowerCase();
+      let list = chats.slice();
+
+      // search across title + messages
+      if (q) {
+        list = list.map(c => {
+          const titleMatch = (c.title || '').toLowerCase().includes(q);
+          let snippet = null;
+          if (!titleMatch) {
+            for (const m of (c.messages || [])) {
+              const idx = (m.text || '').toLowerCase().indexOf(q);
+              if (idx >= 0) {
+                const start = Math.max(0, idx - 30);
+                const end = Math.min(m.text.length, idx + q.length + 60);
+                snippet = (start > 0 ? '…' : '') + m.text.slice(start, end) + (end < m.text.length ? '…' : '');
+                break;
+              }
+            }
+          }
+          return (titleMatch || snippet) ? { c, snippet } : null;
+        }).filter(Boolean);
+
+        sectionEl.style.display = 'none';
+        infoEl.style.display = '';
+        infoEl.textContent = list.length
+          ? `${list.length} resultado${list.length === 1 ? '' : 's'} para "${q}"`
+          : `Sin resultados para "${q}"`;
+
+        if (list.length === 0) {
+          sbList.innerHTML = '<div style="padding:12px 14px; font-size:12.5px; color:var(--ink-mute); line-height:1.5;">Prueba con otras palabras.</div>';
+          return;
+        }
+
+        list.forEach(({ c, snippet }) => sbList.appendChild(buildChatRow(c, snippet, q)));
+        return;
+      }
+
+      // no search: split pinned / recent
+      const pinned = list.filter(c => c.pinned).sort((a, b) => b.updatedAt - a.updatedAt);
+      const recent = list.filter(c => !c.pinned).sort((a, b) => b.updatedAt - a.updatedAt);
+      infoEl.style.display = 'none';
+
+      if (pinned.length) {
+        const pinHead = document.createElement('div');
+        pinHead.className = 'sb-section';
+        pinHead.style.padding = '0 10px 6px';
+        pinHead.textContent = 'Fijadas';
+        sbList.appendChild(pinHead);
+        pinned.forEach(c => sbList.appendChild(buildChatRow(c)));
+        const recHead = document.createElement('div');
+        recHead.className = 'sb-section';
+        recHead.style.padding = '14px 10px 6px';
+        recHead.textContent = 'Recientes';
+        sbList.appendChild(recHead);
+        sectionEl.style.display = 'none';
+      } else {
+        sectionEl.style.display = '';
+        sectionEl.textContent = 'Conversaciones recientes';
+      }
+      recent.forEach(c => sbList.appendChild(buildChatRow(c)));
+    }
+
+    function buildChatRow(c, snippet, query) {
+      const row = document.createElement('div');
+      row.className = 'sb-item' + (c.id === activeId ? ' active' : '');
+      row.dataset.id = c.id;
+
+      const date = new Date(c.updatedAt);
+      const today = new Date();
+      const dStr = (date.toDateString() === today.toDateString())
+        ? 'Hoy · ' + date.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+        : date.toLocaleDateString('es', { day: '2-digit', month: 'short' });
+
+      const pinIcon = c.pinned
+        ? '<svg class="pin-ic" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-4 1-3 5-5-5 5-3 1-4z M2 22l7-7" stroke="currentColor" stroke-width="1.4" fill="currentColor" stroke-linejoin="round"/></svg>'
+        : '';
+
+      let snippetHtml = '';
+      if (snippet && query) {
+        const safe = escapeHtml(snippet);
+        const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+        snippetHtml = `<div class="snippet">${safe.replace(re, '<mark>$1</mark>')}</div>`;
+      }
+
+      row.innerHTML = `
+    <div class="info">
+      <div class="title">${pinIcon}<span class="title-text">${escapeHtml(c.title || 'Conversación')}</span></div>
+      <div class="meta">${dStr} · ${escapeHtml(c.specialty || 'General')}</div>
+      ${snippetHtml}
+    </div>
+    <button class="more" aria-label="Acciones" data-id="${c.id}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    </button>
+  `;
+
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.more')) return;
+        if (row.querySelector('.rename-input')) return;
+        openChat(c.id);
+      });
+      row.querySelector('.more').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openChatMenu(e.currentTarget, c);
+      });
+
+      return row;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CONTEXT MENUS
+       ═══════════════════════════════════════════════════════════ */
+    const ctxMenu = document.getElementById('ctx-menu');
+
+    function placeMenu(anchor, align = 'right') {
+      const r = anchor.getBoundingClientRect();
+      ctxMenu.style.display = 'flex';
+      // position after measure
+      requestAnimationFrame(() => {
+        const mw = ctxMenu.offsetWidth;
+        const mh = ctxMenu.offsetHeight;
+        let left = align === 'right' ? r.right - mw : r.left;
+        let top = r.bottom + 6;
+        if (top + mh > window.innerHeight - 10) top = r.top - mh - 6;
+        if (left < 10) left = 10;
+        if (left + mw > window.innerWidth - 10) left = window.innerWidth - mw - 10;
+        ctxMenu.style.left = left + 'px';
+        ctxMenu.style.top = top + 'px';
+      });
+    }
+
+    function closeCtxMenu() { ctxMenu.style.display = 'none'; ctxMenu.innerHTML = ''; }
+
+    document.addEventListener('click', (e) => {
+      if (ctxMenu.style.display !== 'none' && !ctxMenu.contains(e.target)) {
+        closeCtxMenu();
+      }
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCtxMenu(); });
+
+    function openChatMenu(anchor, c) {
+      ctxMenu.innerHTML = `
+    <button data-act="pin">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M16 3l5 5-4 1-3 5-5-5 5-3 1-4z M2 22l7-7" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span>${c.pinned ? 'Desfijar' : 'Fijar chat'}</span>
+    </button>
+    <button data-act="rename">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Renombrar</span>
+    </button>
+    <div class="sep"></div>
+    <button data-act="delete" class="danger">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Eliminar</span>
+    </button>
+  `;
+      placeMenu(anchor);
+      ctxMenu.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          const act = b.dataset.act;
+          closeCtxMenu();
+          if (act === 'pin') togglePinChat(c.id);
+          else if (act === 'rename') startRename(c.id);
+          else if (act === 'delete') deleteChat(c.id);
+        });
+      });
+    }
+
+    function openUserMenu(anchor) {
+      ctxMenu.innerHTML = `
+    <div class="ctx-head">
+      Sesión
+      <b>${escapeHtml(displayName())}</b>
+      ${sbUser?.email ? `<span style="font-family:var(--f-mono); font-size:10.5px; color:var(--ink-mute); display:block; margin-top:2px;">${escapeHtml(sbUser.email)}</span>` : ''}
+    </div>
+    <button data-act="profile">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span>Perfil</span>
+    </button>
+    <button data-act="settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9c0 .67.39 1.27 1 1.51H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Configuración</span>
+    </button>
+    <div class="sep"></div>
+    <button data-act="logout" class="danger">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Cerrar sesión</span>
+    </button>
+  `;
+      placeMenu(anchor);
+      ctxMenu.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', async () => {
+          const act = b.dataset.act;
+          closeCtxMenu();
+          if (act === 'profile') openModal('modal-profile');
+          else if (act === 'settings') openModal('modal-settings');
+          else if (act === 'logout') {
+            await sb.auth.signOut();
+            location.href = 'login.html';
+          }
+        });
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CHAT ACTIONS: pin / rename / delete
+       ═══════════════════════════════════════════════════════════ */
+    function togglePinChat(id) {
+      const c = chats.find(x => x.id === id);
+      if (!c) return;
+      c.pinned = !c.pinned;
+      saveChats(); renderSidebar();
+    }
+
+    function startRename(id) {
+      const c = chats.find(x => x.id === id);
+      if (!c) return;
+      const row = sbList.querySelector(`.sb-item[data-id="${id}"]`);
+      if (!row) return;
+      const titleEl = row.querySelector('.title');
+      const original = c.title || 'Conversación';
+      titleEl.innerHTML = `<input class="rename-input" type="text" value="${escapeHtml(original)}" />`;
+      const inp = titleEl.querySelector('.rename-input');
+      inp.focus(); inp.select();
+
+      const finish = (commit) => {
+        const v = inp.value.trim();
+        if (commit && v && v !== original) {
+          c.title = v.slice(0, 80);
+          saveChats();
+          if (id === activeId) document.getElementById('chat-title').textContent = c.title;
+        }
+        renderSidebar();
+      };
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+      });
+      inp.addEventListener('blur', () => finish(true));
+      inp.addEventListener('click', e => e.stopPropagation());
+    }
+
+    function deleteChat(id) {
+      const c = chats.find(x => x.id === id);
+      if (!c) return;
+
+      chats = chats.filter(x => x.id !== id);
+      if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat clínico — MediQ'; }
+      saveChats(); renderSidebar();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SEARCH
+       ═══════════════════════════════════════════════════════════ */
+    const searchInput = document.getElementById('sb-search');
+    const searchWrap = document.getElementById('sb-search-wrap');
+    const searchClear = document.getElementById('sb-clear');
+    searchInput.addEventListener('input', () => {
+      searchQuery = searchInput.value;
+      searchWrap.classList.toggle('has-value', searchQuery.length > 0);
+      renderSidebar();
+    });
+    searchClear.addEventListener('click', () => {
+      searchInput.value = ''; searchQuery = '';
+      searchWrap.classList.remove('has-value');
+      renderSidebar(); searchInput.focus();
+    });
+
+    /* ═══════════════════════════════════════════════════════════
+       MODALS
+       ═══════════════════════════════════════════════════════════ */
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+      if (id === 'modal-profile') hydrateProfileModal();
+      if (id === 'modal-settings') hydrateSettingsModal();
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('[data-close]').forEach(b => {
+      b.addEventListener('click', () => closeModal(b.dataset.close));
+    });
+    document.querySelectorAll('.modal-backdrop').forEach(bd => {
+      bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+    });
+
+    function hydrateProfileModal() {
+      document.getElementById('profile-ava').textContent = avaInitial();
+      document.getElementById('profile-email-display').textContent = sbUser?.email || '';
+      document.getElementById('profile-name').value = profile.name || sbUser?.user_metadata?.name || '';
+      document.getElementById('profile-role').value = profile.role || 'medico';
+      document.getElementById('profile-specialty').value = profile.specialty || '';
+      document.getElementById('profile-institution').value = profile.institution || '';
+    }
+    document.getElementById('profile-save').addEventListener('click', () => {
+      profile = {
+        name: document.getElementById('profile-name').value.trim(),
+        role: document.getElementById('profile-role').value,
+        specialty: document.getElementById('profile-specialty').value.trim(),
+        institution: document.getElementById('profile-institution').value.trim(),
+      };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      // refresh display
+      whoLabel.textContent = displayName();
+      avaMini.textContent = avaInitial();
+      avaNav.textContent = avaInitial();
+      accountLabel.textContent = displayName().split(' ')[0];
+      closeModal('modal-profile');
+    });
+
+    function hydrateSettingsModal() {
+      document.getElementById('set-language').value = settings.language || 'es';
+      document.getElementById('set-default-specialty').value = settings.defaultSpecialty || 'General';
+      document.querySelectorAll('#modal-settings .switch').forEach(sw => {
+        const k = sw.dataset.setting;
+        sw.classList.toggle('on', !!settings[k]);
+        sw.setAttribute('aria-pressed', settings[k] ? 'true' : 'false');
+      });
+    }
+    document.querySelectorAll('#modal-settings .switch').forEach(sw => {
+      sw.addEventListener('click', () => {
+        sw.classList.toggle('on');
+        sw.setAttribute('aria-pressed', sw.classList.contains('on') ? 'true' : 'false');
+      });
+    });
+    document.getElementById('settings-save').addEventListener('click', () => {
+      settings.language = document.getElementById('set-language').value;
+      settings.defaultSpecialty = document.getElementById('set-default-specialty').value;
+      document.querySelectorAll('#modal-settings .switch').forEach(sw => {
+        settings[sw.dataset.setting] = sw.classList.contains('on');
+      });
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      closeModal('modal-settings');
+    });
+    document.getElementById('export-chats').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(chats, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'mediq-chats-' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click(); URL.revokeObjectURL(url);
+    });
+    document.getElementById('clear-chats').addEventListener('click', () => {
+      if (!confirm('¿Borrar TODAS las conversaciones? Esta acción no se puede deshacer.')) return;
+      chats = []; activeId = null;
+      saveChats(); renderSidebar(); renderMessages(null);
+      closeModal('modal-settings');
+    });
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    /* tiny markdown → html (subset) */
+    function md(text) {
+      let s = escapeHtml(text);
+      s = s.replace(/```([\s\S]*?)```/g, (_, c) => `<pre style="background:var(--bg-2); padding:10px 12px; border-radius:8px; overflow-x:auto; font-family:var(--f-mono); font-size:13px;">${c}</pre>`);
+      s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+      s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+      s = s.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+      s = s.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+      s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+      s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+      // lists
+      s = s.replace(/(?:^|\n)((?:- .+\n?)+)/g, (m, block) => {
+        const items = block.trim().split(/\n/).map(l => '<li>' + l.replace(/^- /, '') + '</li>').join('');
+        return '\n<ul>' + items + '</ul>';
+      });
+      s = s.replace(/(?:^|\n)((?:\d+\. .+\n?)+)/g, (m, block) => {
+        const items = block.trim().split(/\n/).map(l => '<li>' + l.replace(/^\d+\. /, '') + '</li>').join('');
+        return '\n<ol>' + items + '</ol>';
+      });
+      return s;
+    }
+
+    function renderMessages(chat) {
+      // remove all msg children, keep welcome only when no chat
+      msgsInner.querySelectorAll('.msg').forEach(n => n.remove());
+      if (!chat || chat.messages.length === 0) {
+        welcomeEl.style.display = '';
+        titleEl.textContent = chat?.title || 'Nueva consulta';
+        return;
+      }
+      welcomeEl.style.display = 'none';
+      titleEl.textContent = chat.title || 'Conversación';
+      chat.messages.forEach(m => msgsInner.appendChild(buildMsgEl(m)));
+      // scroll to bottom
+      requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
+    }
+
+    function buildMsgEl(m) {
+      const wrap = document.createElement('div');
+      wrap.className = 'msg ' + m.role;
+      const av = m.role === 'ai'
+        ? `<div class="av"></div>`
+        : `<div class="av">${sbUser?.email ? sbUser.email[0].toUpperCase() : 'M'}</div>`;
+      const role = m.role === 'ai' ? 'MediQ' : 'Tú';
+      const time = new Date(m.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+
+      // attachments preview (only on user msgs)
+      let attachHtml = '';
+      if (m.attachments && m.attachments.length) {
+        attachHtml = '<div style="margin-bottom:8px;">' + m.attachments.map(a =>
+          `<span class="msg-attach"><svg class="ic-file" viewBox="0 0 16 16" fill="none"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" stroke-width="1.4"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.4"/></svg><span>${escapeHtml(a.name)}</span><span class="meta">${a.pages}p · ${Math.round(a.chars / 1000)}k</span></span>`
+        ).join('') + '</div>';
+      }
+
+      const content = m.pending
+        ? `<div class="content"><span class="typing"><i></i><i></i><i></i></span></div>`
+        : `<div class="content">${m.role === 'ai' ? md(m.text) : escapeHtml(m.text)}</div>`;
+      wrap.innerHTML = `${av}<div class="body"><div class="role-line"><span>${role}</span>·<span>${time}</span></div>${attachHtml}${content}</div>`;
+      return wrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CHAT OPS
+       ═══════════════════════════════════════════════════════════ */
+    function newChat() {
+      activeId = null;
+      renderMessages(null);
+      renderSidebar();
+      input.focus();
+    }
+
+    function openChat(id) {
+      const c = chats.find(x => x.id === id);
+      if (!c) return;
+      activeId = id;
+      specialty = c.specialty || 'General';
+      document.getElementById('specialty-label').textContent = specialty;
+      document.querySelectorAll('#specialty-menu button').forEach(b => b.classList.toggle('on', b.dataset.sp === specialty));
+      renderMessages(c);
+      renderSidebar();
+    }
+
+    function ensureChat() {
+      if (activeId) return chats.find(x => x.id === activeId);
+      const c = {
+        id: 'c_' + Date.now().toString(36),
+        title: 'Nueva consulta',
+        specialty,
+        messages: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      chats.unshift(c);
+      activeId = c.id;
+      return c;
+    }
+
+    async function sendMessage(text) {
+      if (sending) return;
+      // require either text or attachments
+      if (!text.trim() && pendingAttachments.length === 0) return;
+      // block if any attachment is still processing
+      if (pendingAttachments.some(a => a.status === 'processing')) return;
+
+      sending = true;
+      sendBtn.disabled = true;
+
+      const chat = ensureChat();
+      // freeze attachments for this message
+      const attachments = pendingAttachments
+        .filter(a => a.status === 'ready')
+        .map(a => ({ name: a.name, size: a.size, pages: a.pages, chars: a.text.length, text: a.text }));
+
+      if (chat.messages.length === 0) {
+        if (text.trim()) {
+          chat.title = text.length > 48 ? text.slice(0, 48).trim() + '…' : text.trim();
+        } else if (attachments.length) {
+          chat.title = attachments[0].name.replace(/\.pdf$/i, '');
+        }
+      }
+
+      chat.messages.push({
+        role: 'user',
+        text: text || (attachments.length ? `He adjuntado ${attachments.length} documento${attachments.length > 1 ? 's' : ''}. Analízalo y dime lo más relevante.` : ''),
+        attachments: attachments.map(a => ({ name: a.name, size: a.size, pages: a.pages, chars: a.chars })),
+        at: Date.now()
+      });
+      chat.updatedAt = Date.now();
+
+      // clear pending attachments tray
+      pendingAttachments = [];
+      renderAttachments();
+
+      saveChats();
+      renderMessages(chat);
+      renderSidebar();
+
+      // pending AI placeholder
+      const pending = { role: 'ai', text: '', at: Date.now(), pending: true };
+      chat.messages.push(pending);
+      renderMessages(chat);
+
+      // build messages array for the API — inject the extracted PDF text into the user content
+      const apiMsgs = chat.messages
+        .filter(m => !m.pending)
+        .map((m, i, arr) => {
+          let content = m.text;
+          // Find the original message in chat history to recover the full text of attachments
+          // (we need to look up by index in the user messages we pushed)
+          return { role: m.role === 'ai' ? 'assistant' : 'user', content };
+        });
+
+      // Append the just-attached PDFs' text to the LAST user message we sent
+      if (attachments.length) {
+        // Find last user msg in apiMsgs
+        for (let i = apiMsgs.length - 1; i >= 0; i--) {
+          if (apiMsgs[i].role === 'user') {
+            const docs = attachments.map(a =>
+              `\n\n===== DOCUMENTO ADJUNTO: ${a.name} (${a.pages} páginas) =====\n${a.text.slice(0, 60000)}\n===== FIN DEL DOCUMENTO =====`
+            ).join('');
+            apiMsgs[i].content = (apiMsgs[i].content || '') + docs;
+            break;
+          }
+        }
+      }
+
+      try {
+        const reply = await window.claude.complete({
+          system: systemPrompt(),
+          messages: apiMsgs
+        });
+        pending.text = (reply || 'No se obtuvo respuesta.').trim();
+        pending.pending = false;
+        pending.at = Date.now();
+      } catch (err) {
+        console.error(err);
+        pending.text = '⚠️ No pude conectar con el modelo. Verifica tu conexión e inténtalo de nuevo.';
+        pending.pending = false;
+      }
+
+      chat.updatedAt = Date.now();
+      saveChats();
+      renderMessages(chat);
+      renderSidebar();
+      sending = false;
+      sendBtn.disabled = input.value.trim().length === 0;
+      input.focus();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       COMPOSER
+       ═══════════════════════════════════════════════════════════ */
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const composer = document.getElementById('composer');
+    const attachBtn = document.getElementById('attach-btn');
+    const fileInput = document.getElementById('file-input');
+    const attachmentsEl = document.getElementById('attachments');
+    const dropOverlay = document.getElementById('drop-overlay');
+
+    let pendingAttachments = []; // { id, name, size, status: 'processing'|'ready'|'error', text, pages, error }
+
+    function updateSendState() {
+      const hasText = input.value.trim().length > 0;
+      const hasReady = pendingAttachments.some(a => a.status === 'ready');
+      const isProcessing = pendingAttachments.some(a => a.status === 'processing');
+      sendBtn.disabled = sending || isProcessing || (!hasText && !hasReady);
+    }
+
+    function renderAttachments() {
+      attachmentsEl.innerHTML = '';
+      pendingAttachments.forEach(a => {
+        const chip = document.createElement('span');
+        chip.className = 'chip ' + (a.status === 'processing' ? 'processing' : a.status === 'error' ? 'error' : '');
+        const sizeKb = (a.size / 1024).toFixed(0);
+        const meta = a.status === 'ready' ? `${a.pages}p · ${sizeKb}KB`
+          : a.status === 'error' ? 'error'
+            : `${sizeKb}KB`;
+        chip.innerHTML = `
+      <svg class="ic-file" viewBox="0 0 16 16" fill="none"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z" stroke="currentColor" stroke-width="1.4"/><path d="M9 1v5h5" stroke="currentColor" stroke-width="1.4"/></svg>
+      <span class="name">${escapeHtml(a.name)}</span>
+      <span class="meta">${meta}</span>
+      <button type="button" class="x" data-id="${a.id}" aria-label="Quitar">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>`;
+        attachmentsEl.appendChild(chip);
+      });
+      attachmentsEl.querySelectorAll('button.x').forEach(b => {
+        b.addEventListener('click', () => {
+          pendingAttachments = pendingAttachments.filter(x => x.id !== b.dataset.id);
+          renderAttachments();
+          updateSendState();
+        });
+      });
+      updateSendState();
+    }
+
+    async function extractPdfText(file) {
+      if (!window.pdfjsLib) {
+        // wait for pdfjs to load (module import is async)
+        for (let i = 0; i < 30; i++) {
+          await new Promise(r => setTimeout(r, 150));
+          if (window.pdfjsLib) break;
+        }
+        if (!window.pdfjsLib) throw new Error('PDF reader no disponible');
+      }
+      const buf = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      let text = '';
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(i => i.str).join(' ');
+        text += `\n--- Página ${p} ---\n${pageText}\n`;
+      }
+      return { text: text.trim(), pages: pdf.numPages };
+    }
+
+    async function handleFiles(fileList) {
+      const files = [...fileList];
+      for (const f of files) {
+        if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+          const id = 'att_' + Math.random().toString(36).slice(2, 8);
+          pendingAttachments.push({ id, name: f.name, size: f.size, status: 'error', error: 'Solo PDF' });
+          renderAttachments();
+          continue;
+        }
+        if (f.size > 20 * 1024 * 1024) {
+          const id = 'att_' + Math.random().toString(36).slice(2, 8);
+          pendingAttachments.push({ id, name: f.name, size: f.size, status: 'error', error: 'Máx 20 MB' });
+          renderAttachments();
+          continue;
+        }
+        const id = 'att_' + Math.random().toString(36).slice(2, 8);
+        const att = { id, name: f.name, size: f.size, status: 'processing' };
+        pendingAttachments.push(att);
+        renderAttachments();
+        try {
+          const { text, pages } = await extractPdfText(f);
+          att.text = text;
+          att.pages = pages;
+          att.status = 'ready';
+        } catch (err) {
+          console.error(err);
+          att.status = 'error';
+          att.error = String(err.message || err);
+        }
+        renderAttachments();
+      }
+    }
+
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length) handleFiles(e.target.files);
+      e.target.value = '';
+    });
+
+    /* drag & drop */
+    let dragDepth = 0;
+    window.addEventListener('dragenter', (e) => {
+      if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) {
+        dragDepth++;
+        dropOverlay.classList.add('on');
+      }
+    });
+    window.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault();
+    });
+    window.addEventListener('dragleave', () => {
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) dropOverlay.classList.remove('on');
+    });
+    window.addEventListener('drop', (e) => {
+      dragDepth = 0;
+      dropOverlay.classList.remove('on');
+      if (e.dataTransfer && e.dataTransfer.files.length) {
+        e.preventDefault();
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+
+    function autoresize() {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+    }
+    input.addEventListener('input', () => {
+      autoresize();
+      updateSendState();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) composer.requestSubmit();
+      }
+    });
+    composer.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text && !pendingAttachments.some(a => a.status === 'ready')) return;
+      input.value = '';
+      autoresize();
+      sendMessage(text);
+    });
+
+    /* suggestions */
+    document.querySelectorAll('.suggestion').forEach(s => {
+      s.addEventListener('click', () => {
+        input.value = s.dataset.prompt;
+        autoresize();
+        composer.requestSubmit();
+      });
+    });
+
+    /* new chat btn */
+    document.getElementById('new-chat').addEventListener('click', newChat);
+
+    /* specialty dropdown */
+    const spBtn = document.getElementById('specialty-btn');
+    const spMenu = document.getElementById('specialty-menu');
+    const spLabel = document.getElementById('specialty-label');
+    spBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      spMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', () => spMenu.classList.remove('open'));
+    spMenu.addEventListener('click', (e) => e.stopPropagation());
+    document.querySelectorAll('#specialty-menu button').forEach(b => {
+      b.addEventListener('click', () => {
+        specialty = b.dataset.sp;
+        spLabel.textContent = specialty;
+        document.querySelectorAll('#specialty-menu button').forEach(x => x.classList.toggle('on', x.dataset.sp === specialty));
+        spMenu.classList.remove('open');
+        if (activeId) {
+          const c = chats.find(x => x.id === activeId);
+          if (c) { c.specialty = specialty; saveChats(); renderSidebar(); }
+        }
+      });
+    });
+
+    /* corpus badge */
+    (function() {
+      const n = corpusCount();
+      const badge = document.getElementById('corpus-badge');
+      if (n > 0) { badge.textContent = n + ' doc' + (n > 1 ? 's' : '') + ' entrenados'; badge.style.display = ''; }
+    })();
+
+    /* init */
+    renderSidebar();
+    renderMessages(null);
+    renderAttachments();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST https://ivpyhvibbopqlhuekchj.supabase.co/functions/v1/claude-chat -H 'Content-Type: application/json' -d '{\"system\":\"Eres un asistente médico.\",\"messages\":[{\"role\":\"user\",\"content\":\"Hola\"}]}' --max-time 15)",
+      "Bash(python -m http.server 8080)"
+    ]
+  }
+}
