@@ -136,7 +136,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <p style="font-family:var(--f-mono); font-size:11px; letter-spacing:0.1em; color:var(--ink-mute); text-transform:uppercase; margin-bottom:10px;">Categoría del contenido</p>
         <div class="category-picker" id="cat-picker">
           <button class="cat-btn on" data-cat="guideline"><span class="lbl">Guía clínica</span><span class="h">protocolos</span></button>
-          <button class="cat-btn" data-cat="paper"><span class="lbl">Paper</span><span class="h">investigación</span></button>
+          <button class="cat-btn" data-cat="paper"><span class="lbl">Artículo científico</span><span class="h">investigación</span></button>
           <button class="cat-btn" data-cat="case"><span class="lbl">Caso clínico</span><span class="h">historiales</span></button>
           <button class="cat-btn" data-cat="reference"><span class="lbl">Referencia</span><span class="h">vademecum, etc.</span></button>
         </div>
@@ -175,7 +175,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
     const STORAGE_KEY = 'mediq.corpus.v1';
-    const CAT_LABELS = { guideline: 'Guía', paper: 'Paper', case: 'Caso', reference: 'Referencia' };
+    const CAT_LABELS = { guideline: 'Guía', paper: 'Artículo', case: 'Caso', reference: 'Referencia' };
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let corpus = [];
