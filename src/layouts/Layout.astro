@@ -72,8 +72,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <!-- Aplicar tema guardado antes del primer paint para evitar flash -->
   <script is:inline>
     (function () {
-      if (localStorage.getItem('mediq.theme') === 'dark')
-        document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-dark',
+        localStorage.getItem('mediq.theme') === 'dark' ? 'true' : 'false');
     })();
   </script>
 </head>
@@ -127,7 +127,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const root    = document.documentElement;
 
       function applyTheme(dark) {
-        root.setAttribute('data-theme', dark ? 'dark' : 'light');
+        root.setAttribute('data-dark', dark ? 'true' : 'false');
         iconSun.style.display  = dark ? '' : 'none';
         iconMoon.style.display = dark ? 'none' : '';
         localStorage.setItem('mediq.theme', dark ? 'dark' : 'light');
@@ -137,7 +137,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       applyTheme(isDark);
 
       btn.addEventListener('click', () => {
-        applyTheme(root.getAttribute('data-theme') !== 'dark');
+        applyTheme(root.getAttribute('data-dark') !== 'true');
       });
 
       btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-2)');

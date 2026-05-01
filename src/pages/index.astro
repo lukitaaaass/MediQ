@@ -477,7 +477,7 @@ import Layout from '../layouts/Layout.astro';
   const root = document.documentElement;
 
   function applyTweaks(t) {
-    if (localStorage.getItem('mediq.theme') !== 'dark') root.setAttribute('data-theme', t.theme);
+    root.setAttribute('data-theme', t.theme);
     root.setAttribute('data-type',  t.typePair);
     root.setAttribute('data-style', t.visualStyle);
     document.querySelectorAll('[data-brand]').forEach(el => el.textContent = t.brandName);
