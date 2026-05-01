@@ -399,8 +399,8 @@ import Layout from '../layouts/Layout.astro';
       </div>
       <div class="foot-col">
         <h4>Legal</h4>
-        <a href="#">Privacidad</a>
-        <a href="#">Términos</a>
+        <a href="#" id="link-privacy">Privacidad</a>
+        <a href="#" id="link-terms">Términos</a>
         <a href="#">Cumplimiento</a>
         <a href="#">Aviso clínico</a>
       </div>
@@ -412,6 +412,104 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 </footer>
+
+<!-- Modal Privacidad -->
+<div id="modal-privacy" class="legal-modal" hidden aria-modal="true" role="dialog">
+  <div class="legal-modal-box">
+    <button class="legal-modal-close" data-close="modal-privacy" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="legal-modal-icon">🔒</div>
+    <h3>Política de privacidad</h3>
+    <p>En MediQ nos tomamos tu privacidad muy en serio. Tus credenciales, datos personales y documentos subidos <strong>nunca serán compartidos con terceros</strong> bajo ningún concepto.</p>
+    <ul>
+      <li>Las contraseñas se almacenan con cifrado bcrypt y nunca viajan en texto plano.</li>
+      <li>Los documentos que subes a tu corpus son de uso exclusivo para tu cuenta.</li>
+      <li>No vendemos ni cedemos datos a anunciantes ni terceros.</li>
+      <li>Cumplimos con el Reglamento General de Protección de Datos (RGPD) de la Unión Europea.</li>
+    </ul>
+    <button class="legal-modal-btn" data-close="modal-privacy">Entendido</button>
+  </div>
+</div>
+
+<!-- Modal Términos -->
+<div id="modal-terms" class="legal-modal" hidden aria-modal="true" role="dialog">
+  <div class="legal-modal-box">
+    <button class="legal-modal-close" data-close="modal-terms" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="legal-modal-icon">⚠️</div>
+    <h3>Aviso legal y términos de uso</h3>
+    <p>MediQ es una herramienta de <strong>apoyo informativo</strong> para profesionales sanitarios. El uso de esta plataforma implica la aceptación de los siguientes términos:</p>
+    <ul>
+      <li>MediQ <strong>no se hace responsable</strong> de ninguna decisión clínica, diagnóstico, tratamiento o actuación médica derivada del uso de esta herramienta.</li>
+      <li>Las respuestas generadas por la IA son orientativas y no sustituyen el criterio clínico del profesional sanitario.</li>
+      <li>El usuario es el único responsable de validar cualquier información antes de aplicarla en la práctica clínica.</li>
+      <li>No introduzcas datos identificables de pacientes en la plataforma.</li>
+    </ul>
+    <button class="legal-modal-btn" data-close="modal-terms">Entendido</button>
+  </div>
+</div>
+
+<style is:global>
+  .legal-modal {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .legal-modal[hidden] { display: none; }
+  .legal-modal-box {
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 16px;
+    padding: 36px 32px 28px;
+    max-width: 480px; width: 100%;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,.18);
+  }
+  .legal-modal-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--ink-mute);
+  }
+  .legal-modal-close:hover { background: var(--bg-2); color: var(--ink); }
+  .legal-modal-icon { font-size: 32px; margin-bottom: 14px; }
+  .legal-modal-box h3 { font-size: 22px; margin-bottom: 12px; }
+  .legal-modal-box p { font-size: 14.5px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 14px; }
+  .legal-modal-box ul { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .legal-modal-box ul li { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+  .legal-modal-btn {
+    width: 100%; padding: 13px;
+    background: var(--ink); color: var(--bg);
+    border-radius: 10px; font-size: 15px; font-weight: 500;
+    transition: opacity .2s;
+  }
+  .legal-modal-btn:hover { opacity: .85; }
+</style>
+
+<script is:inline>
+  document.getElementById('link-privacy').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('modal-privacy').hidden = false;
+  });
+  document.getElementById('link-terms').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('modal-terms').hidden = false;
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById(btn.dataset.close).hidden = true;
+    });
+  });
+  document.querySelectorAll('.legal-modal').forEach(modal => {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.hidden = true;
+    });
+  });
+</script>
 
 <!-- ═══════════════════ TWEAKS PANEL ═══════════════════ -->
 <aside class="tweaks-panel" id="tweaks">
