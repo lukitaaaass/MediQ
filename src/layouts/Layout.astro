@@ -168,6 +168,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-2)');
       btn.addEventListener('mouseleave', () => btn.style.background = '');
+
+      // View Transitions: aplica el tema al documento entrante antes del intercambio
+      document.addEventListener('astro:before-swap', (e) => {
+        const dark = localStorage.getItem('mediq.theme') === 'dark';
+        e.newDocument.documentElement.setAttribute('data-dark', dark ? 'true' : 'false');
+      });
     })();
   </script>
 
