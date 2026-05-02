@@ -113,8 +113,30 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
         </div>
       </slot>
+
+      <!-- Botón hamburguesa (solo móvil) -->
+      <button id="nav-burger" aria-label="Abrir menú" aria-expanded="false" style="display:none;width:36px;height:36px;border-radius:8px;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink);flex-shrink:0;">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
     </div>
   </nav>
+
+  <!-- Menú móvil -->
+  <div id="nav-mobile" aria-hidden="true">
+    <nav>
+      <a href="/">Inicio</a>
+      <a href="/pricing">Precios</a>
+      <a href="/chat">Chat</a>
+      <a href="/train">Entrenar IA</a>
+      <a href="/triadas">Tríadas</a>
+    </nav>
+    <div id="nav-mobile-auth">
+      <a class="btn btn-ghost" href="/login">Entrar</a>
+      <a class="btn btn-primary" href="/login">Solicitar acceso →</a>
+    </div>
+  </div>
 
   <slot />
 
@@ -142,6 +164,33 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-2)');
       btn.addEventListener('mouseleave', () => btn.style.background = '');
+    })();
+  </script>
+
+  <!-- Menú hamburguesa -->
+  <script is:inline>
+    (function () {
+      const burger = document.getElementById('nav-burger');
+      const menu   = document.getElementById('nav-mobile');
+      if (!burger || !menu) return;
+
+      burger.addEventListener('click', () => {
+        const open = menu.classList.toggle('open');
+        burger.classList.toggle('open', open);
+        burger.setAttribute('aria-expanded', open);
+        menu.setAttribute('aria-hidden', !open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      });
+
+      menu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+          menu.classList.remove('open');
+          burger.classList.remove('open');
+          burger.setAttribute('aria-expanded', 'false');
+          menu.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        });
+      });
     })();
   </script>
 
