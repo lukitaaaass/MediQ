@@ -1,6 +1,42 @@
+// Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
+const rateMap = new Map();
+const RATE_LIMIT  = 20;
+const RATE_WINDOW = 60_000;
+
+function checkRate(ip) {
+  const now = Date.now();
+  const hits = (rateMap.get(ip) || []).filter(t => now - t < RATE_WINDOW);
+  if (hits.length >= RATE_LIMIT) return { ok: false, remaining: 0, reset: Math.ceil((hits[0] + RATE_WINDOW - now) / 1000) };
+  hits.push(now);
+  rateMap.set(ip, hits);
+  return { ok: true, remaining: RATE_LIMIT - hits.length };
+}
+
+// Prune IPs that have had no requests for > 5 minutes to avoid unbounded growth
+setInterval(() => {
+  const cutoff = Date.now() - 5 * 60_000;
+  for (const [ip, hits] of rateMap) {
+    if (!hits.length || hits[hits.length - 1] < cutoff) rateMap.delete(ip);
+  }
+}, 60_000);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
+    .split(',')[0].trim();
+  const rate = checkRate(ip);
+
+  res.setHeader('X-RateLimit-Limit',     String(RATE_LIMIT));
+  res.setHeader('X-RateLimit-Remaining', String(rate.remaining));
+
+  if (!rate.ok) {
+    res.setHeader('Retry-After', String(rate.reset));
+    return res.status(429).json({
+      error: `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.`,
+    });
   }
 
   const { system, messages } = req.body;

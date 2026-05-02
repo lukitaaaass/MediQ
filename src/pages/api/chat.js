@@ -1,4 +1,37 @@
+// Sliding-window rate limiter: 20 req/min per IP
+const rateMap = new Map();
+const RATE_LIMIT  = 20;
+const RATE_WINDOW = 60_000;
+
+function checkRate(ip) {
+  const now = Date.now();
+  const hits = (rateMap.get(ip) || []).filter(t => now - t < RATE_WINDOW);
+  if (hits.length >= RATE_LIMIT) return { ok: false, remaining: 0, reset: Math.ceil((hits[0] + RATE_WINDOW - now) / 1000) };
+  hits.push(now);
+  rateMap.set(ip, hits);
+  return { ok: true, remaining: RATE_LIMIT - hits.length };
+}
+
 export async function POST({ request }) {
+  const ip = (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'dev')
+    .split(',')[0].trim();
+  const rate = checkRate(ip);
+
+  if (!rate.ok) {
+    return new Response(
+      JSON.stringify({ error: `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.` }),
+      {
+        status: 429,
+        headers: {
+          'content-type': 'application/json',
+          'Retry-After': String(rate.reset),
+          'X-RateLimit-Limit': String(RATE_LIMIT),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    );
+  }
+
   const { system, messages } = await request.json();
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -47,6 +80,8 @@ export async function POST({ request }) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
+      'X-RateLimit-Limit': String(RATE_LIMIT),
+      'X-RateLimit-Remaining': String(rate.remaining),
     },
   });
 }
