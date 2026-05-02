@@ -1,0 +1,294 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+---
+
+<Layout
+  title="Contacto — MediQ"
+  navActive=""
+  description="Solicita acceso a MediQ, habla con el equipo de ventas o escríbenos cualquier duda. Respondemos en menos de 48h."
+>
+
+<style is:global>
+  .contact-page {
+    padding: clamp(48px, 8vw, 96px) 0 clamp(64px, 10vw, 120px);
+  }
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 56px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  @media (min-width: 760px) {
+    .contact-grid { grid-template-columns: 1fr 1.3fr; gap: 80px; align-items: start; }
+  }
+
+  /* Left column */
+  .contact-info { display: flex; flex-direction: column; gap: 32px; }
+  .contact-info h1 { font-size: clamp(32px, 4vw, 48px); line-height: 1.05; }
+  .contact-info h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+  .contact-info .lede { font-size: 15.5px; }
+
+  .contact-channels { display: flex; flex-direction: column; gap: 14px; }
+  .channel {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 16px; border: 1px solid var(--rule-2); border-radius: 12px;
+    background: var(--surface);
+  }
+  .channel-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--bg-2); display: grid; place-items: center;
+    color: var(--ink-mute); flex-shrink: 0;
+  }
+  .channel-body { display: flex; flex-direction: column; gap: 2px; }
+  .channel-label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .channel-value { font-size: 14px; color: var(--ink); font-weight: 500; }
+  .channel-sub   { font-size: 12.5px; color: var(--ink-mute); }
+
+  /* Right column — form */
+  .contact-form-wrap {
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 18px;
+    padding: clamp(24px, 3vw, 36px);
+  }
+  .contact-form-wrap h2 {
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-mute); font-weight: 400; margin-bottom: 24px;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 540px) { .form-row { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  .field input, .field select, .field textarea {
+    border: 1px solid var(--rule-2); border-radius: 8px;
+    padding: 10px 12px; font: inherit; font-size: 14px;
+    background: var(--bg); color: var(--ink); outline: none;
+    transition: border-color .2s ease;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--ink-soft);
+  }
+  .field textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+  .field select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%237a7f82' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .form-fields { display: flex; flex-direction: column; gap: 16px; }
+
+  .contact-submit {
+    width: 100%; padding: 13px; border-radius: 10px;
+    background: var(--ink); color: var(--bg);
+    font-size: 15px; font-weight: 500;
+    transition: opacity .2s ease, transform .2s ease;
+    margin-top: 8px;
+  }
+  .contact-submit:hover { opacity: .88; transform: translateY(-1px); }
+  .contact-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  /* States */
+  #form-success {
+    display: none; flex-direction: column; align-items: center;
+    text-align: center; padding: 32px 16px; gap: 16px;
+  }
+  .success-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: color-mix(in oklab, var(--ok) 15%, var(--bg));
+    border: 1px solid color-mix(in oklab, var(--ok) 30%, transparent);
+    display: grid; place-items: center; color: var(--ok);
+  }
+  #form-success h3 { font-size: 20px; }
+  #form-success p  { font-size: 14px; color: var(--ink-soft); max-width: 32ch; line-height: 1.5; }
+  #form-error {
+    display: none; padding: 10px 14px; background: color-mix(in oklab, var(--danger) 10%, var(--bg));
+    border: 1px solid color-mix(in oklab, var(--danger) 25%, transparent);
+    border-radius: 8px; font-size: 13.5px; color: var(--danger); margin-top: 4px;
+  }
+</style>
+
+<main class="contact-page">
+  <div class="container">
+    <div class="contact-grid">
+
+      <!-- Left: info -->
+      <div class="contact-info">
+        <div>
+          <span class="eyebrow">Contacto</span>
+          <h1 style="margin-top:16px;">
+            Hablemos de <em>lo que necesitas.</em>
+          </h1>
+          <p class="lede" style="margin-top:18px;">
+            Solicita acceso, pide una demo para tu hospital, o escríbenos cualquier pregunta. Respondemos en menos de 48h.
+          </p>
+        </div>
+
+        <div class="contact-channels">
+          <div class="channel">
+            <div class="channel-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </div>
+            <div class="channel-body">
+              <span class="channel-label">Email general</span>
+              <span class="channel-value">hola@mediq.health</span>
+              <span class="channel-sub">Respuesta en &lt; 48h</span>
+            </div>
+          </div>
+
+          <div class="channel">
+            <div class="channel-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="channel-body">
+              <span class="channel-label">Demo institucional</span>
+              <span class="channel-value">ventas@mediq.health</span>
+              <span class="channel-sub">Hospitales, clínicas y redes asistenciales</span>
+            </div>
+          </div>
+
+          <div class="channel">
+            <div class="channel-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke="currentColor" stroke-width="1.6"/>
+                <circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+            </div>
+            <div class="channel-body">
+              <span class="channel-label">Oficinas</span>
+              <span class="channel-value">Madrid · CDMX · Bogotá</span>
+              <span class="channel-sub">Reuniones presenciales con cita previa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: form -->
+      <div class="contact-form-wrap">
+        <h2>Escríbenos</h2>
+
+        <div id="form-success" role="alert">
+          <div class="success-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>¡Mensaje enviado!</h3>
+          <p>Te contestamos en menos de 48 horas. Revisa también tu carpeta de spam.</p>
+          <a href="/" class="btn btn-ghost" style="margin-top:8px;">Volver al inicio</a>
+        </div>
+
+        <form id="contact-form" novalidate>
+          <div class="form-fields">
+            <div class="form-row">
+              <div class="field">
+                <label for="cf-name">Nombre completo *</label>
+                <input id="cf-name" name="name" type="text" autocomplete="name" required placeholder="Dra. María García" />
+              </div>
+              <div class="field">
+                <label for="cf-email">Email *</label>
+                <input id="cf-email" name="email" type="email" autocomplete="email" required placeholder="maria@hospital.es" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="cf-role">Perfil *</label>
+                <select id="cf-role" name="role" required>
+                  <option value="" disabled selected>Selecciona…</option>
+                  <option value="medico">Médico en ejercicio</option>
+                  <option value="residente">Residente / MIR</option>
+                  <option value="estudiante">Estudiante de medicina</option>
+                  <option value="hospital">Hospital / Clínica</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="cf-specialty">Especialidad</label>
+                <input id="cf-specialty" name="specialty" type="text" placeholder="Medicina interna, urgencias…" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="cf-message">Mensaje *</label>
+              <textarea id="cf-message" name="message" required placeholder="Cuéntanos qué necesitas: solicitud de acceso, demo institucional, duda técnica…"></textarea>
+            </div>
+
+            <div id="form-error" role="alert"></div>
+
+            <button type="submit" class="contact-submit" id="cf-submit">
+              Enviar mensaje →
+            </button>
+
+            <p style="font-family:var(--f-mono); font-size:10.5px; color:var(--ink-mute); text-align:center; line-height:1.5;">
+              Tus datos se usan únicamente para responderte. No spam. Cumplimos RGPD.
+            </p>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
+  (function () {
+    const form    = document.getElementById('contact-form');
+    const success = document.getElementById('form-success');
+    const errEl   = document.getElementById('form-error');
+    const submit  = document.getElementById('cf-submit');
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.style.display = 'none';
+
+      const name      = form.cf_name?.value.trim()      || document.getElementById('cf-name').value.trim();
+      const email     = document.getElementById('cf-email').value.trim();
+      const role      = document.getElementById('cf-role').value;
+      const specialty = document.getElementById('cf-specialty').value.trim();
+      const message   = document.getElementById('cf-message').value.trim();
+
+      if (!name || !email || !role || !message) {
+        showErr('Por favor, completa los campos obligatorios (*).');
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showErr('El email no parece válido.');
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = 'Enviando…';
+
+      const { error } = await sb.from('contact_requests').insert({
+        name, email, role, specialty: specialty || null, message,
+      });
+
+      if (error) {
+        console.error('[contact] supabase error:', error);
+        showErr('No se pudo enviar el mensaje. Inténtalo de nuevo o escríbenos directamente a hola@mediq.health.');
+        submit.disabled = false;
+        submit.textContent = 'Enviar mensaje →';
+        return;
+      }
+
+      form.style.display = 'none';
+      success.style.display = 'flex';
+    });
+
+    function showErr(msg) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+      errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  })();
+</script>
+
+</Layout>
