@@ -141,6 +141,7 @@ import Layout from '../layouts/Layout.astro';
   .foot-col h4 { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-mute); text-transform: uppercase; font-weight: 400; margin-bottom: 14px; }
   .foot-col a { display: block; padding: 4px 0; color: var(--ink-soft); }
   .foot-col a:hover { color: var(--ink); }
+  .foot-muted { display: block; padding: 4px 0; color: var(--ink-mute); cursor: default; }
   .foot-bot { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; }
 
   /* Scroll animations */
@@ -385,24 +386,24 @@ import Layout from '../layouts/Layout.astro';
       </div>
       <div class="foot-col">
         <h4>Producto</h4>
-        <a href="#how">Cómo funciona</a>
-        <a href="#features">Capacidades</a>
+        <span class="foot-muted">Cómo funciona</span>
+        <span class="foot-muted">Capacidades</span>
         <a href="/pricing">Precios</a>
-        <a href="#">Cambios (changelog)</a>
+        <span class="foot-muted">Cambios (changelog)</span>
       </div>
       <div class="foot-col">
         <h4>Compañía</h4>
-        <a href="#">Sobre nosotros</a>
-        <a href="#resources">Recursos</a>
-        <a href="#">Comité clínico</a>
-        <a href="#">Contacto</a>
+        <span class="foot-muted">Sobre nosotros</span>
+        <span class="foot-muted">Recursos</span>
+        <span class="foot-muted">Comité clínico</span>
+        <span class="foot-muted">Contacto</span>
       </div>
       <div class="foot-col">
         <h4>Legal</h4>
         <a href="#" id="link-privacy">Privacidad</a>
         <a href="#" id="link-terms">Términos</a>
-        <a href="#">Cumplimiento</a>
-        <a href="#">Aviso clínico</a>
+        <span class="foot-muted">Cumplimiento</span>
+        <span class="foot-muted">Aviso clínico</span>
       </div>
     </div>
     <div class="foot-bot">
