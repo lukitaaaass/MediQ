@@ -340,6 +340,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .disclaimer svg { flex-shrink: 0; margin-top: 2px; color: oklch(50% 0.18 40); }
     .menu { position: absolute; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 10px; box-shadow: 0 12px 32px -16px #0000003d; padding: 6px; z-index: 100; display: none; min-width: 200px; }
     .menu.open { display: block; }
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 22px; border-radius: 999px; font-size: 13.5px; z-index: 999; opacity: 0; transition: opacity .2s ease; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; }
     .menu button { display: flex; width: 100%; text-align: left; padding: 8px 12px; border-radius: 6px; font-size: 13.5px; color: var(--ink-soft); }
     .menu button:hover { background: var(--bg-2); color: var(--ink); }
     .menu button.on { color: var(--ink); font-weight: 500; }
@@ -974,6 +976,10 @@ INSTRUCCIONES:
           <span>Renombrar</span>
         </button>
         <div class="sep"></div>
+        <button data-act="share">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Compartir enlace</span>
+        </button>
         <button data-act="export-txt">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span>Exportar como texto</span>
@@ -994,6 +1000,7 @@ INSTRUCCIONES:
           closeCtxMenu();
           if (act === 'pin') togglePinChat(c.id);
           else if (act === 'rename') startRename(c.id);
+          else if (act === 'share') shareChat(c);
           else if (act === 'export-txt') exportChatAsText(c);
           else if (act === 'export-pdf') exportChatAsPdf(c);
           else if (act === 'delete') deleteChat(c.id);
@@ -1077,6 +1084,31 @@ INSTRUCCIONES:
       if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat clínico — MediQ'; }
       saveChats(); renderSidebar();
       deleteChatFromSupabase(id);
+    }
+
+    function showToast(msg, ms = 2600) {
+      let t = document.getElementById('mediq-toast');
+      if (!t) { t = document.createElement('div'); t.id = 'mediq-toast'; t.className = 'toast'; document.body.appendChild(t); }
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), ms);
+    }
+
+    async function shareChat(chat) {
+      if (!sbUser) return;
+      const shareId = 'shr_' + Math.random().toString(36).slice(2, 10);
+      const { error } = await sb.from('shared_chats').insert({
+        id: shareId,
+        title: chat.title,
+        specialty: chat.specialty || 'General',
+        messages: chat.messages.filter(m => !m.pending),
+        owner_id: sbUser.id,
+      });
+      if (error) { console.error('[share] error:', error); showToast('Error al compartir. Inténtalo de nuevo.'); return; }
+      const url = `${location.origin}/share?id=${shareId}`;
+      navigator.clipboard.writeText(url)
+        .then(() => showToast('¡Enlace copiado al portapapeles!'))
+        .catch(() => prompt('Copia este enlace:', url));
     }
 
     function exportChatAsText(chat) {
