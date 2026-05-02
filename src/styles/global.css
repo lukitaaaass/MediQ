@@ -24,7 +24,7 @@
   --pad: clamp(20px, 4vw, 56px);
 }
 
-[data-dark="true"] {
+html[data-dark="true"] {
   --bg: #0e1113;
   --bg-2: #14181b;
   --ink: #f2f0ea;
