@@ -692,6 +692,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       accountLabel.textContent = displayName().split(' ')[0];
       logoutBtn.hidden = false;
       updateWelcomeGreeting();
+      loadChatsFromSupabase();
       logoutBtn.addEventListener('click', async () => {
         await sb.auth.signOut();
         location.href = '/login';
@@ -761,7 +762,56 @@ INSTRUCCIONES:
     const messagesEl = document.getElementById('messages');
     const titleEl   = document.getElementById('chat-title');
 
-    function saveChats() { localStorage.setItem(STORAGE_KEY, JSON.stringify(chats)); }
+    function saveChats(modifiedChat) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+      if (modifiedChat) upsertChatToSupabase(modifiedChat);
+    }
+
+    async function upsertChatToSupabase(chat) {
+      if (!sbUser) return;
+      try {
+        await sb.from('chats').upsert({
+          id: chat.id,
+          user_id: sbUser.id,
+          title: chat.title || 'Nueva consulta',
+          specialty: chat.specialty || 'General',
+          messages: chat.messages,
+          pinned: !!chat.pinned,
+          created_at: new Date(chat.createdAt || Date.now()).toISOString(),
+          updated_at: new Date(chat.updatedAt || Date.now()).toISOString(),
+        });
+      } catch (err) { console.error('[chats] upsert error:', err); }
+    }
+
+    async function deleteChatFromSupabase(id) {
+      if (!sbUser) return;
+      try {
+        await sb.from('chats').delete().eq('id', id).eq('user_id', sbUser.id);
+      } catch (err) { console.error('[chats] delete error:', err); }
+    }
+
+    async function loadChatsFromSupabase() {
+      if (!sbUser) return;
+      try {
+        const { data, error } = await sb.from('chats')
+          .select('*').eq('user_id', sbUser.id)
+          .order('updated_at', { ascending: false });
+        if (error) { console.error('[chats] load error:', error); return; }
+        if (!data || data.length === 0) return;
+        chats = data.map(row => ({
+          id: row.id,
+          title: row.title,
+          specialty: row.specialty,
+          messages: row.messages || [],
+          pinned: row.pinned || false,
+          createdAt: new Date(row.created_at).getTime(),
+          updatedAt: new Date(row.updated_at).getTime(),
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+        renderSidebar();
+        if (settings.resumeLast && chats.length > 0 && !activeId) openChat(chats[0].id);
+      } catch (err) { console.error('[chats] load error:', err); }
+    }
 
     function renderSidebar() {
       sbList.innerHTML = '';
@@ -979,7 +1029,7 @@ INSTRUCCIONES:
       const c = chats.find(x => x.id === id);
       if (!c) return;
       c.pinned = !c.pinned;
-      saveChats(); renderSidebar();
+      saveChats(c); renderSidebar();
     }
 
     function startRename(id) {
@@ -996,7 +1046,7 @@ INSTRUCCIONES:
         const v = inp.value.trim();
         if (commit && v && v !== original) {
           c.title = v.slice(0, 80);
-          saveChats();
+          saveChats(c);
           if (id === activeId) document.getElementById('chat-title').textContent = c.title;
         }
         renderSidebar();
@@ -1015,6 +1065,7 @@ INSTRUCCIONES:
       chats = chats.filter(x => x.id !== id);
       if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat clínico — MediQ'; }
       saveChats(); renderSidebar();
+      deleteChatFromSupabase(id);
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -1110,6 +1161,9 @@ INSTRUCCIONES:
       chats = []; activeId = null;
       saveChats(); renderSidebar(); renderMessages(null);
       closeModal('modal-settings');
+      if (sbUser) sb.from('chats').delete().eq('user_id', sbUser.id).then(({ error }) => {
+        if (error) console.error('[chats] clear error:', error);
+      });
     });
 
     function escapeHtml(s) {
@@ -1255,7 +1309,7 @@ INSTRUCCIONES:
 
       pendingAttachments = [];
       renderAttachments();
-      saveChats();
+      saveChats(chat);
       renderMessages(chat);
       renderSidebar();
 
@@ -1285,7 +1339,7 @@ INSTRUCCIONES:
 
       function finishSend() {
         chat.updatedAt = Date.now();
-        saveChats();
+        saveChats(chat);
         renderMessages(chat);
         renderSidebar();
         sending = false;
@@ -1563,7 +1617,7 @@ INSTRUCCIONES:
         spMenu.classList.remove('open');
         if (activeId) {
           const c = chats.find(x => x.id === activeId);
-          if (c) { c.specialty = specialty; saveChats(); renderSidebar(); }
+          if (c) { c.specialty = specialty; saveChats(c); renderSidebar(); }
         }
       });
     });
