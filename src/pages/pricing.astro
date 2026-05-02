@@ -203,7 +203,7 @@ import Layout from '../layouts/Layout.astro';
             <li class="muted">Sin integración con HCE</li>
             <li class="muted">Sin historial cifrado de larga duración</li>
           </ul>
-          <a class="btn btn-ghost" href="/login">Verificar matrícula</a>
+          <a class="btn btn-ghost" href="/login" onclick="window.track('Plan CTA',{plan:'estudiante'})">Verificar matrícula</a>
         </article>
 
         <article class="plan featured">
@@ -224,7 +224,7 @@ import Layout from '../layouts/Layout.astro';
             <li>Historial cifrado por 10 años</li>
             <li>Soporte por email en &lt; 24h</li>
           </ul>
-          <a class="btn btn-primary" href="/login">Empezar prueba de 14 días</a>
+          <a class="btn btn-primary" href="/login" onclick="window.track('Plan CTA',{plan:'practica'})">Empezar prueba de 14 días</a>
         </article>
 
         <article class="plan">
@@ -242,7 +242,7 @@ import Layout from '../layouts/Layout.astro';
             <li>SLA del 99.95% y soporte 24/7</li>
             <li>Comité clínico dedicado</li>
           </ul>
-          <a class="btn btn-ghost" href="/contact">Contactar con ventas</a>
+          <a class="btn btn-ghost" href="/contact" onclick="window.track('Plan CTA',{plan:'institucion'})">Contactar con ventas</a>
         </article>
 
       </div>

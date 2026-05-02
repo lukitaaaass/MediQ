@@ -39,8 +39,9 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, 'https://mediq.app').href;
 
-const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL        = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY   = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 ---
 
 <!doctype html>
@@ -93,6 +94,25 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <ViewTransitions />
   <slot name="head" />
+
+  <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
+  {PLAUSIBLE_DOMAIN && (
+    <script
+      is:inline
+      defer
+      data-domain={PLAUSIBLE_DOMAIN}
+      src="https://plausible.io/js/script.tagged-events.js"
+    ></script>
+  )}
+
+  <!-- Helper global window.track() — no-op si Plausible no está cargado -->
+  <script is:inline>
+    window.track = function(event, props) {
+      try {
+        if (typeof window.plausible === 'function') window.plausible(event, { props: props || {} });
+      } catch (_) {}
+    };
+  </script>
 
   <!-- Aplicar tema guardado antes del primer paint para evitar flash -->
   <script is:inline>

@@ -279,6 +279,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         return;
       }
 
+      window.track('Contact Form', { role });
       form.style.display = 'none';
       success.style.display = 'flex';
     });

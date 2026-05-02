@@ -1456,7 +1456,9 @@ ${msgsHtml}
         } else if (attachments.length) {
           chat.title = attachments[0].name.replace(/\.pdf$/i, '');
         }
+        window.track('Chat Started', { specialty });
       }
+      window.track('Message Sent', { specialty, has_attachment: attachments.length > 0 ? 'yes' : 'no' });
 
       chat.messages.push({
         role: 'user',
