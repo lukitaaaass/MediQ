@@ -269,6 +269,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .msg.ai .av::after { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--accent); }
     .msg .body { padding-top: 4px; }
     .msg .role-line { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-mute); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+    .copy-btn { margin-left: auto; padding: 3px 8px; border-radius: 6px; font-family: var(--f-mono); font-size: 10px; color: var(--ink-mute); border: 1px solid var(--rule-2); transition: all .15s; }
+    .copy-btn:hover { background: var(--bg-2); color: var(--ink); }
+    .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
     .msg .content { font-size: 15.5px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; word-wrap: break-word; }
     .msg.user .content { color: var(--ink); }
     .msg.ai .content { color: var(--ink-soft); }
@@ -1130,7 +1133,19 @@ INSTRUCCIONES:
       const content = m.pending
         ? `<div class="content"><span class="typing"><i></i><i></i><i></i></span></div>`
         : `<div class="content">${m.role === 'ai' ? md(m.text) : escapeHtml(m.text)}</div>`;
-      wrap.innerHTML = `${av}<div class="body"><div class="role-line"><span>${role}</span>·<span>${time}</span></div>${attachHtml}${content}</div>`;
+      const copyBtn = m.role === 'ai' && !m.pending
+        ? `<button class="copy-btn" aria-label="Copiar respuesta">Copiar</button>`
+        : '';
+      wrap.innerHTML = `${av}<div class="body"><div class="role-line"><span>${role}</span>·<span>${time}</span>${copyBtn}</div>${attachHtml}${content}</div>`;
+      if (m.role === 'ai' && !m.pending) {
+        wrap.querySelector('.copy-btn').addEventListener('click', function () {
+          navigator.clipboard.writeText(m.text).then(() => {
+            this.textContent = '✓ Copiado';
+            this.classList.add('copied');
+            setTimeout(() => { this.textContent = 'Copiar'; this.classList.remove('copied'); }, 2000);
+          });
+        });
+      }
       return wrap;
     }
 
