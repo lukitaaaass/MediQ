@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /chat
+Disallow: /train
+Disallow: /api/
+
+Sitemap: https://mediq.app/sitemap.xml

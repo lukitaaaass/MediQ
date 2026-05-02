@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0e1113"/>
+      <stop offset="100%" stop-color="#14181b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e40af"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="315" x2="1200" y2="315" stroke="#f2f0ea08" stroke-width="1"/>
+  <line x1="600" y1="0" x2="600" y2="630" stroke="#f2f0ea08" stroke-width="1"/>
+
+  <!-- ECG line decoration -->
+  <polyline
+    points="60,400 160,400 200,290 240,480 290,200 340,400 520,400 560,340 600,400 640,400"
+    fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+
+  <!-- Logo mark -->
+  <circle cx="136" cy="215" r="40" fill="url(#accent)"/>
+  <circle cx="136" cy="215" r="22" fill="#2dd4bf" opacity="0.9"/>
+
+  <!-- Brand name -->
+  <text x="196" y="232" font-family="Georgia, serif" font-size="56" font-weight="400" fill="#f2f0ea" letter-spacing="-1.5">MediQ</text>
+
+  <!-- Tagline -->
+  <text x="136" y="310" font-family="-apple-system, system-ui, sans-serif" font-size="22" fill="#c6c3ba" letter-spacing="0">Soporte clínico con IA para médicos hispanohablantes</text>
+
+  <!-- Feature pills -->
+  <rect x="136" y="360" width="188" height="38" rx="19" fill="#f2f0ea12" stroke="#f2f0ea1a" stroke-width="1"/>
+  <text x="230" y="384" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#c6c3ba" text-anchor="middle">Diagnóstico diferencial</text>
+
+  <rect x="340" y="360" width="178" height="38" rx="19" fill="#f2f0ea12" stroke="#f2f0ea1a" stroke-width="1"/>
+  <text x="429" y="384" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#c6c3ba" text-anchor="middle">Interacciones farmacológicas</text>
+
+  <rect x="534" y="360" width="120" height="38" rx="19" fill="#f2f0ea12" stroke="#f2f0ea1a" stroke-width="1"/>
+  <text x="594" y="384" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#c6c3ba" text-anchor="middle">RAG sobre PDFs</text>
+
+  <!-- Right side decoration: chat bubble mockup -->
+  <rect x="760" y="140" width="380" height="300" rx="16" fill="#191d20" stroke="#f2f0ea14" stroke-width="1"/>
+
+  <rect x="784" y="168" width="200" height="36" rx="10" fill="#f2f0ea0d"/>
+  <rect x="784" y="216" width="332" height="56" rx="10" fill="#2dd4bf18" stroke="#2dd4bf22" stroke-width="1"/>
+  <rect x="784" y="284" width="260" height="36" rx="10" fill="#f2f0ea0d"/>
+  <rect x="784" y="332" width="300" height="72" rx="10" fill="#2dd4bf18" stroke="#2dd4bf22" stroke-width="1"/>
+
+  <!-- Pulse dot -->
+  <circle cx="1100" cy="455" r="6" fill="#2dd4bf" opacity="0.8"/>
+  <circle cx="1100" cy="455" r="12" fill="#2dd4bf" opacity="0.2"/>
+
+  <!-- Bottom label -->
+  <text x="600" y="580" font-family="-apple-system, system-ui, sans-serif" font-size="15" fill="#7f837f" text-anchor="middle" letter-spacing="0.08em">MEDIQ.APP</text>
+</svg>

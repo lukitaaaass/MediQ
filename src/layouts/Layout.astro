@@ -23,6 +23,8 @@ interface Props {
   navActive?: string;
   bodyClass?: string;
   includePdfJs?: boolean;
+  ogImage?: string;
+  noindex?: boolean;
 }
 
 const {
@@ -31,7 +33,11 @@ const {
   navActive    = '',
   bodyClass    = '',
   includePdfJs = false,
+  ogImage      = 'https://mediq.app/og.svg',
+  noindex      = false,
 } = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, 'https://mediq.app').href;
 
 const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -43,11 +49,28 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="canonical" href={canonicalURL} />
+  <link rel="sitemap" href="/sitemap.xml" />
   <title>{title}</title>
   <meta name="description" content={description} />
+  <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content={canonicalURL} />
   <meta property="og:title"       content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:type"        content="website" />
+  <meta property="og:image"       content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale"      content="es_ES" />
+  <meta property="og:site_name"   content="MediQ" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image"       content={ogImage} />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
