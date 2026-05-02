@@ -342,6 +342,18 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .menu.open { display: block; }
     .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 22px; border-radius: 999px; font-size: 13.5px; z-index: 999; opacity: 0; transition: opacity .2s ease; pointer-events: none; white-space: nowrap; }
     .toast.show { opacity: 1; }
+    /* ─── Onboarding ─── */
+    .ob-backdrop { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.55); z-index: 500; }
+    .ob-card { position: fixed; z-index: 502; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 16px; padding: 24px; width: min(320px, calc(100vw - 32px)); box-shadow: 0 24px 64px -20px rgba(0,0,0,.45); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .ob-tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .ob-card h3 { font-family: var(--f-display); font-size: 20px; font-weight: 400; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .ob-card p { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 20px; }
+    .ob-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .ob-dots { display: flex; gap: 5px; align-items: center; }
+    .ob-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rule-2); transition: all .2s ease; flex-shrink: 0; }
+    .ob-dot.on { background: var(--accent); width: 16px; border-radius: 3px; }
+    .ob-pulse { outline: 2px solid var(--accent) !important; outline-offset: 4px; animation: ob-ring 1.4s ease infinite; position: relative; z-index: 501; }
+    @keyframes ob-ring { 0%, 100% { outline-color: var(--accent); } 50% { outline-color: color-mix(in oklab, var(--accent) 25%, transparent); } }
     .menu button { display: flex; width: 100%; text-align: left; padding: 8px 12px; border-radius: 6px; font-size: 13.5px; color: var(--ink-soft); }
     .menu button:hover { background: var(--bg-2); color: var(--ink); }
     .menu button.on { color: var(--ink); font-weight: 500; }
@@ -695,6 +707,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       logoutBtn.hidden = false;
       updateWelcomeGreeting();
       loadChatsFromSupabase();
+      setTimeout(maybeStartOnboarding, 900);
       logoutBtn.addEventListener('click', async () => {
         await sb.auth.signOut();
         location.href = '/login';
@@ -1084,6 +1097,62 @@ INSTRUCCIONES:
       if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat clínico — MediQ'; }
       saveChats(); renderSidebar();
       deleteChatFromSupabase(id);
+    }
+
+    function maybeStartOnboarding() {
+      if (localStorage.getItem('mediq.onboarding.v1')) return;
+
+      const STEPS = [
+        { tag: 'Bienvenido', title: '¡Hola! Soy MediQ', body: 'Tu asistente clínico con IA. En cuatro pasos rápidos te enseñamos lo esencial.', target: null },
+        { tag: 'Chats', title: 'Historial de consultas', body: 'En la barra lateral tienes todas tus conversaciones, sincronizadas entre dispositivos. Créalas, fíjalas, compártelas o expórtalas.', target: '.sidebar' },
+        { tag: 'Especialidad', title: 'Adapta la respuesta', body: 'Cambia la especialidad activa para ajustar el enfoque de la IA: urgencias, cardiología, modo estudiante…', target: '#specialty-btn' },
+        { tag: 'Empieza aquí', title: 'El compositor', body: 'Describe el caso en lenguaje natural o adjunta PDFs: historias clínicas, guías, artículos. La IA razonará sobre ellos.', target: '#composer' },
+      ];
+
+      let step = 0;
+      let prevEl = null;
+
+      const backdrop = document.createElement('div');
+      backdrop.className = 'ob-backdrop';
+      const card = document.createElement('div');
+      card.className = 'ob-card';
+      document.body.append(backdrop, card);
+
+      function render() {
+        const s = STEPS[step];
+        if (prevEl) { prevEl.classList.remove('ob-pulse'); prevEl = null; }
+        if (s.target) {
+          const el = document.querySelector(s.target);
+          if (el && window.getComputedStyle(el).display !== 'none') {
+            el.classList.add('ob-pulse');
+            prevEl = el;
+          }
+        }
+        const dots = STEPS.map((_, i) => `<span class="ob-dot${i === step ? ' on' : ''}"></span>`).join('');
+        const isLast = step === STEPS.length - 1;
+        card.innerHTML = `
+          <div class="ob-tag">${s.tag} · ${step + 1} / ${STEPS.length}</div>
+          <h3>${s.title}</h3>
+          <p>${s.body}</p>
+          <div class="ob-footer">
+            <div class="ob-dots">${dots}</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost" id="ob-skip" style="font-size:13px;padding:7px 14px;">Saltar</button>
+              <button class="btn btn-primary" id="ob-next" style="font-size:13px;padding:7px 16px;">${isLast ? '¡Empezar! →' : 'Siguiente →'}</button>
+            </div>
+          </div>`;
+        card.querySelector('#ob-next').addEventListener('click', () => isLast ? finish() : (step++, render()));
+        card.querySelector('#ob-skip').addEventListener('click', finish);
+      }
+
+      function finish() {
+        if (prevEl) prevEl.classList.remove('ob-pulse');
+        backdrop.remove(); card.remove();
+        localStorage.setItem('mediq.onboarding.v1', '1');
+      }
+
+      backdrop.addEventListener('click', finish);
+      render();
     }
 
     function showToast(msg, ms = 2600) {
