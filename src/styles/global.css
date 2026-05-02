@@ -116,7 +116,7 @@ nav.top .row {
 .btn-ghost:hover { background: var(--surface); }
 .btn-accent { background: var(--accent); color: var(--accent-ink); }
 
-@media (max-width: 720px) { .nav-links { display: none; } .nav-actions-default { display: none !important; } }
+@media (max-width: 720px) { .nav-links { display: none; } #nav-actions-wrap { display: none; } }
 
 /* Hamburguesa */
 .burger-line { display: block; width: 20px; height: 2px; background: currentColor; border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }

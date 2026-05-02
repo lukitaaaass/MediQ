@@ -107,15 +107,17 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         <svg id="icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
 
-      <slot name="nav-actions">
-        <div id="nav-auth" style="display:flex; gap:10px; align-items:center;">
-          <a class="btn btn-ghost"   href="/login">Entrar</a>
-          <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
-        </div>
-      </slot>
+      <div id="nav-actions-wrap">
+        <slot name="nav-actions">
+          <div id="nav-auth" style="display:flex; gap:10px; align-items:center;">
+            <a class="btn btn-ghost"   href="/login">Entrar</a>
+            <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
+          </div>
+        </slot>
+      </div>
 
       <!-- Botón hamburguesa (solo móvil) -->
-      <button id="nav-burger" aria-label="Abrir menú" aria-expanded="false" style="display:none;width:36px;height:36px;border-radius:8px;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink);flex-shrink:0;">
+      <button id="nav-burger" aria-label="Abrir menú" aria-expanded="false" style="width:36px;height:36px;border-radius:8px;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--ink);flex-shrink:0;">
         <span class="burger-line"></span>
         <span class="burger-line"></span>
         <span class="burger-line"></span>
