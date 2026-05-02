@@ -1,0 +1,70 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Página no encontrada — MediQ">
+  <style is:global>
+    .not-found {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--pad);
+    }
+    .not-found .code {
+      font-family: var(--f-mono);
+      font-size: clamp(80px, 18vw, 180px);
+      line-height: 1;
+      color: var(--rule-2);
+      letter-spacing: -0.04em;
+      font-weight: 400;
+      margin-bottom: 0;
+    }
+    .not-found h1 {
+      font-size: clamp(24px, 3vw, 36px);
+      margin-top: 12px;
+      margin-bottom: 16px;
+    }
+    .not-found h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .not-found p {
+      color: var(--ink-soft);
+      font-size: 16px;
+      max-width: 40ch;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .not-found .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .not-found .ecg {
+      width: 160px;
+      height: 40px;
+      margin: 24px auto 0;
+      opacity: .18;
+    }
+  </style>
+
+  <main class="not-found">
+    <div class="code">404</div>
+    <svg class="ecg" viewBox="0 0 160 40" fill="none">
+      <polyline
+        points="0,20 30,20 38,4 46,36 54,8 62,20 160,20"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+    <h1>Página no <em>encontrada</em></h1>
+    <p>Esta ruta no existe o ha sido movida. Vuelve al inicio o abre el chat para continuar.</p>
+    <div class="actions">
+      <a href="/" class="btn btn-primary">Ir al inicio →</a>
+      <a href="/chat" class="btn btn-ghost">Abrir el chat</a>
+    </div>
+  </main>
+</Layout>
