@@ -1,23 +1,23 @@
 export async function POST({ request }) {
+  const { system, messages } = await request.json();
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return jsonErr('Parámetros inválidos: messages vacío', 400);
+  }
+
+  const apiKey = import.meta.env.GROQ_API_KEY;
+  if (!apiKey) {
+    return jsonErr('GROQ_API_KEY no está en el .env', 500);
+  }
+
+  const groqMessages = [
+    { role: 'system', content: system },
+    ...messages,
+  ];
+
+  let groqRes;
   try {
-    const { system, messages } = await request.json();
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return json({ error: 'Parámetros inválidos: messages vacío' }, 400);
-    }
-
-    const apiKey = import.meta.env.GROQ_API_KEY;
-    if (!apiKey) {
-      return json({ error: 'GROQ_API_KEY no está en el .env' }, 500);
-    }
-
-    // Groq usa formato OpenAI: system va como primer mensaje
-    const groqMessages = [
-      { role: 'system', content: system },
-      ...messages,
-    ];
-
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -27,32 +27,32 @@ export async function POST({ request }) {
         model: 'llama-3.3-70b-versatile',
         messages: groqMessages,
         max_tokens: 2048,
+        stream: true,
       }),
     });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      const msg = data?.error?.message || JSON.stringify(data);
-      console.error('[/api/chat] Groq error', res.status, msg);
-      return json({ error: `Groq ${res.status}: ${msg}` }, res.status);
-    }
-
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) {
-      return json({ error: 'Groq no devolvió texto: ' + JSON.stringify(data) }, 500);
-    }
-
-    return json({ text });
-
   } catch (err) {
-    console.error('[/api/chat] excepción:', err);
-    return json({ error: String(err.message || err) }, 500);
+    console.error('[/api/chat] fetch error:', err);
+    return jsonErr(String(err.message || err), 500);
   }
+
+  if (!groqRes.ok) {
+    const data = await groqRes.json();
+    const msg = data?.error?.message || JSON.stringify(data);
+    console.error('[/api/chat] Groq error', groqRes.status, msg);
+    return jsonErr(`Groq ${groqRes.status}: ${msg}`, groqRes.status);
+  }
+
+  return new Response(groqRes.body, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
 }
 
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
+function jsonErr(msg, status) {
+  return new Response(JSON.stringify({ error: msg }), {
     status,
     headers: { 'content-type': 'application/json' },
   });

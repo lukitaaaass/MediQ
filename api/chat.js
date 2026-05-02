@@ -19,8 +19,9 @@ export default async function handler(req, res) {
     ...messages,
   ];
 
+  let groqRes;
   try {
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -30,25 +31,37 @@ export default async function handler(req, res) {
         model: 'llama-3.3-70b-versatile',
         messages: groqMessages,
         max_tokens: 2048,
+        stream: true,
       }),
     });
-
-    const data = await groqRes.json();
-
-    if (!groqRes.ok) {
-      const msg = data?.error?.message || JSON.stringify(data);
-      console.error('[/api/chat] Groq error', groqRes.status, msg);
-      return res.status(groqRes.status).json({ error: `Groq ${groqRes.status}: ${msg}` });
-    }
-
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) {
-      return res.status(500).json({ error: 'Groq no devolvió texto: ' + JSON.stringify(data) });
-    }
-
-    return res.status(200).json({ text });
   } catch (err) {
-    console.error('[/api/chat] excepción:', err);
+    console.error('[/api/chat] fetch error:', err);
     return res.status(500).json({ error: String(err.message || err) });
+  }
+
+  if (!groqRes.ok) {
+    const data = await groqRes.json();
+    const msg = data?.error?.message || JSON.stringify(data);
+    console.error('[/api/chat] Groq error', groqRes.status, msg);
+    return res.status(groqRes.status).json({ error: `Groq ${groqRes.status}: ${msg}` });
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  const reader = groqRes.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(decoder.decode(value, { stream: true }));
+    }
+  } catch (err) {
+    console.error('[/api/chat] stream error:', err);
+  } finally {
+    res.end();
   }
 }
