@@ -15,6 +15,7 @@
  *   head           — elementos extra para <head>
  */
 import '../styles/global.css';
+import { ViewTransitions } from 'astro:transitions';
 
 interface Props {
   title?: string;
@@ -67,6 +68,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     </script>
   )}
 
+  <ViewTransitions />
   <slot name="head" />
 
   <!-- Aplicar tema guardado antes del primer paint para evitar flash -->

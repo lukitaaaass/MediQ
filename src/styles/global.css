@@ -141,6 +141,12 @@ nav.top .row {
 #nav-mobile-auth { display: flex; flex-direction: column; gap: 10px; }
 #nav-mobile-auth .btn { justify-content: center; border-radius: 10px; padding: 13px; }
 
+/* View Transitions */
+@keyframes vt-fade-in  { from { opacity: 0; transform: translateY(7px); } }
+@keyframes vt-fade-out { to   { opacity: 0; transform: translateY(-4px); } }
+::view-transition-old(root) { animation: vt-fade-out 160ms ease forwards; }
+::view-transition-new(root) { animation: vt-fade-in  200ms ease forwards; }
+
 /* Animación hamburguesa → X */
 #nav-burger.open .burger-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 #nav-burger.open .burger-line:nth-child(2) { opacity: 0; }
