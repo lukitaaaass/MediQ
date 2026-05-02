@@ -53,6 +53,7 @@ img, svg { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
 ::selection { background: var(--ink); color: var(--bg); }
+p, li, td, th { overflow-wrap: break-word; word-break: break-word; }
 
 .container { max-width: var(--container); margin: 0 auto; padding: 0 var(--pad); }
 
@@ -151,4 +152,10 @@ nav.top .row {
 #nav-burger.open .burger-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 #nav-burger.open .burger-line:nth-child(2) { opacity: 0; }
 #nav-burger.open .burger-line:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Mejoras táctiles globales */
+@media (max-width: 720px) {
+  .btn { min-height: 44px; }
+  h1 { word-break: break-word; }
+}
 
