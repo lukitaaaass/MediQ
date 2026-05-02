@@ -1,5 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
+const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout title="Precios — MediQ" navActive="/pricing" description="Planes de MediQ para médicos y equipos clínicos. Acceso al asistente IA de diagnóstico diferencial, verificador de interacciones y entrenamiento sobre documentación propia.">
@@ -224,7 +226,7 @@ import Layout from '../layouts/Layout.astro';
             <li>Historial cifrado por 10 años</li>
             <li>Soporte por email en &lt; 24h</li>
           </ul>
-          <a class="btn btn-primary" href="/login" onclick="window.track('Plan CTA',{plan:'practica'})">Empezar prueba de 14 días</a>
+          <button class="btn btn-primary" id="btn-practica" onclick="window.track('Plan CTA',{plan:'practica'})">Empezar prueba de 14 días →</button>
         </article>
 
         <article class="plan">
@@ -377,6 +379,60 @@ import Layout from '../layouts/Layout.astro';
     }
     bm.addEventListener('click', () => setBilling('m'));
     ba.addEventListener('click', () => setBilling('a'));
+  </script>
+
+  <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
+    (function () {
+      const btn = document.getElementById('btn-practica');
+      if (!btn) return;
+
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Redirigiendo…';
+
+        // Determinar el plan seleccionado (mensual / anual)
+        const isAnnual = document.getElementById('ba')?.classList.contains('on');
+        const plan = isAnnual ? 'annual' : 'monthly';
+
+        // Obtener sesión activa
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+          // No logueado → enviar a login con retorno a pricing
+          location.href = '/login?next=/pricing';
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/stripe-checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ plan }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error || 'Error al iniciar el pago. Inténtalo de nuevo.');
+            btn.disabled = false;
+            btn.textContent = 'Empezar prueba de 14 días →';
+            return;
+          }
+
+          window.track('Checkout Started', { plan });
+          location.href = data.url;
+        } catch (err) {
+          console.error('[checkout]', err);
+          alert('Error de red. Inténtalo de nuevo.');
+          btn.disabled = false;
+          btn.textContent = 'Empezar prueba de 14 días →';
+        }
+      });
+    })();
   </script>
 
 </Layout>

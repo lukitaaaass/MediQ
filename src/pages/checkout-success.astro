@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="¡Suscripción activada! — MediQ"
+  navActive=""
+  noindex={true}
+>
+<style is:global>
+  .success-page {
+    display: flex; align-items: center; justify-content: center;
+    min-height: calc(100vh - 64px);
+    padding: 40px var(--pad);
+    text-align: center;
+  }
+  .success-card {
+    max-width: 440px; width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 20px;
+    padding: clamp(32px, 5vw, 48px);
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .success-check {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: color-mix(in oklab, var(--ok) 14%, var(--bg));
+    border: 1px solid color-mix(in oklab, var(--ok) 30%, transparent);
+    display: grid; place-items: center;
+    color: var(--ok);
+  }
+  .success-card h1 { font-size: clamp(24px, 3vw, 32px); line-height: 1.1; }
+  .success-card p  { font-size: 15px; color: var(--ink-soft); line-height: 1.6; max-width: 34ch; }
+  .success-features {
+    width: 100%; display: flex; flex-direction: column; gap: 10px;
+    background: var(--bg-2); border-radius: 12px; padding: 16px 18px;
+    text-align: left;
+  }
+  .success-feat {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; color: var(--ink-soft);
+  }
+  .success-feat svg { color: var(--ok); flex-shrink: 0; }
+  .success-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .success-actions .btn { justify-content: center; border-radius: 10px; padding: 13px; font-size: 15px; }
+  .trial-note {
+    font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-mute);
+    letter-spacing: 0.04em; text-align: center;
+  }
+</style>
+
+<main class="success-page">
+  <div class="success-card">
+    <div class="success-check">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div>
+      <h1>¡Prueba activada!</h1>
+    </div>
+
+    <p>Tu período de prueba gratuito de 14 días ya está activo. No se cobra nada hasta que termine.</p>
+
+    <div class="success-features">
+      <div class="success-feat">
+        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Diagnósticos diferenciales con evidencia enlazada
+      </div>
+      <div class="success-feat">
+        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Verificador de interacciones farmacológicas
+      </div>
+      <div class="success-feat">
+        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Subida de PDFs e historias clínicas
+      </div>
+      <div class="success-feat">
+        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Integración con HCE (FHIR, HL7)
+      </div>
+    </div>
+
+    <div class="success-actions">
+      <a href="/chat" class="btn btn-primary">Ir al chat →</a>
+      <a href="/" class="btn btn-ghost">Volver al inicio</a>
+    </div>
+
+    <p class="trial-note">
+      Recibirás un email de confirmación en breve.<br/>
+      Cancela cuando quieras desde tu cuenta.
+    </p>
+  </div>
+</main>
+</Layout>
