@@ -728,7 +728,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ═══════════════════════════════════════════════════════════
        PROMPT
        ═══════════════════════════════════════════════════════════ */
-    function systemPrompt() {
+    const TOPIC_SHIFT_RE = /\b(cambiando de tema|cambio de tema|otra cosa|por cierto|nueva pregunta|pregunta distinta|deja eso|olvida lo anterior|nuevo caso)\b/i;
+    const HISTORY_THRESHOLD = 20;
+
+    function systemPrompt(chat) {
       const corpus = JSON.parse(localStorage.getItem('mediq.corpus.v1') || '[]');
       const catMeta = {
         guideline: { label: 'GUÍA CLÍNICA / PROTOCOLO', instruction: 'Trátalo como protocolo oficial. Sigue sus recomendaciones con prioridad sobre tu conocimiento general. Cita el grado de recomendación si aparece en el texto.' },
@@ -746,9 +749,17 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         corpusSection = `\n\nBASE DE CONOCIMIENTO PERSONALIZADA (${corpus.length} documento${corpus.length > 1 ? 's' : ''} subidos por el equipo):\nEstos documentos son tu referencia prioritaria. Cuando sean relevantes para la consulta, úsalos antes que tu conocimiento general y cita el nombre del documento. Cada documento incluye una instrucción específica de cómo usarlo.\n\n${docs}\n\n---`;
       }
 
-      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${corpusSection}
+      const msgs = chat?.messages?.filter(m => !m.pending) || [];
+      const hasTopic = msgs.length >= 2 && chat?.title;
+      const topicLine = hasTopic ? `\nTEMA ACTUAL DE LA CONVERSACIÓN: "${chat.title}"\n` : '';
 
-INSTRUCCIONES:
+      const summaryLine = chat?.historySummary
+        ? `\nRESUMEN DE INTERCAMBIOS ANTERIORES (contexto comprimido):\n${chat.historySummary}\n`
+        : '';
+
+      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
+
+INSTRUCCIONES GENERALES:
 - Responde SIEMPRE en español, en lenguaje natural y profesional médico.
 - Usa lenguaje claro, estructurado con encabezados (##) y listas cuando ayude a la legibilidad.
 - Cuando se trate de un caso clínico, organiza tu respuesta así:
@@ -762,7 +773,64 @@ INSTRUCCIONES:
 - AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"
 - Si te preguntan algo no clínico, redirige amablemente al uso clínico.
 - Cuando el usuario adjunte documentos PDF (verás bloques delimitados por "===== DOCUMENTO ADJUNTO ====="), léelos cuidadosamente, identifica si son historias clínicas, analíticas, informes, papers, guías o protocolos, y razona sobre su contenido. Cita textualmente fragmentos relevantes entre comillas cuando aporten valor. Indica si falta información para una conclusión sólida.
-- Sé conciso pero completo. No inventes referencias. Si no sabes algo, dilo.`;
+- Sé conciso pero completo. No inventes referencias. Si no sabes algo, dilo.
+
+CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
+- El último mensaje del usuario debe interpretarse SIEMPRE en el contexto del tema actual de la conversación, no como una pregunta aislada.
+- Si el usuario menciona un dato nuevo (síntoma, alergia, medicamento, condición, preferencia), trátalo como INFORMACIÓN ADICIONAL sobre el tema en curso e incorpóralo al razonamiento inmediatamente. Ejemplo: si se habla de vértigos y el usuario dice "tengo alergia a la aspirina", NO expliques qué es la aspirina — ajusta las opciones terapéuticas del caso actual excluyendo la aspirina.
+- NUNCA definas términos médicos conocidos (fármacos, enfermedades, procedimientos) a menos que el usuario pida explícitamente "¿qué es X?" o "explícame X".
+- NUNCA derives hacia tangentes (etimología, historia del fármaco, datos epidemiológicos generales) salvo petición explícita.
+- Si el historial muestra un caso clínico en desarrollo, cada mensaje nuevo es una actualización de ese caso, no un caso nuevo.`;
+    }
+
+    async function summarizeHistory(chat) {
+      const msgs = chat.messages.filter(m => !m.pending);
+      // Resumir solo los mensajes antiguos (todos menos los últimos 8)
+      const toSummarize = msgs.slice(0, -8);
+      if (toSummarize.length < 4) return;
+
+      const summaryMsgs = toSummarize.map(m => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: m.text,
+      }));
+      summaryMsgs.push({
+        role: 'user',
+        content: 'Resume en máximo 120 palabras los puntos clave de esta conversación: datos del paciente, síntomas relevantes, alergias, fármacos mencionados, diagnósticos discutidos y decisiones tomadas. Solo los hechos, sin formato, sin introducción.',
+      });
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system: `Eres un asistente médico. Tu única tarea es resumir conversaciones clínicas de forma concisa y fáctica.`,
+            messages: summaryMsgs,
+          }),
+        });
+        if (!res.ok) return;
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let summary = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
+            try {
+              const delta = JSON.parse(line.slice(6))?.choices?.[0]?.delta?.content;
+              if (delta) summary += delta;
+            } catch {}
+          }
+        }
+        if (summary.trim()) {
+          chat.historySummary = summary.trim();
+          saveChats(chat);
+        }
+      } catch (err) {
+        console.warn('[summarize] error (non-fatal):', err);
+      }
     }
 
     function corpusCount() {
@@ -1478,9 +1546,14 @@ ${msgsHtml}
       chat.messages.push(pending);
       renderMessages(chat);
 
-      const apiMsgs = chat.messages
+      const allMsgs = chat.messages
         .filter(m => !m.pending)
         .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+
+      // Si hay resumen cacheado, usar solo los últimos 8 mensajes + el resumen ya está en el system prompt
+      const apiMsgs = chat.historySummary && allMsgs.length > HISTORY_THRESHOLD
+        ? allMsgs.slice(-8)
+        : allMsgs;
 
       if (attachments.length) {
         for (let i = apiMsgs.length - 1; i >= 0; i--) {
@@ -1508,8 +1581,13 @@ ${msgsHtml}
         input.focus();
       }
 
+      // Detectar cambio de tema explícito → limpiar topic/summary para no anclar el modelo
+      if (TOPIC_SHIFT_RE.test(text)) {
+        delete chat.historySummary;
+      }
+
       await window.claude.stream({
-        system: systemPrompt(),
+        system: systemPrompt(chat),
         messages: apiMsgs,
         onChunk(accumulated) {
           pending.text = accumulated;
@@ -1521,6 +1599,11 @@ ${msgsHtml}
           pending.pending = false;
           pending.at = Date.now();
           finishSend();
+          // Generar resumen en background cuando se supera el umbral
+          const completedMsgs = chat.messages.filter(m => !m.pending);
+          if (completedMsgs.length >= HISTORY_THRESHOLD && !chat.historySummary) {
+            summarizeHistory(chat);
+          }
         },
         onError(err) {
           console.error('[chat] error:', err);
