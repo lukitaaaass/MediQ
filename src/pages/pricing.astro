@@ -388,49 +388,26 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+      const PAYMENT_LINKS = {
+        monthly: 'https://buy.stripe.com/test_7sY14pcbJ3Ik1eq4cM6wE00',
+        annual:  'https://buy.stripe.com/test_4gM9AV5Nl5Qs0amgZy6wE01',
+      };
+
       btn.addEventListener('click', async () => {
         btn.disabled = true;
         btn.textContent = 'Redirigiendo…';
 
-        // Determinar el plan seleccionado (mensual / anual)
         const isAnnual = document.getElementById('ba')?.classList.contains('on');
         const plan = isAnnual ? 'annual' : 'monthly';
 
-        // Obtener sesión activa
         const { data: { session } } = await sb.auth.getSession();
         if (!session) {
-          // No logueado → enviar a login con retorno a pricing
           location.href = '/login?next=/pricing';
           return;
         }
 
-        try {
-          const res = await fetch('/api/stripe-checkout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({ plan }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            alert(data.error || 'Error al iniciar el pago. Inténtalo de nuevo.');
-            btn.disabled = false;
-            btn.textContent = 'Empezar prueba de 14 días →';
-            return;
-          }
-
-          window.track('Checkout Started', { plan });
-          location.href = data.url;
-        } catch (err) {
-          console.error('[checkout]', err);
-          alert('Error de red. Inténtalo de nuevo.');
-          btn.disabled = false;
-          btn.textContent = 'Empezar prueba de 14 días →';
-        }
+        window.track('Checkout Started', { plan });
+        location.href = `${PAYMENT_LINKS[plan]}?prefilled_email=${encodeURIComponent(session.user.email)}`;
       });
     })();
   </script>
