@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "postinstall": "patch-package"
+    "postinstall": "node scripts/patch-vercel-adapter.js"
   },
   "dependencies": {
     "@astrojs/node": "^8.3.4",
