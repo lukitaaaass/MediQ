@@ -1,8 +1,8 @@
 import Stripe from 'stripe';
 
 const PRICE_IDS = {
-  monthly: 'price_1TSfmUQ7vgQfCtG2fhnfiNsY',
-  annual: 'price_1TSfoOQ7vgQfCtG23sALPegZ',
+  monthly: 'price_1TUBopQ7vgQfCtG2Pr5iXJuH',
+  annual: 'price_1TUBpNQ7vgQfCtG2bjO1q2Du',
 };
 
 export async function POST({ request }) {
