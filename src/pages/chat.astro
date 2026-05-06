@@ -742,7 +742,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
     let paywallActive = false;
 
+    const ADMIN_EMAILS = ['lucasjuarezparada@gmail.com'];
+
     async function checkSubscription(userId) {
+      if (sbUser?.email && ADMIN_EMAILS.includes(sbUser.email)) return;
       try {
         const { data } = await sb
           .from('subscriptions')
