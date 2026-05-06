@@ -1,18 +1,18 @@
 import Stripe from 'stripe';
 
 const PRICE_IDS = {
-  monthly: 'price_XXXXXXXXXXXXXXXXXXXXXXXX',  // reemplaza con tu price_id mensual de Stripe
-  annual:  'price_XXXXXXXXXXXXXXXXXXXXXXXX',  // reemplaza con tu price_id anual de Stripe
+  monthly: 'price_1TSfmUQ7vgQfCtG2fhnfiNsY',
+  annual: 'price_1TSfoOQ7vgQfCtG23sALPegZ',
 };
 
 export async function POST({ request }) {
   const token = (request.headers.get('Authorization') || '').replace('Bearer ', '').trim();
   if (!token) return jsonErr('No autorizado', 401);
 
-  const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
+  const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-  const STRIPE_KEY        = import.meta.env.STRIPE_SECRET_KEY;
-  const SITE_URL          = import.meta.env.PUBLIC_SITE_URL || 'https://mediq.app';
+  const STRIPE_KEY = import.meta.env.STRIPE_SECRET_KEY;
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'https://mediq.app';
 
   // Verificar JWT con Supabase
   const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -38,7 +38,7 @@ export async function POST({ request }) {
     customer_email: user.email,
     metadata: { user_id: user.id },
     success_url: `${SITE_URL}/checkout-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url:  `${SITE_URL}/pricing`,
+    cancel_url: `${SITE_URL}/pricing`,
   });
 
   return new Response(JSON.stringify({ url: session.url }), {
