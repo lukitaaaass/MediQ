@@ -1,0 +1,13 @@
+diff --git a/node_modules/@astrojs/vercel/dist/index.js b/node_modules/@astrojs/vercel/dist/index.js
+index f3fb62c..6f1e292 100644
+--- a/node_modules/@astrojs/vercel/dist/index.js
++++ b/node_modules/@astrojs/vercel/dist/index.js
+@@ -338,7 +338,7 @@ function vercelAdapter({
+             );
+           }
+         }
+-        const fourOhFourRoute = routes.find((route) => route.pathname === "/404");
++        const fourOhFourRoute = routes?.find((route) => route.pathname === "/404");
+         const vercelConfigJson = new URL("./.vercel/output/config.json", _config.root);
+         const finalRoutes = [
+           {
