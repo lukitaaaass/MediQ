@@ -95,6 +95,16 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <ViewTransitions />
   <slot name="head" />
 
+  <!--
+    CSS para el toggle de visibilidad del header según data-auth.
+    Lo metemos aquí para que sea autocontenido.
+  -->
+  <style is:global>
+    .nav-auth-state { display: none !important; }
+    html[data-auth="out"] #nav-auth-out { display: flex !important; }
+    html[data-auth="in"]  #nav-auth-in  { display: flex !important; }
+  </style>
+
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
   {PLAUSIBLE_DOMAIN && (
     <script
@@ -114,11 +124,40 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     };
   </script>
 
-  <!-- Aplicar tema guardado antes del primer paint para evitar flash -->
+  <!--
+    Script de pre-paint: aplica tema, tweaks y estado de sesión ANTES del
+    primer paint para eliminar cualquier flash (FOUC de color, tipografía
+    o botones de nav).
+  -->
   <script is:inline>
     (function () {
-      document.documentElement.setAttribute('data-dark',
-        localStorage.getItem('mediq.theme') === 'dark' ? 'true' : 'false');
+      var r = document.documentElement;
+
+      // Dark mode
+      try {
+        r.setAttribute('data-dark',
+          localStorage.getItem('mediq.theme') === 'dark' ? 'true' : 'false');
+      } catch (e) { r.setAttribute('data-dark', 'false'); }
+
+      // Tweaks de diseño (paleta, tipografía, estilo visual)
+      try {
+        var tw = JSON.parse(localStorage.getItem('mediq:tweaks') || 'null') || {
+          theme: 'clinical', typePair: 'serif-soft', visualStyle: 'technical'
+        };
+        r.setAttribute('data-theme', tw.theme);
+        r.setAttribute('data-type',  tw.typePair);
+        r.setAttribute('data-style', tw.visualStyle);
+      } catch (e) {
+        r.setAttribute('data-theme', 'clinical');
+        r.setAttribute('data-type',  'serif-soft');
+        r.setAttribute('data-style', 'technical');
+      }
+
+      // Pista de sesión: pinta el header correcto desde el primer render
+      try {
+        r.setAttribute('data-auth',
+          localStorage.getItem('mediq.authHint') === 'in' ? 'in' : 'out');
+      } catch (e) { r.setAttribute('data-auth', 'out'); }
     })();
   </script>
 </head>
@@ -154,9 +193,22 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 
       <div id="nav-actions-wrap">
         <slot name="nav-actions">
-          <div id="nav-auth" style="display:flex; gap:10px; align-items:center;">
+          <!--
+            Renderizamos AMBOS estados en HTML. El CSS usa
+            html[data-auth="in|out"] para mostrar uno u otro sin flash.
+            El script de Supabase de abajo confirma/corrige el estado.
+          -->
+          <div id="nav-auth-out" class="nav-auth-state" style="display:flex; gap:10px; align-items:center;">
             <a class="btn btn-ghost"   href="/login">Entrar</a>
             <a class="btn btn-primary" href="/login">Solicitar acceso <span aria-hidden="true">→</span></a>
+          </div>
+          <div id="nav-auth-in" class="nav-auth-state" style="display:flex; gap:10px; align-items:center;">
+            <span style="display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-soft);">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span>
+              <span id="nav-auth-name">&nbsp;</span>
+            </span>
+            <a class="btn btn-ghost" href="/account">Mi cuenta</a>
+            <a class="btn btn-ghost" href="/chat">Ir al chat</a>
           </div>
         </slot>
       </div>
@@ -169,6 +221,17 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       </button>
     </div>
   </nav>
+
+  <!-- Pre-fill nombre: evita que aparezca vacío hasta que Supabase responde -->
+  <script is:inline>
+    (function () {
+      const nameEl = document.getElementById('nav-auth-name');
+      if (nameEl && localStorage.getItem('mediq.authHint') === 'in') {
+        const saved = localStorage.getItem('mediq.userName');
+        if (saved) nameEl.textContent = saved;
+      }
+    })();
+  </script>
 
   <!-- Menú móvil -->
   <div id="nav-mobile" aria-hidden="true">
@@ -212,11 +275,33 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-2)');
       btn.addEventListener('mouseleave', () => btn.style.background = '');
 
-      // View Transitions: aplica el tema al documento entrante antes del intercambio
+      // View Transitions: replica TODOS los data-* relevantes en el documento
+      // entrante antes del swap para evitar cualquier flash de tema o auth.
       document.addEventListener('astro:before-swap', (e) => {
-        const dark = localStorage.getItem('mediq.theme') === 'dark';
-        e.newDocument.documentElement.setAttribute('data-dark', dark ? 'true' : 'false');
+        const src = document.documentElement;
+        const dst = e.newDocument.documentElement;
+        ['data-dark', 'data-theme', 'data-type', 'data-style', 'data-auth'].forEach(attr => {
+          const v = src.getAttribute(attr);
+          if (v != null) dst.setAttribute(attr, v);
+        });
+        window.__astroNavDir = e.direction; // 'forward' | 'back'
+
+        // FIX pantalla en blanco: el snapshot de View Transitions se captura DESPUÉS
+        // del swap pero ANTES de que corran los scripts (que añaden .in).
+        // Activando data-no-reveal aquí, el CSS ya fuerza opacity:1 en .reveal
+        // cuando se toma el snapshot → la imagen capturada muestra contenido visible.
+        if (e.direction === 'back') {
+          src.setAttribute('data-no-reveal', '');
+        } else {
+          src.removeAttribute('data-no-reveal');
+        }
       });
+
+      // Detecta botón atrás/adelante del navegador (fiable, se registra una sola vez)
+      if (!window.__pstateReg) {
+        window.__pstateReg = true;
+        window.addEventListener('popstate', () => { window.__didPop = true; });
+      }
     })();
   </script>
 
@@ -247,27 +332,44 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     })();
   </script>
 
-  <!-- Comprobación de sesión Supabase para los botones del nav -->
+  <!--
+    Comprobación de sesión Supabase.
+    En vez de reescribir el HTML (que provoca el flash), aquí solo:
+      1. Guardamos mediq.authHint en localStorage para que el script del
+         <head> pinte el header correcto en la SIGUIENTE navegación.
+      2. Corregimos data-auth en el documento actual si es necesario.
+      3. Rellenamos el nombre dentro del slot ya existente.
+  -->
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
     (function () {
-      const navAuth = document.getElementById('nav-auth');
-      if (!navAuth) return;
+      const root   = document.documentElement;
+      // nameEl solo existe en páginas con el slot nav-actions por defecto.
+      // En chat/login/account se usa un slot personalizado, pero igual
+      // necesitamos el sync entre pestañas → no hacemos early return.
+      const nameEl = document.getElementById('nav-auth-name');
 
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      sb.auth.getSession().then(({ data: { session } }) => {
-        if (!session) return;
-        const raw   = session.user.user_metadata?.name || session.user.email.split('@')[0];
-        const first = raw.split(' ')[0];
-        const safe  = first.replace(/[&<>"']/g, c =>
-          ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
-        );
-        navAuth.innerHTML =
-          `<span style="display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--ink-soft);">
-            <span style="width:7px;height:7px;border-radius:50%;background:var(--ok);flex-shrink:0;"></span>
-            ${safe}
-          </span>
-          <a class="btn btn-ghost" href="/chat">Ir al chat</a>`;
-      });
+
+      function applySession(session) {
+        const hint = session ? 'in' : 'out';
+        root.setAttribute('data-auth', hint);
+        try { localStorage.setItem('mediq.authHint', hint); } catch (_) {}
+        if (session) {
+          const raw = session.user.user_metadata?.name || session.user.email.split('@')[0];
+          const first = raw.split(' ')[0];
+          try { localStorage.setItem('mediq.userName', first); } catch (_) {}
+          if (nameEl) nameEl.textContent = first;
+        } else {
+          try { localStorage.removeItem('mediq.userName'); } catch (_) {}
+          if (nameEl) nameEl.textContent = '';
+        }
+      }
+
+      sb.auth.getSession().then(({ data: { session } }) => applySession(session));
+
+      // Supabase dispara onAuthStateChange en TODAS las pestañas cuando
+      // la sesión cambia, gracias a su listener interno de storage.
+      sb.auth.onAuthStateChange((_event, session) => applySession(session));
     })();
   </script>
 

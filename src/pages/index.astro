@@ -16,6 +16,8 @@ import Layout from '../layouts/Layout.astro';
 -->
 <style is:global>
   :root {
+    color-scheme: light;
+
     /* CLINICAL (default) */
     --bg: #f6f5f1;
     --bg-2: #efede6;
@@ -45,6 +47,7 @@ import Layout from '../layouts/Layout.astro';
     --accent: oklch(52% 0.13 45); --surface: #fbf6ec;
   }
   [data-theme="ink"] {
+    color-scheme: dark;
     --bg: #0e1113; --bg-2: #14181b; --ink: #f2f0ea; --ink-soft: #c6c3ba;
     --ink-mute: #7f837f; --rule: #f2f0ea14; --rule-2: #f2f0ea22;
     --accent: oklch(78% 0.13 155); --accent-ink: #0e1113; --surface: #191d20;
@@ -144,11 +147,12 @@ import Layout from '../layouts/Layout.astro';
   .foot-muted { display: block; padding: 4px 0; color: var(--ink-mute); cursor: default; }
   .foot-bot { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0.06em; }
 
-  /* Scroll animations */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
-  .reveal.in { opacity: 1; transform: none; }
-  .word-reveal .w { display: inline-block; opacity: 0; transform: translateY(.4em); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.7,.2,1); }
-  .word-reveal.in .w { opacity: 1; transform: none; }
+  /* Scroll animations — opacidad siempre 1 para evitar pantalla en blanco
+     en View Transitions; la animación es solo de posición (slide suave). */
+  .reveal { transform: translateY(18px); transition: transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0ms); }
+  .reveal.in { transform: none; }
+  .word-reveal .w { display: inline-block; transform: translateY(.4em); transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+  .word-reveal.in .w { transform: none; }
 
   /* Tweaks panel */
   .tweaks-panel { position: fixed; right: 20px; bottom: 20px; z-index: 100; width: 300px; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 14px; padding: 18px; box-shadow: 0 30px 60px -30px #00000040; display: none; font-family: var(--f-body); }
@@ -603,7 +607,16 @@ import Layout from '../layouts/Layout.astro';
     document.querySelectorAll('#t-style button').forEach(b => b.classList.toggle('on', b.dataset.val === t.visualStyle));
     const brandInput = document.getElementById('t-brand');
     if (brandInput && document.activeElement !== brandInput) brandInput.value = t.brandName;
+
+    // Persistir para que el script del <head> restaure los data-* antes del primer paint
+    try { localStorage.setItem('mediq:tweaks', JSON.stringify(t)); } catch (e) {}
   }
+
+  // Si el script del <head> ya restauró tweaks desde localStorage, adoptamos esos valores
+  try {
+    const stored = JSON.parse(localStorage.getItem('mediq:tweaks') || 'null');
+    if (stored && typeof stored === 'object') Object.assign(window.TWEAKS, stored);
+  } catch (e) {}
 
   applyTweaks(window.TWEAKS);
 
@@ -651,19 +664,47 @@ import Layout from '../layouts/Layout.astro';
   });
 
   /* ───────── Scroll reveal ─────────
-     Desconectamos el observer anterior si lo hay (evita observar elementos
-     duplicados en re-ejecuciones por navegación SPA).
+     Primera visita en la sesión: anima los elementos al entrar en viewport.
+     Visitas posteriores (SPA, botón atrás, etc.): visible de golpe.
+     pageshow.persisted: restauración desde bfcache del navegador.
+
+     sessionStorage es la señal más fiable porque sobrevive las View
+     Transitions pero se resetea al cerrar la pestaña (nueva sesión = nueva
+     animación). No dependemos del timing de snapshots ni de popstate.
   */
   if (window.__revealObserver) window.__revealObserver.disconnect();
-  window.__revealObserver = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) { e.target.classList.add('in'); window.__revealObserver.unobserve(e.target); }
+
+  const _alreadySeen = !!sessionStorage.getItem('mediq.index.v1');
+  if (!_alreadySeen) sessionStorage.setItem('mediq.index.v1', '1');
+
+  const _showNow = _alreadySeen || window.__didPop || window.__astroNavDir === 'back';
+  window.__didPop      = false;
+  window.__astroNavDir = undefined;
+
+  if (_showNow) {
+    document.querySelectorAll('.reveal, .word-reveal').forEach(el => el.classList.add('in'));
+  } else {
+    window.__revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('in'); window.__revealObserver.unobserve(e.target); }
+      });
+    }, { threshold: 0.14, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal, .word-reveal').forEach(el => {
+      el.classList.remove('in');
+      window.__revealObserver.observe(el);
     });
-  }, { threshold: 0.14, rootMargin: '0px 0px -40px 0px' });
-  document.querySelectorAll('.reveal, .word-reveal').forEach(el => {
-    el.classList.remove('in'); // permite re-animar al volver via SPA
-    window.__revealObserver.observe(el);
-  });
+  }
+
+  // Bfcache: el navegador restaura la página congelada sin re-ejecutar scripts.
+  // pageshow con persisted=true es el único hook fiable en ese caso.
+  if (!window.__pgsReveal) {
+    window.__pgsReveal = true;
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) {
+        document.querySelectorAll('.reveal, .word-reveal').forEach(el => el.classList.add('in'));
+      }
+    });
+  }
 
   /* ───────── Tweak-mode host protocol ─────────
      Solo registramos el listener de postMessage UNA VEZ por sesión.

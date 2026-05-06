@@ -147,6 +147,13 @@ nav.top .row {
 @keyframes vt-fade-out { to   { opacity: 0; transform: translateY(-4px); } }
 ::view-transition-old(root) { animation: vt-fade-out 160ms ease forwards; }
 ::view-transition-new(root) { animation: vt-fade-in  200ms ease forwards; }
+/* Navegación con botón atrás: restauración instantánea sin fundido */
+html[data-astro-transition="back"] ::view-transition-old(root),
+html[data-astro-transition="back"] ::view-transition-new(root) { animation: none; }
+
+/* Elimina el slide de posición en navegaciones de vuelta (belt & suspenders). */
+html[data-no-reveal] .reveal { transform: none !important; transition: none !important; }
+html[data-no-reveal] .word-reveal .w { transform: none !important; }
 
 /* Animación hamburguesa → X */
 #nav-burger.open .burger-line:nth-child(1) { transform: translateY(7px) rotate(45deg); }
