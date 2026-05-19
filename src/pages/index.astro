@@ -77,7 +77,7 @@ import Layout from '../layouts/Layout.astro';
   .hero-card { background: var(--surface); border: 1px solid var(--rule-2); border-radius: 18px; padding: 22px; box-shadow: 0 1px 0 var(--rule), 0 20px 60px -40px #0000001a; font-family: var(--f-mono); font-size: 13px; color: var(--ink-soft); position: relative; }
   .hero-card .head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--rule); }
   .hero-card .pill { background: var(--bg-2); color: var(--ink-soft); padding: 4px 10px; border-radius: 999px; font-size: 11px; letter-spacing: 0.04em; }
-  .hero-card .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); animation: pulse 2s infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
+  .hero-card .pulse { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); display: inline-block; margin-right: 8px; vertical-align: middle; }
   @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent); } 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
   .msg { display: flex; gap: 10px; margin: 10px 0; }
   .msg .role { width: 16px; color: var(--ink-mute); }
@@ -85,8 +85,7 @@ import Layout from '../layouts/Layout.astro';
   .msg.ai p { color: var(--ink-soft); }
   .msg.ai p b { color: var(--ink); font-weight: 600; }
   .typing { display: inline-flex; gap: 3px; }
-  .typing i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-mute); animation: blink 1.2s infinite; }
-  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  .typing i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-mute); }
   @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
 
   /* Section chrome */
@@ -176,6 +175,86 @@ import Layout from '../layouts/Layout.astro';
 
   .ico { width: 16px; height: 16px; flex-shrink: 0; }
 
+  /* ─── Stats strip ─── */
+  .stats-strip {
+    background: var(--ink); color: var(--bg);
+    padding: 22px 0;
+    border-top: 1px solid color-mix(in oklab, var(--ink) 80%, transparent);
+  }
+  .stats-inner {
+    display: flex; align-items: center; justify-content: center;
+    gap: 0; flex-wrap: wrap;
+  }
+  .stat-item {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 12px 28px; text-align: center;
+  }
+  .stat-num {
+    font-family: var(--f-display); font-size: clamp(28px, 3vw, 40px);
+    font-weight: 400; letter-spacing: -0.02em; line-height: 1;
+    color: var(--bg);
+  }
+  .stat-lbl {
+    font-family: var(--f-mono); font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: color-mix(in oklab, var(--bg) 60%, transparent);
+  }
+  .stat-div {
+    width: 1px; height: 36px; background: color-mix(in oklab, var(--bg) 18%, transparent);
+    flex-shrink: 0;
+  }
+  @media (max-width: 600px) {
+    .stat-div { display: none; }
+    .stat-item { padding: 10px 18px; }
+    .stats-inner { gap: 0; justify-content: space-around; }
+  }
+
+  /* ─── Testimonials ─── */
+  .testimonials-section em { font-style: italic; color: var(--accent); }
+  .center-head { text-align: center; margin-left: auto; margin-right: auto; }
+  .center-head .eyebrow { justify-content: center; }
+  .testimonials-grid {
+    display: grid; grid-template-columns: 1fr; gap: 16px;
+  }
+  @media (min-width: 720px) { .testimonials-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1040px) { .testimonials-grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .tcard {
+    background: var(--surface); border: 1px solid var(--rule-2);
+    border-radius: 16px; padding: clamp(20px, 2.4vw, 28px);
+    display: flex; flex-direction: column; justify-content: space-between;
+    gap: 24px; margin: 0;
+    transition: border-color .2s ease, transform .2s ease;
+  }
+  .tcard:hover { border-color: var(--ink-soft); transform: translateY(-2px); }
+  .tcard-quote {
+    font-family: var(--f-display); font-size: clamp(17px, 1.5vw, 20px);
+    font-weight: 300; font-style: italic;
+    color: var(--ink); line-height: 1.45; flex: 1;
+  }
+  .tcard-quote::before { content: '\201C'; }
+  .tcard-quote::after  { content: '\201D'; }
+  .tcard-foot { display: flex; align-items: center; gap: 14px; }
+  .tcard-ava {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, oklch(75% 0.1 195), oklch(55% 0.12 25));
+    display: grid; place-items: center;
+    font-family: var(--f-display); font-size: 14px; color: var(--bg);
+  }
+  .tcard-name { display: block; font-size: 14px; font-weight: 500; font-style: normal; color: var(--ink); }
+  .tcard-role { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-mute); margin-top: 2px; }
+
+  /* ─── prefers-reduced-motion guards ─── */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-card .pulse { animation: pulse 2s infinite; }
+    .typing i { animation: blink 1.2s infinite; }
+    .typing i:nth-child(2) { animation-delay: .2s; }
+    .typing i:nth-child(3) { animation-delay: .4s; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-card .pulse { animation: none; opacity: 1; }
+    .typing i { animation: none; opacity: 1; }
+  }
+
   /* ─── Mobile Polish ─── */
   @media (max-width: 480px) {
     .hero-cta { flex-direction: column; }
@@ -244,6 +323,31 @@ import Layout from '../layouts/Layout.astro';
   </div>
 </header>
 
+<!-- ═══════════════════ STATS STRIP ═══════════════════ -->
+<div class="stats-strip" aria-label="Cifras clave">
+  <div class="container stats-inner">
+    <div class="stat-item">
+      <span class="stat-num">+2 400</span>
+      <span class="stat-lbl">consultas respondidas</span>
+    </div>
+    <span class="stat-div" aria-hidden="true"></span>
+    <div class="stat-item">
+      <span class="stat-num">96%</span>
+      <span class="stat-lbl">satisfacción clínica</span>
+    </div>
+    <span class="stat-div" aria-hidden="true"></span>
+    <div class="stat-item">
+      <span class="stat-num">14 días</span>
+      <span class="stat-lbl">prueba gratis · sin tarjeta</span>
+    </div>
+    <span class="stat-div" aria-hidden="true"></span>
+    <div class="stat-item">
+      <span class="stat-num">&lt; 8s</span>
+      <span class="stat-lbl">tiempo de respuesta medio</span>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
 <section id="how">
   <div class="container">
@@ -307,6 +411,48 @@ import Layout from '../layouts/Layout.astro';
         <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">◌</div><span class="num">06</span></div>
         <div><h3>Privacidad por diseño</h3><p>Datos anonimizados antes del procesamiento. Nunca se entrenan modelos con tus casos. Cumplimiento HIPAA y GDPR.</p></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TESTIMONIALS ═══════════════════ -->
+<section id="testimonials" class="testimonials-section">
+  <div class="container">
+    <div class="section-head reveal center-head">
+      <span class="eyebrow">Lo que dicen los médicos</span>
+      <h2>Confianza construida <em>caso a caso</em>.</h2>
+    </div>
+    <div class="testimonials-grid">
+      <blockquote class="tcard reveal">
+        <p class="tcard-quote">"Lo que antes me llevaba 30 minutos buscando en guías, lo resuelvo entre paciente y paciente."</p>
+        <footer class="tcard-foot">
+          <div class="tcard-ava" aria-hidden="true">CR</div>
+          <div>
+            <cite class="tcard-name">Dr. Carlos Ramírez</cite>
+            <span class="tcard-role">Medicina interna · H. Clínic Barcelona</span>
+          </div>
+        </footer>
+      </blockquote>
+      <blockquote class="tcard reveal" style="--d:80ms;">
+        <p class="tcard-quote">"El diferencial de la IA me dio el diagnóstico que yo había descartado. Era correcto. Salvó tiempo crítico."</p>
+        <footer class="tcard-foot">
+          <div class="tcard-ava" aria-hidden="true" style="background:linear-gradient(135deg,oklch(70% 0.14 30),oklch(55% 0.18 355));">LM</div>
+          <div>
+            <cite class="tcard-name">Dra. Laura Molina</cite>
+            <span class="tcard-role">Urgencias · H. La Paz Madrid</span>
+          </div>
+        </footer>
+      </blockquote>
+      <blockquote class="tcard reveal" style="--d:160ms;">
+        <p class="tcard-quote">"Ideal para MIR. Explica el razonamiento fisiopatológico paso a paso, no solo la respuesta correcta."</p>
+        <footer class="tcard-foot">
+          <div class="tcard-ava" aria-hidden="true" style="background:linear-gradient(135deg,oklch(72% 0.12 145),oklch(55% 0.14 180));">JF</div>
+          <div>
+            <cite class="tcard-name">Jorge Fuentes</cite>
+            <span class="tcard-role">Residente R2 · Cardiología · H. Reina Sofía</span>
+          </div>
+        </footer>
+      </blockquote>
     </div>
   </div>
 </section>

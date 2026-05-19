@@ -16,6 +16,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <a slot="nav-actions" class="btn btn-ghost" href="/">Volver al inicio</a>
 
   <style is:global>
+    .auth-page {
+      --pv-accent: oklch(82% 0.1 195);
+      --pv-ava-from: oklch(75% 0.1 195);
+      --pv-ava-to: oklch(55% 0.12 25);
+      --pv-dot: oklch(70% 0.15 155);
+      --alert-ok-text: oklch(35% 0.1 155);
+      --alert-err-text: oklch(38% 0.16 25);
+    }
     body.auth-page {
       min-height: 100vh;
       display: grid;
@@ -166,8 +174,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       display: flex; gap: 10px;
       margin-bottom: 8px;
     }
-    .alert.ok  { background: color-mix(in oklab, var(--ok)     12%, transparent); color: oklch(35% 0.1  155); }
-    .alert.err { background: color-mix(in oklab, var(--danger) 12%, transparent); color: oklch(38% 0.16  25); }
+    .alert.ok  { background: color-mix(in oklab, var(--ok)     12%, transparent); color: var(--alert-ok-text); }
+    .alert.err { background: color-mix(in oklab, var(--danger) 12%, transparent); color: var(--alert-err-text); }
     .alert.info { background: var(--bg-2); color: var(--ink-soft); }
 
     /* Right side: data visual */
@@ -204,14 +212,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       margin-top: 24px;
       text-wrap: pretty;
     }
-    .pv-quote em { font-style: italic; color: oklch(82% 0.1 195); }
+    .pv-quote em { font-style: italic; color: var(--pv-accent); }
     .pv-attr {
       margin-top: 32px;
       display: flex; align-items: center; gap: 14px;
     }
     .pv-attr .ava {
       width: 42px; height: 42px; border-radius: 50%;
-      background: linear-gradient(135deg, oklch(75% 0.1 195), oklch(55% 0.12 25));
+      background: linear-gradient(135deg, var(--pv-ava-from), var(--pv-ava-to));
       display: grid; place-items: center;
       font-family: var(--f-display); font-size: 16px;
       color: var(--bg);
@@ -237,7 +245,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     }
     .inspector .row-i { display: grid; grid-template-columns: 80px 1fr; gap: 12px; padding: 4px 0; }
     .inspector .row-i b {
-      color: oklch(82% 0.1 195); font-weight: 400;
+      color: var(--pv-accent); font-weight: 400;
       text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.1em;
     }
     .inspector .v {
@@ -257,12 +265,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     }
     .lock-dot {
       width: 8px; height: 8px; border-radius: 50%;
-      background: oklch(70% 0.15 155);
-      box-shadow: 0 0 0 0 oklch(70% 0.15 155 / .6);
-      animation: pulse-dot 2s infinite;
+      background: var(--pv-dot);
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--pv-dot) 60%, transparent);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .lock-dot { animation: pulse-dot 2s infinite; }
     }
     @keyframes pulse-dot {
-      0%   { box-shadow: 0 0 0 0 oklch(70% 0.15 155 / .5); }
+      0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--pv-dot) 50%, transparent); }
       70%  { box-shadow: 0 0 0 8px transparent; }
       100% { box-shadow: 0 0 0 0 transparent; }
     }
@@ -276,16 +286,33 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <p class="sub">Tu sesión está gestionada por Supabase Auth. Las contraseñas se almacenan con bcrypt en el servidor y nunca viajan en texto plano.</p>
 
       <div class="tabs" role="tablist">
-        <button id="tab-login" class="on" role="tab" aria-selected="true">Iniciar sesión</button>
-        <button id="tab-signup" role="tab" aria-selected="false">Crear cuenta</button>
+        <button id="tab-login" class="on" role="tab" aria-selected="true" aria-controls="auth-form">Iniciar sesión</button>
+        <button id="tab-signup" role="tab" aria-selected="false" aria-controls="auth-form">Crear cuenta</button>
       </div>
 
-      <div id="alerts"></div>
+      <div id="alerts" role="alert" aria-live="polite" aria-atomic="true"></div>
 
       <form id="auth-form" novalidate>
         <div class="field" id="f-name" hidden>
           <label for="name">Nombre completo</label>
           <input id="name" name="name" type="text" placeholder="Dra. Ana Pérez" autocomplete="name"/>
+        </div>
+
+        <div class="field" id="f-role" hidden>
+          <label for="role">Perfil profesional</label>
+          <select id="role" name="role">
+            <option value="">Selecciona tu perfil…</option>
+            <option value="medico">Médico en ejercicio</option>
+            <option value="residente">Residente / MIR</option>
+            <option value="estudiante">Estudiante de medicina</option>
+            <option value="enfermeria">Enfermería</option>
+            <option value="otro">Otro profesional sanitario</option>
+          </select>
+        </div>
+
+        <div class="field" id="f-specialty" hidden>
+          <label for="specialty">Especialidad <span style="color:var(--ink-mute); font-weight:400;">(opcional)</span></label>
+          <input id="specialty" name="specialty" type="text" placeholder="Cardiología, Urgencias, Medicina interna…" autocomplete="off"/>
         </div>
 
         <div class="field">
@@ -302,7 +329,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <div class="strength" id="strength" data-s="0" hidden>
             <i></i><i></i><i></i><i></i>
           </div>
-          <div class="strength-label" id="strength-label" hidden>Fortaleza: —</div>
+          <div class="strength-label" id="strength-label" hidden aria-live="polite">Fortaleza: —</div>
         </div>
 
         <div class="row-flex" id="row-extras">
@@ -369,6 +396,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     const tabSignup   = document.getElementById('tab-signup');
     const submitLabel = document.getElementById('submit-label');
     const fName       = document.getElementById('f-name');
+    const fRole       = document.getElementById('f-role');
+    const fSpecialty  = document.getElementById('f-specialty');
     const rowExtras   = document.getElementById('row-extras');
     const strengthBar = document.getElementById('strength');
     const strengthLbl = document.getElementById('strength-label');
@@ -388,6 +417,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       tabLogin.setAttribute('aria-selected', m === 'login');
       tabSignup.setAttribute('aria-selected', m === 'signup');
       fName.hidden = m !== 'signup';
+      fRole.hidden = m !== 'signup';
+      fSpecialty.hidden = m !== 'signup';
       if (m === 'signup') {
         nameEl.required = true;
         submitLabel.textContent = 'Crear cuenta';
@@ -415,6 +446,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const isPw = passwordEl.type === 'password';
       passwordEl.type = isPw ? 'text' : 'password';
       togglePw.textContent = isPw ? 'Ocultar' : 'Mostrar';
+      togglePw.setAttribute('aria-label', isPw ? 'Ocultar contraseña' : 'Mostrar contraseña');
     });
 
     function scorePassword(pw) {
@@ -448,9 +480,11 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       alertsEl.innerHTML = '';
-      const email    = emailEl.value.trim().toLowerCase();
-      const password = passwordEl.value;
-      const name     = nameEl.value.trim();
+      const email     = emailEl.value.trim().toLowerCase();
+      const password  = passwordEl.value;
+      const name      = nameEl.value.trim();
+      const role      = document.getElementById('role')?.value || '';
+      const specialty = document.getElementById('specialty')?.value.trim() || '';
 
       if (!email || !password) { alertMsg('err', 'Rellena todos los campos.'); return; }
       if (password.length < 8)  { alertMsg('err', 'La contraseña debe tener al menos 8 caracteres.'); return; }
@@ -465,12 +499,16 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           const { data, error } = await sb.auth.signUp({
             email,
             password,
-            options: { data: { name } }
+            options: { data: { name, role, specialty } }
           });
           if (error) throw error;
           if (data.session) {
-            alertMsg('ok', '✓ Cuenta creada. Redirigiendo al chat…');
-            setTimeout(() => location.href = '/chat', 900);
+            try {
+              if (specialty) localStorage.setItem('mediq.specialty', specialty);
+              if (role) localStorage.setItem('mediq.role', role);
+            } catch (_) {}
+            alertMsg('ok', '✓ Cuenta creada. Redirigiendo…');
+            setTimeout(() => location.href = '/checkout-success', 900);
           } else {
             alertMsg('ok', '✓ Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.');
             submitBtn.disabled = false;

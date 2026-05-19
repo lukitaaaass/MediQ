@@ -23,7 +23,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       padding: 10px 18px; border-radius: 999px;
       font-size: 13px; font-weight: 500; color: var(--ink-soft);
       display: inline-flex; align-items: center; gap: 8px;
+      transition: background .15s ease, color .15s ease;
+      cursor: pointer;
     }
+    .billing-toggle button:hover { color: var(--ink); }
     .billing-toggle button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 0 var(--rule-2); }
     .badge-save {
       font-family: var(--f-mono); font-size: 10px;
@@ -108,6 +111,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     table.compare thead th:first-child { width: 40%; }
     table.compare thead th.featured-col { color: var(--ink); background: color-mix(in oklab, var(--accent) 12%, var(--bg-2)); }
     table.compare tbody td:first-child { font-weight: 500; color: var(--ink); }
+    table.compare tbody tr:not(.section):hover { background: color-mix(in oklab, var(--accent) 5%, var(--surface)); }
     table.compare tbody tr.section td {
       background: var(--bg); font-family: var(--f-mono); font-size: 11px;
       letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); padding: 14px 20px;
@@ -208,13 +212,13 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <a class="btn btn-ghost" href="/login" onclick="window.track('Plan CTA',{plan:'estudiante'})">Verificar matrícula</a>
         </article>
 
-        <article class="plan featured">
+        <article class="plan featured" aria-current="true">
           <span class="plan-tag">Más elegido</span>
           <div>
             <div class="plan-name">Práctica clínica</div>
             <p class="plan-desc" style="margin-top:6px;">Para médicos en ejercicio, todas las especialidades.</p>
           </div>
-          <div class="price">
+          <div class="price" aria-live="polite" aria-atomic="true">
             <span data-price-monthly="29€" data-price-yearly="23€">29€</span><small data-period="/mes">/mes</small>
           </div>
           <ul>
@@ -301,7 +305,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   </section>
 
   <!-- ─────── FAQ ─────── -->
-  <section class="faq-section" id="faq">
+  <section class="faq-section" id="faq" role="region" aria-label="Preguntas frecuentes">
     <div class="container" style="display:grid; gap:48px; grid-template-columns:1fr;">
       <div class="section-head">
         <span class="eyebrow">Sobre la facturación</span>
