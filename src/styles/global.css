@@ -13,6 +13,8 @@
   --warn: oklch(62% 0.14 40);
   --danger: oklch(58% 0.18 25);
   --ok: oklch(60% 0.12 155);
+  --success: oklch(62% 0.15 145);
+  --info: oklch(60% 0.12 240);
 
   --f-display: "Fraunces", Georgia, serif;
   --f-body: "Inter", system-ui, -apple-system, sans-serif;
@@ -35,6 +37,11 @@ html[data-dark="true"] {
   --accent: oklch(78% 0.13 155);
   --accent-ink: #0e1113;
   --surface: #191d20;
+  --ok: oklch(70% 0.14 155);
+  --success: oklch(72% 0.16 145);
+  --danger: oklch(68% 0.20 25);
+  --info: oklch(70% 0.14 240);
+  --warn: oklch(75% 0.16 40);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -164,5 +171,32 @@ html[data-no-reveal] .word-reveal .w { transform: none !important; }
 @media (max-width: 720px) {
   .btn { min-height: 44px; }
   h1 { word-break: break-word; }
+}
+
+/* Skip link — accesibilidad */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  transition: top .15s ease;
+}
+.skip-link:focus { top: 0; }
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
 }
 

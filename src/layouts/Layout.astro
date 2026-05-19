@@ -103,15 +103,6 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     .nav-auth-state { display: none !important; }
     html[data-auth="out"] #nav-auth-out { display: flex !important; }
     html[data-auth="in"]  #nav-auth-in  { display: flex !important; }
-
-    .skip-link {
-      position: absolute; top: -100%; left: 16px;
-      background: var(--ink); color: var(--bg);
-      padding: 8px 16px; border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-      font-size: 14px; font-weight: 500; z-index: 9999;
-      transition: top 0.1s;
-    }
-    .skip-link:focus { top: 0; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
@@ -259,9 +250,8 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     </div>
   </div>
 
-  <main id="main-content">
+  <span id="main-content" aria-hidden="true" style="position:absolute;"></span>
   <slot />
-  </main>
 
   <!-- Dark mode toggle -->
   <script is:inline>
