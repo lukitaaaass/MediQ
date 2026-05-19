@@ -459,6 +459,20 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </svg>
             <div class="welcome-greeting" id="welcome-greeting">Hola</div>
             <p class="welcome-sub">¿Qué necesitas analizar hoy?</p>
+
+            <!-- Banner primer uso: se muestra solo si el perfil está incompleto -->
+            <div id="onboarding-banner" style="display:none; margin-top:16px; background:color-mix(in oklab,var(--accent) 8%,var(--bg)); border:1px solid color-mix(in oklab,var(--accent) 25%,transparent); border-radius:12px; padding:14px 16px; align-items:center; gap:12px; max-width:520px; text-align:left;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:var(--accent)"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/></svg>
+              <div style="flex:1; min-width:0;">
+                <span style="font-size:13.5px; font-weight:500; color:var(--ink);">Completa tu perfil para respuestas personalizadas</span>
+                <span style="display:block; font-size:12px; color:var(--ink-mute); margin-top:2px;">La IA adapta los diferenciales a tu especialidad</span>
+              </div>
+              <button id="banner-profile-btn" style="padding:7px 13px; border-radius:8px; background:var(--accent); color:var(--accent-ink); font-size:12.5px; font-weight:500; white-space:nowrap; flex-shrink:0;">Completar →</button>
+              <button id="banner-dismiss" aria-label="Cerrar" style="color:var(--ink-mute); padding:4px; flex-shrink:0;">
+                <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+
             <p class="welcome-disclaimer">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -793,6 +807,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       loadChatsFromSupabase();
       checkSubscription(user.id);
       setTimeout(maybeStartOnboarding, 900);
+      setTimeout(initOnboardingBanner, 400);
+      loadPendingPrompt();
       logoutBtn.addEventListener('click', async () => {
         await sb.auth.signOut();
         location.href = '/login';
@@ -1308,6 +1324,37 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
       render();
     }
 
+    function initOnboardingBanner() {
+      const banner = document.getElementById('onboarding-banner');
+      if (!banner) return;
+      const dismissed = localStorage.getItem('mediq.banner.v1');
+      const hasSpecialty = !!(profile.specialty || localStorage.getItem('mediq.specialty'));
+      if (dismissed || hasSpecialty) { banner.style.display = 'none'; return; }
+      banner.style.display = 'flex';
+      document.getElementById('banner-dismiss').addEventListener('click', () => {
+        banner.style.display = 'none';
+        localStorage.setItem('mediq.banner.v1', '1');
+      });
+      document.getElementById('banner-profile-btn').addEventListener('click', () => {
+        banner.style.display = 'none';
+        localStorage.setItem('mediq.banner.v1', '1');
+        openModal('modal-profile');
+      });
+    }
+
+    function loadPendingPrompt() {
+      try {
+        const pending = localStorage.getItem('mediq.pendingPrompt');
+        if (!pending) return;
+        localStorage.removeItem('mediq.pendingPrompt');
+        const ta = document.getElementById('input');
+        if (!ta) return;
+        ta.value = pending;
+        ta.dispatchEvent(new Event('input'));
+        ta.focus();
+      } catch (_) {}
+    }
+
     function showToast(msg, ms = 2600) {
       let t = document.getElementById('mediq-toast');
       if (!t) { t = document.createElement('div'); t.id = 'mediq-toast'; t.className = 'toast'; document.body.appendChild(t); }
@@ -1433,6 +1480,9 @@ ${msgsHtml}
       avaMini.textContent = avaInitial();
       avaNav.textContent = avaInitial();
       accountLabel.textContent = displayName().split(' ')[0];
+      const banner = document.getElementById('onboarding-banner');
+      if (banner) banner.style.display = 'none';
+      localStorage.setItem('mediq.banner.v1', '1');
       closeModal('modal-profile');
     });
 
