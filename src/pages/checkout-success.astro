@@ -3,94 +3,228 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout
-  title="¡Suscripción activada! — MediQ"
+  title="¡Bienvenido a MediQ! — Empieza aquí"
   navActive=""
   noindex={true}
 >
 <style is:global>
-  .success-page {
-    display: flex; align-items: center; justify-content: center;
+  .onboarding-page {
     min-height: calc(100vh - 64px);
-    padding: 40px var(--pad);
-    text-align: center;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: clamp(32px, 6vw, 64px) var(--pad);
   }
-  .success-card {
-    max-width: 440px; width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--rule-2);
-    border-radius: 20px;
-    padding: clamp(32px, 5vw, 48px);
-    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  .onboarding-wrap {
+    max-width: 560px; width: 100%;
+    display: flex; flex-direction: column; gap: 28px;
   }
-  .success-check {
-    width: 64px; height: 64px; border-radius: 50%;
+
+  /* Header */
+  .ob-header { text-align: center; }
+  .ob-check {
+    width: 56px; height: 56px; border-radius: 50%;
     background: color-mix(in oklab, var(--ok) 14%, var(--bg));
     border: 1px solid color-mix(in oklab, var(--ok) 30%, transparent);
+    display: grid; place-items: center; color: var(--ok);
+    margin: 0 auto 18px;
+  }
+  .ob-header h1 { font-size: clamp(26px, 3.5vw, 36px); line-height: 1.1; }
+  .ob-header h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+  .ob-header p { color: var(--ink-soft); font-size: 15px; margin-top: 8px; }
+
+  /* Trial badge */
+  .trial-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: color-mix(in oklab, var(--accent) 10%, var(--bg));
+    border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
+    color: var(--accent); padding: 6px 14px; border-radius: 999px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; margin: 14px auto 0;
+  }
+  .trial-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Steps */
+  .ob-steps { display: flex; flex-direction: column; gap: 12px; }
+  .ob-step {
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: border-color .2s ease, transform .2s ease;
+  }
+  .ob-step:hover { border-color: var(--ink-soft); transform: translateY(-1px); }
+  .ob-step.done { border-color: color-mix(in oklab, var(--ok) 40%, transparent); background: color-mix(in oklab, var(--ok) 5%, var(--surface)); }
+  .ob-step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--bg-2); border: 1px solid var(--rule-2);
     display: grid; place-items: center;
+    font-family: var(--f-mono); font-size: 13px; color: var(--ink-mute);
+    flex-shrink: 0;
+  }
+  .ob-step.done .ob-step-num {
+    background: color-mix(in oklab, var(--ok) 15%, transparent);
+    border-color: color-mix(in oklab, var(--ok) 40%, transparent);
     color: var(--ok);
   }
-  .success-card h1 { font-size: clamp(24px, 3vw, 32px); line-height: 1.1; }
-  .success-card p  { font-size: 15px; color: var(--ink-soft); line-height: 1.6; max-width: 34ch; }
-  .success-features {
-    width: 100%; display: flex; flex-direction: column; gap: 10px;
-    background: var(--bg-2); border-radius: 12px; padding: 16px 18px;
-    text-align: left;
+  .ob-step-body h3 { font-family: var(--f-body); font-size: 14.5px; font-weight: 600; margin: 0 0 2px; }
+  .ob-step-body p  { font-size: 13px; color: var(--ink-mute); margin: 0; }
+  .ob-step-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    background: var(--ink); color: var(--bg);
+    white-space: nowrap;
+    transition: opacity .15s ease;
   }
-  .success-feat {
-    display: flex; align-items: center; gap: 10px;
+  .ob-step-cta:hover { opacity: .85; }
+  .ob-step.done .ob-step-cta {
+    background: color-mix(in oklab, var(--ok) 15%, transparent);
+    color: var(--ok); border: 1px solid color-mix(in oklab, var(--ok) 30%, transparent);
+  }
+
+  /* Quick start */
+  .ob-quick {
+    background: var(--bg-2);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .ob-quick h4 {
+    font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-mute); font-weight: 400;
+    margin: 0 0 12px;
+  }
+  .ob-prompts { display: flex; flex-direction: column; gap: 8px; }
+  .ob-prompt {
+    background: var(--surface); border: 1px solid var(--rule-2);
+    border-radius: 10px; padding: 10px 14px;
     font-size: 13.5px; color: var(--ink-soft);
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; text-align: left;
+    transition: border-color .15s ease, color .15s ease;
   }
-  .success-feat svg { color: var(--ok); flex-shrink: 0; }
-  .success-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-  .success-actions .btn { justify-content: center; border-radius: 10px; padding: 13px; font-size: 15px; }
-  .trial-note {
-    font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-mute);
-    letter-spacing: 0.04em; text-align: center;
+  .ob-prompt:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .ob-prompt svg { flex-shrink: 0; color: var(--ink-mute); }
+
+  @media (max-width: 480px) {
+    .ob-step { grid-template-columns: 36px 1fr; }
+    .ob-step-cta { display: none; }
   }
 </style>
 
-<main class="success-page">
-  <div class="success-card">
-    <div class="success-check">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+<main class="onboarding-page">
+  <div class="onboarding-wrap">
+
+    <!-- Header -->
+    <div class="ob-header">
+      <div class="ob-check">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>Bienvenido, <em id="ob-name">doctor</em>.</h1>
+      <p>Tu prueba de 14 días ya está activa. Sigue estos pasos para sacarle partido desde el primer día.</p>
+      <div class="trial-badge"><span class="dot"></span> 14 días gratis · sin cargo hasta <span id="ob-trial-end">—</span></div>
     </div>
 
-    <div>
-      <h1>¡Prueba activada!</h1>
+    <!-- Steps -->
+    <div class="ob-steps">
+
+      <!-- Step 1: Perfil -->
+      <div class="ob-step done" id="step-profile">
+        <div class="ob-step-num" id="step-profile-num">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="ob-step-body">
+          <h3>Completa tu perfil</h3>
+          <p>Nombre, especialidad y rol — la IA te responde de forma personalizada</p>
+        </div>
+        <a href="/chat" class="ob-step-cta" id="step-profile-cta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Hecho
+        </a>
+      </div>
+
+      <!-- Step 2: Primera consulta -->
+      <div class="ob-step" id="step-chat">
+        <div class="ob-step-num">2</div>
+        <div class="ob-step-body">
+          <h3>Haz tu primera consulta</h3>
+          <p>Describe un caso clínico o usa uno de los prompts de abajo</p>
+        </div>
+        <a href="/chat" class="ob-step-cta">Ir al chat →</a>
+      </div>
+
+      <!-- Step 3: Entrena -->
+      <div class="ob-step" id="step-train">
+        <div class="ob-step-num">3</div>
+        <div class="ob-step-body">
+          <h3>Sube tu documentación</h3>
+          <p>Protocolos, guías clínicas o historias — la IA razona sobre tu corpus</p>
+        </div>
+        <a href="/train" class="ob-step-cta">Subir docs →</a>
+      </div>
+
     </div>
 
-    <p>Tu período de prueba gratuito de 14 días ya está activo. No se cobra nada hasta que termine.</p>
-
-    <div class="success-features">
-      <div class="success-feat">
-        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Diagnósticos diferenciales con evidencia enlazada
-      </div>
-      <div class="success-feat">
-        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Verificador de interacciones farmacológicas
-      </div>
-      <div class="success-feat">
-        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Subida de PDFs e historias clínicas
-      </div>
-      <div class="success-feat">
-        <svg width="15" height="15" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Integración con HCE (FHIR, HL7)
+    <!-- Quick start prompts -->
+    <div class="ob-quick">
+      <h4>Empieza con un caso real</h4>
+      <div class="ob-prompts">
+        <button class="ob-prompt" data-prompt="Varón 58a, dolor torácico opresivo 40 min, irradia a brazo izquierdo. ECG: supradesnivel ST en DII, DIII, aVF. ¿Diagnóstico diferencial y pasos a seguir?">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Dolor torácico — diferencial urgente
+        </button>
+        <button class="ob-prompt" data-prompt="¿Cuáles son las interacciones relevantes entre warfarina, amoxicilina y omeprazol en un paciente de 72 años con FA e insuficiencia renal leve?">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/></svg>
+          Interacciones farmacológicas — polifarmacia
+        </button>
+        <button class="ob-prompt" data-prompt="Score CURB-65 para neumonía adquirida en la comunidad: ¿qué criterios evalúa y qué decisión clínica implica cada puntuación?">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Calculadora CURB-65 — neumonía
+        </button>
       </div>
     </div>
 
-    <div class="success-actions">
-      <a href="/chat" class="btn btn-primary">Ir al chat →</a>
-      <a href="/" class="btn btn-ghost">Volver al inicio</a>
-    </div>
-
-    <p class="trial-note">
-      Recibirás un email de confirmación en breve.<br/>
-      Cancela cuando quieras desde tu cuenta.
-    </p>
   </div>
 </main>
+
+<script is:inline>
+  (function () {
+    // Nombre personalizado
+    const name = localStorage.getItem('mediq.userName');
+    if (name) document.getElementById('ob-name').textContent = name;
+
+    // Fecha fin de prueba (14 días desde hoy)
+    const end = new Date();
+    end.setDate(end.getDate() + 14);
+    document.getElementById('ob-trial-end').textContent = end.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+
+    // Verificar si el perfil ya tiene especialidad
+    const specialty = localStorage.getItem('mediq.specialty');
+    const stepProfile = document.getElementById('step-profile');
+    if (!specialty) {
+      stepProfile.classList.remove('done');
+      document.getElementById('step-profile-num').textContent = '1';
+      const cta = document.getElementById('step-profile-cta');
+      cta.textContent = 'Completar →';
+      cta.href = '/chat';
+    }
+
+    // Quick start prompts → abrir chat con el prompt prellenado
+    document.querySelectorAll('.ob-prompt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const prompt = btn.dataset.prompt;
+        try { localStorage.setItem('mediq.pendingPrompt', prompt); } catch (_) {}
+        location.href = '/chat';
+      });
+    });
+
+    // Marcar como onboarded
+    try { localStorage.setItem('mediq.onboarded', '1'); } catch (_) {}
+  })();
+</script>
+
 </Layout>

@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-19T00:00:00.000Z",
+  "title": "Design System: MediQ",
+  "extensions": {
+    "colorMeta": {
+      "warm-parchment":    { "role": "neutral",   "displayName": "Warm Parchment",     "canonical": "oklch(97% 0.007 88)",  "tonalRamp": ["oklch(15% 0.004 88)", "oklch(28% 0.005 88)", "oklch(42% 0.006 88)", "oklch(56% 0.006 88)", "oklch(70% 0.006 88)", "oklch(82% 0.006 88)", "oklch(91% 0.007 88)", "oklch(97% 0.007 88)"] },
+      "parchment-deep":    { "role": "neutral",   "displayName": "Parchment Deep",     "canonical": "oklch(94% 0.009 90)",  "tonalRamp": ["oklch(14% 0.004 90)", "oklch(28% 0.006 90)", "oklch(42% 0.007 90)", "oklch(56% 0.008 90)", "oklch(70% 0.008 90)", "oklch(82% 0.009 90)", "oklch(90% 0.009 90)", "oklch(94% 0.009 90)"] },
+      "surface-white":     { "role": "neutral",   "displayName": "Surface White",      "canonical": "oklch(100% 0 0)",      "tonalRamp": ["oklch(15% 0 0)", "oklch(28% 0 0)", "oklch(42% 0 0)", "oklch(56% 0 0)", "oklch(70% 0 0)", "oklch(84% 0 0)", "oklch(93% 0 0)", "oklch(100% 0 0)"] },
+      "near-black":        { "role": "neutral",   "displayName": "Near-Black",         "canonical": "oklch(13% 0.006 228)", "tonalRamp": ["oklch(10% 0.004 228)", "oklch(18% 0.006 228)", "oklch(29% 0.007 228)", "oklch(41% 0.008 228)", "oklch(54% 0.008 228)", "oklch(68% 0.007 228)", "oklch(82% 0.005 228)", "oklch(95% 0.003 228)"] },
+      "ink-soft":          { "role": "neutral",   "displayName": "Ink Soft",           "canonical": "oklch(29% 0.008 225)", "tonalRamp": ["oklch(10% 0.004 225)", "oklch(18% 0.006 225)", "oklch(29% 0.008 225)", "oklch(40% 0.008 225)", "oklch(54% 0.008 225)", "oklch(68% 0.007 225)", "oklch(82% 0.005 225)", "oklch(95% 0.003 225)"] },
+      "ink-mute":          { "role": "neutral",   "displayName": "Ink Mute",           "canonical": "oklch(41% 0.009 223)", "tonalRamp": ["oklch(12% 0.004 223)", "oklch(22% 0.006 223)", "oklch(33% 0.008 223)", "oklch(41% 0.009 223)", "oklch(54% 0.009 223)", "oklch(68% 0.008 223)", "oklch(82% 0.006 223)", "oklch(95% 0.003 223)"] },
+      "evidence-teal":     { "role": "primary",   "displayName": "Evidence Teal",      "canonical": "oklch(54% 0.09 195)", "tonalRamp": ["oklch(15% 0.03 195)", "oklch(25% 0.05 195)", "oklch(35% 0.07 195)", "oklch(45% 0.09 195)", "oklch(54% 0.09 195)", "oklch(65% 0.07 195)", "oklch(78% 0.05 195)", "oklch(90% 0.03 195)"] },
+      "evidence-teal-dark":{ "role": "primary",   "displayName": "Evidence Teal (dark)","canonical": "oklch(78% 0.13 155)", "tonalRamp": ["oklch(15% 0.04 155)", "oklch(25% 0.06 155)", "oklch(38% 0.09 155)", "oklch(50% 0.11 155)", "oklch(62% 0.13 155)", "oklch(72% 0.13 155)", "oklch(78% 0.13 155)", "oklch(90% 0.07 155)"] },
+      "ok-green":          { "role": "semantic",  "displayName": "Clearance Green",    "canonical": "oklch(60% 0.12 155)", "tonalRamp": ["oklch(15% 0.04 155)", "oklch(25% 0.06 155)", "oklch(36% 0.09 155)", "oklch(48% 0.11 155)", "oklch(60% 0.12 155)", "oklch(72% 0.10 155)", "oklch(84% 0.07 155)", "oklch(94% 0.04 155)"] },
+      "danger-red":        { "role": "semantic",  "displayName": "Clinical Alert",     "canonical": "oklch(58% 0.18 25)",  "tonalRamp": ["oklch(14% 0.06 25)", "oklch(24% 0.10 25)", "oklch(35% 0.14 25)", "oklch(46% 0.16 25)", "oklch(58% 0.18 25)", "oklch(70% 0.15 25)", "oklch(82% 0.10 25)", "oklch(93% 0.05 25)"] },
+      "warn-amber":        { "role": "semantic",  "displayName": "Advisory Amber",     "canonical": "oklch(62% 0.14 40)",  "tonalRamp": ["oklch(15% 0.05 40)", "oklch(26% 0.08 40)", "oklch(38% 0.11 40)", "oklch(50% 0.13 40)", "oklch(62% 0.14 40)", "oklch(74% 0.12 40)", "oklch(85% 0.08 40)", "oklch(94% 0.04 40)"] },
+      "info-blue":         { "role": "semantic",  "displayName": "Reference Blue",     "canonical": "oklch(60% 0.12 240)", "tonalRamp": ["oklch(14% 0.04 240)", "oklch(24% 0.07 240)", "oklch(36% 0.10 240)", "oklch(48% 0.11 240)", "oklch(60% 0.12 240)", "oklch(72% 0.10 240)", "oklch(84% 0.07 240)", "oklch(94% 0.04 240)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines only. The 48px-112px fluid range fills the visual field at large viewports, like a journal cover." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles (h2). Reads like a chapter heading in a medical reference." },
+      "title": { "displayName": "Title", "purpose": "Card headings, modal titles, feature names (h3)." },
+      "body": { "displayName": "Body", "purpose": "All running prose. 16px minimum, 1.55 line-height, 65-75ch max line length." },
+      "label": { "displayName": "Label / Mono", "purpose": "Section eyebrows, metadata, pricing tier names, data values. IBM Plex Mono signals system precision." }
+    },
+    "shadows": [
+      { "name": "ambient-card", "value": "0 1px 0 rgba(30,35,39,0.05), 0 20px 60px -40px rgba(0,0,0,0.10)", "purpose": "Hero and featured containers only. Reads as slight lift off parchment." },
+      { "name": "focus-ring", "value": "0 0 0 4px color-mix(in oklab, oklch(54% 0.09 195) 15%, transparent)", "purpose": "Focused form inputs and interactive elements. Teal halo." },
+      { "name": "modal-backdrop", "value": "rgba(0,0,0,0.40)", "purpose": "Modal overlay. No blur. Solid enough to push background content to background." }
+    ],
+    "motion": [
+      { "name": "state-change", "value": "150-200ms ease", "purpose": "Color, border, opacity transitions on interactive states. The minimum perceptible response time." },
+      { "name": "lift", "value": "transform 0.2s ease", "purpose": "The 1px translateY(-1px) on button hover and the 2px card lift on hover." },
+      { "name": "entrance-reveal", "value": "transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1)", "purpose": "Scroll-driven section entrance (translateY 18px to 0). Only fires when prefers-reduced-motion: no-preference." },
+      { "name": "active-press", "value": "transform 0.1s ease", "purpose": "scale(0.97) on btn:active. Immediate tactile compression." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-nav", "value": "720px", "purpose": "Below this: hamburger nav, hide nav links." },
+      { "name": "mobile-form", "value": "920px", "purpose": "Login page: below this, hide visual pane, single column." },
+      { "name": "features-2col", "value": "720px", "purpose": "Feature grid switches from 1 to 2 columns." },
+      { "name": "features-3col", "value": "1040px", "purpose": "Feature grid switches from 2 to 3 columns." },
+      { "name": "pricing-3col", "value": "900px", "purpose": "Pricing plan grid switches from 1 to 3 columns." },
+      { "name": "hero-2col", "value": "960px", "purpose": "Hero section switches from stacked to side-by-side." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The primary action. Ink-filled pill. Reserved for the most important single action on screen.",
+      "html": "<button class=\"ds-btn-primary\">Empezar gratis <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #161a1d; color: #f6f5f1; border: none; border-radius: 999px; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: transform 0.2s ease; } .ds-btn-primary:hover { transform: translateY(-1px); } .ds-btn-primary:active { transform: scale(0.97); transition-duration: 0.1s; } .ds-btn-primary:focus-visible { outline: 2.5px solid oklch(54% 0.09 195); outline-offset: 3px; border-radius: 999px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action. Transparent with border. Never competes with primary.",
+      "html": "<button class=\"ds-btn-ghost\">Ver precios</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: transparent; color: #161a1d; border: 1px solid rgba(30,35,39,0.08); border-radius: 999px; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease; } .ds-btn-ghost:hover { background: #ffffff; border-color: #3c4246; } .ds-btn-ghost:active { transform: scale(0.97); transition-duration: 0.1s; } .ds-btn-ghost:focus-visible { outline: 2.5px solid oklch(54% 0.09 195); outline-offset: 3px; border-radius: 999px; }"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Evidence Teal action. One per screen maximum. Use for the single most confirmation-adjacent action.",
+      "html": "<button class=\"ds-btn-accent\">Confirmar</button>",
+      "css": ".ds-btn-accent { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: oklch(54% 0.09 195); color: #ffffff; border: none; border-radius: 999px; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s ease, transform 0.2s ease; } .ds-btn-accent:hover { opacity: 0.88; transform: translateY(-1px); } .ds-btn-accent:active { transform: scale(0.97); transition-duration: 0.1s; } .ds-btn-accent:focus-visible { outline: 2.5px solid oklch(54% 0.09 195); outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Standard form input. Focus state is the most visible Evidence Teal application in the product.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-input-1\">Correo profesional</label><input class=\"ds-input\" id=\"ds-input-1\" type=\"email\" placeholder=\"ana.perez@hospital.es\" /></div>",
+      "css": ".ds-field { display: grid; gap: 6px; } .ds-label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #595f64; } .ds-input { width: 100%; background: #ffffff; border: 1px solid rgba(30,35,39,0.08); border-radius: 10px; padding: 14px 16px; font-family: Inter, system-ui, sans-serif; font-size: 15px; color: #161a1d; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input::placeholder { color: #595f64; } .ds-input:focus { border-color: #3c4246; box-shadow: 0 0 0 4px color-mix(in oklab, oklch(54% 0.09 195) 15%, transparent); }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Standard elevated surface for content grouping. White on parchment creates the lift.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-label\">01</div><h3 class=\"ds-card-title\">Diagnóstico diferencial</h3><p class=\"ds-card-body\">Diferenciales ordenados por probabilidad, con la evidencia que los respalda.</p></article>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid rgba(30,35,39,0.08); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: border-color 0.2s ease, transform 0.2s ease; } .ds-card:hover { border-color: #3c4246; transform: translateY(-2px); } .ds-card-label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #595f64; letter-spacing: 0.12em; } .ds-card-title { font-family: Fraunces, Georgia, serif; font-size: 22px; font-weight: 400; letter-spacing: -0.02em; color: #161a1d; margin: 0; } .ds-card-body { font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.55; color: #3c4246; margin: 0; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Sticky top nav with blur backdrop. The brand mark is the only logo element. Nav links are minimal.",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-inner\"><a href=\"/\" class=\"ds-brand\"><span class=\"ds-brand-mark\" aria-hidden=\"true\"></span>MediQ</a><div class=\"ds-nav-links\"><a href=\"/chat\" class=\"ds-nav-link\">Chat</a><a href=\"/pricing\" class=\"ds-nav-link\">Precios</a><a href=\"/login\" class=\"ds-nav-link ds-nav-link--active\">Mi cuenta</a></div></div></nav>",
+      "css": ".ds-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(1.1) blur(10px); background: color-mix(in oklab, #f6f5f1 82%, transparent); border-bottom: 1px solid rgba(30,35,39,0.05); } .ds-nav-inner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); display: flex; align-items: center; justify-content: space-between; height: 64px; } .ds-brand { display: flex; align-items: center; gap: 10px; font-family: Fraunces, Georgia, serif; font-size: 22px; letter-spacing: -0.02em; color: #161a1d; text-decoration: none; } .ds-brand-mark { width: 26px; height: 26px; border-radius: 50%; background: #161a1d; position: relative; flex-shrink: 0; } .ds-brand-mark::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: oklch(54% 0.09 195); } .ds-nav-links { display: flex; gap: 28px; align-items: center; } .ds-nav-link { font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #3c4246; text-decoration: none; transition: color 0.15s ease; } .ds-nav-link:hover, .ds-nav-link--active { color: #161a1d; } .ds-nav-link:focus-visible { outline: 2.5px solid oklch(54% 0.09 195); outline-offset: 3px; border-radius: 4px; }"
+    },
+    {
+      "name": "Eyebrow Label",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Section identifier. IBM Plex Mono, uppercase, with a leading hairline. Marks structural hierarchy, never decorative.",
+      "html": "<span class=\"ds-eyebrow\">Cómo funciona</span>",
+      "css": ".ds-eyebrow { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #595f64; display: inline-flex; align-items: center; gap: 10px; } .ds-eyebrow::before { content: ''; width: 18px; height: 1px; background: currentColor; display: inline-block; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Inline semantic badge for plan tier, trial status, or confirmation state. Color derived from semantic token at 10-15% opacity.",
+      "html": "<span class=\"ds-badge ds-badge--ok\">14 días activos</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; } .ds-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .ds-badge--ok { background: color-mix(in oklab, oklch(60% 0.12 155) 12%, transparent); color: oklch(40% 0.12 155); border: 1px solid color-mix(in oklab, oklch(60% 0.12 155) 25%, transparent); } .ds-badge--teal { background: color-mix(in oklab, oklch(54% 0.09 195) 10%, transparent); color: oklch(40% 0.09 195); border: 1px solid color-mix(in oklab, oklch(54% 0.09 195) 25%, transparent); } .ds-badge--warn { background: color-mix(in oklab, oklch(62% 0.14 40) 12%, transparent); color: oklch(42% 0.14 40); border: 1px solid color-mix(in oklab, oklch(62% 0.14 40) 25%, transparent); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clinical Notebook",
+    "overview": "MediQ's visual system is the typeset equivalent of a well-maintained clinical notebook: warm off-white pages, near-black ink with precise hierarchy, and a single muted teal marking what requires attention. Every design decision is filtered through the question a consultant asks before opening their mouth: 'Is this necessary?' If the answer is no, it doesn't appear.\n\nThe system is editorial without being decorative. Fraunces (variable optical-size serif) carries the structural weight of headings, reinforcing that MediQ reasons and presents, never sells. Inter handles the body work quietly; IBM Plex Mono serves labels, metadata, and anything that must feel accurate rather than conversational.\n\nColor is restrained to near-monochrome with one accent: Evidence Teal, a muted cyan-green that appears where clinical attention is warranted. In dark mode, the accent shifts from teal (hue 195) to green (hue 155) — terminal energy replacing daytime precision. This is intentional and should never be corrected.",
+    "keyCharacteristics": [
+      "Three-typeface hierarchy: Fraunces (serif display) + Inter (sans body) + IBM Plex Mono (label/code)",
+      "Near-monochrome palette with one restrained accent (Evidence Teal)",
+      "Flat-by-default elevation; depth through tonal layering, not shadows",
+      "Warm off-white base (#f6f5f1), not white; ink near-black (#161a1d), not black",
+      "Dense information layout with intentional breathing room at section breaks",
+      "All semantic colors expressed in OKLCH for perceptual linearity"
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Evidence Teal appears on no more than 10% of any given screen surface area. Its restraint is what makes it legible as 'action' or 'confirmation'.", "section": "colors" },
+      { "name": "The Hue-Shift Rule", "body": "Dark mode shifts Evidence Teal from hue 195 (teal) to hue 155 (green) at higher lightness. This is intentional. Never override --accent in dark mode back to hue 195.", "section": "colors" },
+      { "name": "The No-Pure-White Rule", "body": "The page is #f6f5f1, not #fff. Cards are #fff specifically because the contrast with the parchment base communicates elevation.", "section": "colors" },
+      { "name": "The Italic Emphasis Rule", "body": "Emphasis in Fraunces headings uses font-style: italic; font-weight: 300, not bold. Bold on Fraunces at display sizes reads loud and unmedical.", "section": "typography" },
+      { "name": "The Mono Precision Rule", "body": "IBM Plex Mono never appears in running body copy. It marks system metadata, labels, and data — a fact, not a sentence.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. The ambient card shadow appears only on hero/featured containers. Regular cards use border-only separation. A new shadow must earn its place.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use oklch() for all semantic colors (accent, ok, danger, warn, info). Hex is reserved for neutral surfaces.",
+      "Do use Fraunces at font-weight 400 with letter-spacing: -0.02em for all display and headline sizes.",
+      "Do express em-tag emphasis inside Fraunces headings as font-style: italic; font-weight: 300.",
+      "Do use IBM Plex Mono for all metadata labels at 10.5-12px with text-transform: uppercase and letter-spacing: 0.08-0.12em.",
+      "Do keep Evidence Teal below 10% of any given screen surface area.",
+      "Do confirm that all interactive elements have :focus-visible with the 2.5px Evidence Teal outline before shipping.",
+      "Do use prefers-reduced-motion: no-preference guards for all decorative animations."
+    ],
+    "donts": [
+      "Don't use purple, violet, or blue-purple anywhere. MediQ is not a SaaS productivity tool for knowledge workers.",
+      "Don't use hospital blue (#0078D4, #1890FF) or white-dominant clinical layouts with stethoscope/heart iconography.",
+      "Don't use gradient text (background-clip: text with a gradient). Use a single solid color.",
+      "Don't use border-left or border-right greater than 1px as a colored stripe accent on cards, callouts, or alerts.",
+      "Don't use AI-hype aesthetics: neon on dark, particle effects, animated gradient backgrounds, ChatGPT/Midjourney palette.",
+      "Don't use consumer-wellness softness: pastel palettes, rounded-everything layouts, Calm/Headspace-adjacent softness.",
+      "Don't add nested cards. A card inside a card collapses the elevation system.",
+      "Don't add glassmorphism as decoration. The top navigation blur is the only sanctioned use.",
+      "Don't use #000000 or #ffffff as the base page or body text color.",
+      "Don't animate layout properties (width, height, top, left, margin, padding). Animate only transform and opacity."
+    ]
+  }
+}
