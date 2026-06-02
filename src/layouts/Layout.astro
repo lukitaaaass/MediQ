@@ -305,6 +305,12 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           const v = src.getAttribute(attr);
           if (v != null) dst.setAttribute(attr, v);
         });
+        // Copia también los inline styles de dark mode al nuevo documento
+        Object.keys(DARK_VARS).forEach(function(k) {
+          const v = src.style.getPropertyValue(k);
+          if (v) dst.style.setProperty(k, v);
+          else dst.style.removeProperty(k);
+        });
         window.__astroNavDir = e.direction; // 'forward' | 'back'
 
         // FIX pantalla en blanco: el snapshot de View Transitions se captura DESPUÉS

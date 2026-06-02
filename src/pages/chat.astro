@@ -805,7 +805,6 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       logoutBtn.hidden = false;
       updateWelcomeGreeting();
       loadChatsFromSupabase();
-      checkSubscription(user.id);
       setTimeout(maybeStartOnboarding, 900);
       setTimeout(initOnboardingBanner, 400);
       loadPendingPrompt();
