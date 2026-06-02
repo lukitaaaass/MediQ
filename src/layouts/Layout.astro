@@ -180,7 +180,10 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       <div class="nav-links">
         <a href="/"        class:list={[{ active: navActive === '/'        }]}>Inicio</a>
         <a href="/pricing" class:list={[{ active: navActive === '/pricing' }]}>Precios</a>
-        <a href="/chat"    class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
+        <div class="nav-chat-group">
+          <a href="/chat"    class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
+          <a href="/chat?mode=medi" class="nav-medi-link">Medi</a>
+        </div>
         <a href="/train"   class:list={[{ active: navActive === '/train'   }]}>Entrenar IA</a>
         <a href="/triadas" class:list={[{ active: navActive === '/triadas' }]}>Tríadas</a>
       </div>
@@ -372,12 +375,6 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       });
     })();
   </script>
-
-  <!-- ElevenLabs Conversational AI Widget -->
-  <div style="position:fixed;bottom:28px;left:28px;z-index:9999;">
-    <elevenlabs-convai agent-id="agent_6201kt445es0f8wbekxtfj4ysk3f"></elevenlabs-convai>
-  </div>
-  <script is:inline src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
   <!--
     Comprobación de sesión Supabase.

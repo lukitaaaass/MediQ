@@ -114,6 +114,20 @@ nav.top .row {
 .nav-links a:hover { color: var(--ink); }
 .nav-links a.active { color: var(--ink); }
 
+/* Chat + Medi nav group */
+.nav-chat-group { display: flex; align-items: center; }
+.nav-medi-link {
+  opacity: 0; max-width: 0; overflow: hidden;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--accent); padding: 3px 10px; border-radius: 999px;
+  white-space: nowrap;
+  transition: opacity .2s ease, max-width .25s ease, margin-left .25s ease;
+  margin-left: 0;
+}
+.nav-chat-group:hover .nav-medi-link { opacity: 1; max-width: 60px; margin-left: 10px; }
+@media (max-width: 720px) { .nav-medi-link { display: none !important; } }
+
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 16px;
