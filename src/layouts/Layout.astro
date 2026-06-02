@@ -133,10 +133,14 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     (function () {
       var r = document.documentElement;
 
-      // Dark mode
+      // Dark mode — inline styles tienen máxima prioridad, nada puede sobrescribirlas
       try {
-        r.setAttribute('data-dark',
-          localStorage.getItem('mediq.theme') === 'dark' ? 'true' : 'false');
+        var _dark = localStorage.getItem('mediq.theme') === 'dark';
+        r.setAttribute('data-dark', _dark ? 'true' : 'false');
+        if (_dark) {
+          var _dv = {'--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea','--ink-soft':'#c6c3ba','--ink-mute':'#7f837f','--rule':'#f2f0ea14','--rule-2':'#f2f0ea22','--accent':'oklch(78% 0.13 155)','--accent-ink':'#0e1113','--surface':'#191d20'};
+          for (var _k in _dv) r.style.setProperty(_k, _dv[_k]);
+        }
       } catch (e) { r.setAttribute('data-dark', 'false'); }
 
       // Tweaks de diseño (paleta, tipografía, estilo visual)
@@ -261,8 +265,22 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       const iconMoon= document.getElementById('icon-moon');
       const root    = document.documentElement;
 
+      var DARK_VARS = {
+        '--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea',
+        '--ink-soft':'#c6c3ba','--ink-mute':'#7f837f',
+        '--rule':'#f2f0ea14','--rule-2':'#f2f0ea22',
+        '--accent':'oklch(78% 0.13 155)','--accent-ink':'#0e1113',
+        '--surface':'#191d20','--ok':'oklch(70% 0.14 155)',
+        '--success':'oklch(72% 0.16 145)','--danger':'oklch(68% 0.20 25)',
+        '--info':'oklch(70% 0.14 240)','--warn':'oklch(75% 0.16 40)'
+      };
+
       function applyTheme(dark) {
         root.setAttribute('data-dark', dark ? 'true' : 'false');
+        Object.keys(DARK_VARS).forEach(function(k) {
+          if (dark) root.style.setProperty(k, DARK_VARS[k]);
+          else root.style.removeProperty(k);
+        });
         iconSun.style.display  = dark ? '' : 'none';
         iconMoon.style.display = dark ? 'none' : '';
         localStorage.setItem('mediq.theme', dark ? 'dark' : 'light');
