@@ -428,6 +428,17 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <div class="ava-mini" id="ava-mini">M</div>
           <span id="who-label">Invitado</span>
         </div>
+        <script is:inline>
+          (function(){
+            var n = localStorage.getItem('mediq.userName');
+            if (n && localStorage.getItem('mediq.authHint') === 'in') {
+              var w = document.getElementById('who-label');
+              var a = document.getElementById('ava-mini');
+              if (w) w.textContent = n;
+              if (a) a.textContent = n[0].toUpperCase();
+            }
+          })();
+        </script>
         <button id="logout-btn" hidden>Salir</button>
       </div>
     </aside>
