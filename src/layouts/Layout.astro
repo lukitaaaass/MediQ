@@ -260,75 +260,89 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <!-- Dark mode toggle -->
   <script is:inline>
     (function () {
-      const btn     = document.getElementById('theme-toggle');
-      const iconSun = document.getElementById('icon-sun');
-      const iconMoon= document.getElementById('icon-moon');
-      const root    = document.documentElement;
+      /* ── Variables de dark mode (una sola definición global) ── */
+      if (!window.__DARK_VARS) {
+        window.__DARK_VARS = {
+          '--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea',
+          '--ink-soft':'#c6c3ba','--ink-mute':'#7f837f',
+          '--rule':'#f2f0ea14','--rule-2':'#f2f0ea22',
+          '--accent':'oklch(78% 0.13 155)','--accent-ink':'#0e1113',
+          '--surface':'#191d20','--ok':'oklch(70% 0.14 155)',
+          '--success':'oklch(72% 0.16 145)','--danger':'oklch(68% 0.20 25)',
+          '--info':'oklch(70% 0.14 240)','--warn':'oklch(75% 0.16 40)'
+        };
+      }
 
-      var DARK_VARS = {
-        '--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea',
-        '--ink-soft':'#c6c3ba','--ink-mute':'#7f837f',
-        '--rule':'#f2f0ea14','--rule-2':'#f2f0ea22',
-        '--accent':'oklch(78% 0.13 155)','--accent-ink':'#0e1113',
-        '--surface':'#191d20','--ok':'oklch(70% 0.14 155)',
-        '--success':'oklch(72% 0.16 145)','--danger':'oklch(68% 0.20 25)',
-        '--info':'oklch(70% 0.14 240)','--warn':'oklch(75% 0.16 40)'
+      /* ── Función global: aplica o quita dark mode ── */
+      window.__applyTheme = function (dark) {
+        var root = document.documentElement;
+        root.setAttribute('data-dark', dark ? 'true' : 'false');
+        var keys = Object.keys(window.__DARK_VARS);
+        for (var i = 0; i < keys.length; i++) {
+          if (dark) root.style.setProperty(keys[i], window.__DARK_VARS[keys[i]]);
+          else root.style.removeProperty(keys[i]);
+        }
+        var sun  = document.getElementById('icon-sun');
+        var moon = document.getElementById('icon-moon');
+        if (sun)  sun.style.display  = dark ? '' : 'none';
+        if (moon) moon.style.display = dark ? 'none' : '';
+        try { localStorage.setItem('mediq.theme', dark ? 'dark' : 'light'); } catch (_) {}
       };
 
-      function applyTheme(dark) {
-        root.setAttribute('data-dark', dark ? 'true' : 'false');
-        Object.keys(DARK_VARS).forEach(function(k) {
-          if (dark) root.style.setProperty(k, DARK_VARS[k]);
-          else root.style.removeProperty(k);
+      /* ── astro:page-load: dispara en carga inicial Y tras cada View Transition ── */
+      /* Se registra UNA sola vez; Astro lo dispara siempre. */
+      if (!window.__themePageLoadReg) {
+        window.__themePageLoadReg = true;
+        document.addEventListener('astro:page-load', function () {
+          // Sincroniza estado visual con localStorage
+          window.__applyTheme(localStorage.getItem('mediq.theme') === 'dark');
+
+          // Re-bind del botón toggle (el DOM se reemplaza en cada navegación)
+          var btn = document.getElementById('theme-toggle');
+          if (btn) {
+            btn.onclick = function () {
+              window.__applyTheme(document.documentElement.getAttribute('data-dark') !== 'true');
+            };
+            btn.onmouseenter = function () { btn.style.background = 'var(--bg-2)'; };
+            btn.onmouseleave = function () { btn.style.background = ''; };
+          }
         });
-        iconSun.style.display  = dark ? '' : 'none';
-        iconMoon.style.display = dark ? 'none' : '';
-        localStorage.setItem('mediq.theme', dark ? 'dark' : 'light');
       }
 
-      const isDark = localStorage.getItem('mediq.theme') === 'dark';
-      applyTheme(isDark);
-
-      btn.addEventListener('click', () => {
-        applyTheme(root.getAttribute('data-dark') !== 'true');
-      });
-
-      btn.addEventListener('mouseenter', () => btn.style.background = 'var(--bg-2)');
-      btn.addEventListener('mouseleave', () => btn.style.background = '');
-
-      // View Transitions: replica TODOS los data-* relevantes en el documento
-      // entrante antes del swap para evitar cualquier flash de tema o auth.
-      document.addEventListener('astro:before-swap', (e) => {
-        const src = document.documentElement;
-        const dst = e.newDocument.documentElement;
-        ['data-dark', 'data-theme', 'data-type', 'data-style', 'data-auth'].forEach(attr => {
-          const v = src.getAttribute(attr);
-          if (v != null) dst.setAttribute(attr, v);
+      /* ── astro:before-swap: copia estado al documento entrante (solo 1 vez) ── */
+      if (!window.__themeSwapReg) {
+        window.__themeSwapReg = true;
+        document.addEventListener('astro:before-swap', function (e) {
+          var src = document.documentElement;
+          var dst = e.newDocument.documentElement;
+          ['data-dark', 'data-theme', 'data-type', 'data-style', 'data-auth'].forEach(function (attr) {
+            var v = src.getAttribute(attr);
+            if (v != null) dst.setAttribute(attr, v);
+          });
+          // Copia inline styles de dark mode al nuevo documento
+          var keys = Object.keys(window.__DARK_VARS);
+          for (var i = 0; i < keys.length; i++) {
+            var v = src.style.getPropertyValue(keys[i]);
+            if (v) dst.style.setProperty(keys[i], v);
+            else dst.style.removeProperty(keys[i]);
+          }
+          window.__astroNavDir = e.direction;
+          if (e.direction === 'back') {
+            src.setAttribute('data-no-reveal', '');
+          } else {
+            src.removeAttribute('data-no-reveal');
+          }
         });
-        // Copia también los inline styles de dark mode al nuevo documento
-        Object.keys(DARK_VARS).forEach(function(k) {
-          const v = src.style.getPropertyValue(k);
-          if (v) dst.style.setProperty(k, v);
-          else dst.style.removeProperty(k);
-        });
-        window.__astroNavDir = e.direction; // 'forward' | 'back'
+      }
 
-        // FIX pantalla en blanco: el snapshot de View Transitions se captura DESPUÉS
-        // del swap pero ANTES de que corran los scripts (que añaden .in).
-        // Activando data-no-reveal aquí, el CSS ya fuerza opacity:1 en .reveal
-        // cuando se toma el snapshot → la imagen capturada muestra contenido visible.
-        if (e.direction === 'back') {
-          src.setAttribute('data-no-reveal', '');
-        } else {
-          src.removeAttribute('data-no-reveal');
-        }
-      });
-
-      // Detecta botón atrás/adelante del navegador (fiable, se registra una sola vez)
+      /* ── popstate (solo 1 vez) ── */
       if (!window.__pstateReg) {
         window.__pstateReg = true;
-        window.addEventListener('popstate', () => { window.__didPop = true; });
+        window.addEventListener('popstate', function () { window.__didPop = true; });
       }
+
+      /* ── Aplicar inmediatamente (para el caso de primer render sin astro:page-load) ── */
+      window.__applyTheme(localStorage.getItem('mediq.theme') === 'dark');
     })();
   </script>
 
