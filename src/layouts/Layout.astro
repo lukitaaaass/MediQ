@@ -335,6 +335,12 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     })();
   </script>
 
+  <!-- ElevenLabs Conversational AI Widget -->
+  <div style="position:fixed;bottom:28px;right:28px;z-index:9999;">
+    <elevenlabs-convai agent-id="agent_6201kt445es0f8wbekxtfj4ysk3f"></elevenlabs-convai>
+  </div>
+  <script is:inline src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
   <!--
     Comprobación de sesión Supabase.
     En vez de reescribir el HTML (que provoca el flash), aquí solo:
