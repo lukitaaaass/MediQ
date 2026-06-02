@@ -15,7 +15,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <!-- Nav: user trigger (oculto hasta confirmar sesión) + fallback login link -->
   <Fragment slot="nav-actions">
-    <a class="btn btn-ghost user-trigger" href="#" id="account-btn" style="display:none;">
+    <a class="btn btn-ghost user-trigger" href="#" id="account-btn" onclick="event.preventDefault();" style="display:none;">
       <span class="ava-nav" id="ava-nav">M</span>
       <span id="account-label">Mi cuenta</span>
       <svg width="10" height="10" viewBox="0 0 12 12">
@@ -856,7 +856,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       if (whoTrigger) {
         whoTrigger.addEventListener('click', (e) => {
           e.stopPropagation();
-          openUserMenu(whoTrigger);
+          openUserMenu(whoTrigger, true);
         });
       }
     }
@@ -1189,15 +1189,16 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
        ═══════════════════════════════════════════════════════════ */
     const ctxMenu = document.getElementById('ctx-menu');
 
-    function placeMenu(anchor, align = 'right') {
+    function placeMenu(anchor, align = 'right', preferUp = false) {
       ctxMenu.style.display = 'flex';
       requestAnimationFrame(() => {
         const r  = anchor.getBoundingClientRect();
         const mw = ctxMenu.offsetWidth;
         const mh = ctxMenu.offsetHeight;
         let left = align === 'right' ? r.right - mw : r.left;
-        let top  = r.bottom + 6;
+        let top  = preferUp ? r.top - mh - 6 : r.bottom + 6;
         if (top + mh > window.innerHeight - 10) top = r.top - mh - 6;
+        if (top < 10) top = r.bottom + 6;
         if (left < 10) left = 10;
         if (left + mw > window.innerWidth - 10) left = window.innerWidth - mw - 10;
         ctxMenu.style.left = left + 'px';
@@ -1260,7 +1261,7 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
       });
     }
 
-    function openUserMenu(anchor) {
+    function openUserMenu(anchor, preferUp) {
       ctxMenu.innerHTML = `
         <div class="ctx-head">
           Sesión
@@ -1280,7 +1281,7 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>Cerrar sesión</span>
         </button>`;
-      placeMenu(anchor);
+      placeMenu(anchor, 'right', !!preferUp);
       ctxMenu.querySelectorAll('button').forEach(b => {
         b.addEventListener('click', async () => {
           const act = b.dataset.act;
