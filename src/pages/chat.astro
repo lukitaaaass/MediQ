@@ -538,7 +538,6 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           </button>
         </div>
       </div>
-      <script is:inline src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
       <!-- Paywall: visible cuando no hay suscripción activa -->
       <div id="paywall-bar" hidden>
@@ -565,6 +564,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       </div>
     </section>
   </div>
+
+  <!-- ElevenLabs Conversational AI (Medi) -->
+  <script is:inline src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
 
   <!-- ─── Modales ─── -->
   <div class="modal-backdrop" id="modal-profile">
@@ -869,31 +871,28 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ═══════════════════════════════════════════════════════════
        MEDI — Toggle chat ↔ asistente de voz
        ═══════════════════════════════════════════════════════════ */
-    const mediView    = document.getElementById('medi-view');
-    const mediBack    = document.getElementById('medi-back');
-    const messagesEl  = document.getElementById('messages');
-    const composerEl  = document.getElementById('composer-wrap');
-    const chatHeadEl  = document.querySelector('.chat-head');
-
     function setMode(mode) {
-      const isMedi = mode === 'medi';
-      mediView.classList.toggle('active', isMedi);
-      messagesEl.style.display   = isMedi ? 'none' : '';
-      composerEl.style.display   = isMedi ? 'none' : '';
-      if (chatHeadEl) chatHeadEl.style.display = isMedi ? 'none' : '';
-      const url = new URL(window.location);
+      var isMedi = mode === 'medi';
+      var mv = document.getElementById('medi-view');
+      var ms = document.getElementById('messages');
+      var cw = document.getElementById('composer-wrap');
+      var ch = document.querySelector('.chat-head');
+      if (mv) mv.classList.toggle('active', isMedi);
+      if (ms) ms.style.display = isMedi ? 'none' : '';
+      if (cw) cw.style.display = isMedi ? 'none' : '';
+      if (ch) ch.style.display = isMedi ? 'none' : '';
+      var url = new URL(window.location);
       if (isMedi) url.searchParams.set('mode', 'medi');
       else url.searchParams.delete('mode');
       history.replaceState(null, '', url);
     }
 
-    // Inicializar modo según URL
     if (new URLSearchParams(window.location.search).get('mode') === 'medi') {
       setMode('medi');
     }
 
-    // Botón "Volver al chat"
-    if (mediBack) mediBack.addEventListener('click', () => setMode('chat'));
+    var mediBackBtn = document.getElementById('medi-back');
+    if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
 
     /* ═══════════════════════════════════════════════════════════
        PROMPT
