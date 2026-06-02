@@ -328,6 +328,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .paywall-cta { padding: 10px 18px !important; border-radius: 10px !important; flex-shrink: 0; white-space: nowrap; }
     @media (max-width: 600px) { .paywall-card { flex-wrap: wrap; } .paywall-cta { width: 100%; justify-content: center; } }
 
+    /* ─── Mode toggle (Chat / Medi) ─── */
+    .mode-toggle { display: flex; background: var(--bg-2); border-radius: 999px; padding: 2px; gap: 2px; }
+    .mode-opt { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; padding: 4px 14px; border-radius: 999px; color: var(--ink-mute); transition: background .2s ease, color .2s ease; white-space: nowrap; }
+    .mode-opt:hover { color: var(--ink-soft); }
+    .mode-opt.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
     /* ─── Medi (asistente de voz) ─── */
     .medi-view { display: none; flex: 1; align-items: center; justify-content: center; overflow: hidden; }
     .medi-view.active { display: flex; }
@@ -450,6 +456,11 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <h2 id="chat-title">Nueva consulta</h2>
           <span id="corpus-badge" style="display:none; font-family:var(--f-mono); font-size:10px; letter-spacing:0.06em; background:color-mix(in oklab,var(--accent) 15%,transparent); color:var(--accent); padding:2px 8px; border-radius:999px;"></span>
         </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="mode-toggle" id="mode-toggle">
+            <button class="mode-opt on" data-mode="chat">Chat</button>
+            <button class="mode-opt" data-mode="medi">Medi</button>
+          </div>
         <div style="position:relative;">
           <button class="specialty" id="specialty-btn">
             <span id="specialty-label">General</span>
@@ -467,6 +478,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <button data-sp="Ginecología">Ginecología</button>
             <button data-sp="Modo estudiante">Modo estudiante</button>
           </div>
+        </div>
         </div>
       </header>
 
@@ -871,17 +883,18 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ═══════════════════════════════════════════════════════════
        MEDI — Toggle chat ↔ asistente de voz
        ═══════════════════════════════════════════════════════════ */
-    window.setMediMode = setMode;
     function setMode(mode) {
       var isMedi = mode === 'medi';
       var mv = document.getElementById('medi-view');
       var ms = document.getElementById('messages');
       var cw = document.getElementById('composer-wrap');
-      var ch = document.querySelector('.chat-head');
       if (mv) mv.classList.toggle('active', isMedi);
       if (ms) ms.style.display = isMedi ? 'none' : '';
       if (cw) cw.style.display = isMedi ? 'none' : '';
-      if (ch) ch.style.display = isMedi ? 'none' : '';
+      // Actualizar toggle visual
+      document.querySelectorAll('.mode-opt').forEach(function(b) {
+        b.classList.toggle('on', b.dataset.mode === mode);
+      });
       var url = new URL(window.location);
       if (isMedi) url.searchParams.set('mode', 'medi');
       else url.searchParams.delete('mode');
@@ -892,17 +905,13 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       setMode('medi');
     }
 
+    // Toggle buttons
+    document.querySelectorAll('.mode-opt').forEach(function(b) {
+      b.addEventListener('click', function() { setMode(b.dataset.mode); });
+    });
+
     var mediBackBtn = document.getElementById('medi-back');
     if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
-
-    // Interceptar click en link "Medi" del nav para evitar navegación completa
-    var mediNavLink = document.querySelector('.nav-medi-link');
-    if (mediNavLink) {
-      mediNavLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        setMode('medi');
-      });
-    }
 
     /* ═══════════════════════════════════════════════════════════
        PROMPT

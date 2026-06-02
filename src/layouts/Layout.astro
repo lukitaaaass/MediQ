@@ -180,10 +180,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       <div class="nav-links">
         <a href="/"        class:list={[{ active: navActive === '/'        }]}>Inicio</a>
         <a href="/pricing" class:list={[{ active: navActive === '/pricing' }]}>Precios</a>
-        <div class="nav-chat-group">
-          <a href="/chat"    class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
-          <a href="/chat?mode=medi" class="nav-medi-link">Medi</a>
-        </div>
+        <a href="/chat"    class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
         <a href="/train"   class:list={[{ active: navActive === '/train'   }]}>Entrenar IA</a>
         <a href="/triadas" class:list={[{ active: navActive === '/triadas' }]}>Tríadas</a>
       </div>
