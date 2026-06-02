@@ -871,6 +871,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ═══════════════════════════════════════════════════════════
        MEDI — Toggle chat ↔ asistente de voz
        ═══════════════════════════════════════════════════════════ */
+    window.setMediMode = setMode;
     function setMode(mode) {
       var isMedi = mode === 'medi';
       var mv = document.getElementById('medi-view');
@@ -893,6 +894,15 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
     var mediBackBtn = document.getElementById('medi-back');
     if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
+
+    // Interceptar click en link "Medi" del nav para evitar navegación completa
+    var mediNavLink = document.querySelector('.nav-medi-link');
+    if (mediNavLink) {
+      mediNavLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        setMode('medi');
+      });
+    }
 
     /* ═══════════════════════════════════════════════════════════
        PROMPT
