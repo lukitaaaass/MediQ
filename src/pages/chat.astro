@@ -662,12 +662,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
        1. SPEECH-TO-TEXT (microfono del navegador)
        ══════════════════════════════════════════════════════════════ */
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    var orbEl = document.getElementById('jarvis-orb');
-    var statusEl = document.getElementById('medi-status');
-    var transcriptEl = document.getElementById('medi-transcript');
 
-    function setStatus(text) { if (statusEl) statusEl.textContent = text; }
-    function setOrb(state) { if (orbEl) orbEl.dataset.state = state; }
+    function getEl(id) { return document.getElementById(id); }
+    function setStatus(text) { var el = getEl('medi-status'); if (el) el.textContent = text; }
+    function setOrb(state) { var el = getEl('jarvis-orb'); if (el) el.dataset.state = state; }
 
     function startListening() {
       if (!SpeechRecognition) {
@@ -687,7 +685,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       _recognition.onstart = function() {
         setOrb('listening');
         setStatus('Escuchando...');
-        if (transcriptEl) transcriptEl.textContent = '';
+        var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = '';
       };
 
       _recognition.onresult = function(e) {
@@ -695,7 +693,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         for (var i = 0; i < e.results.length; i++) {
           text += e.results[i][0].transcript;
         }
-        if (transcriptEl) transcriptEl.textContent = text;
+        var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = text;
 
         if (e.results[0].isFinal) {
           setOrb('thinking');
@@ -715,7 +713,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       _recognition.onend = function() {
         /* Only reset to idle if not already thinking/speaking */
-        if (orbEl && orbEl.dataset.state === 'listening') setOrb('idle');
+        var o = getEl('jarvis-orb'); if (o && o.dataset.state === 'listening') setOrb('idle');
       };
 
       _recognition.start();
@@ -734,14 +732,20 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       return false;
     };
 
-    if (orbEl) {
-      orbEl.addEventListener('click', function() {
-        if (!window._mediSpeakCancel()) window._mediStartListening();
-      });
-      orbEl.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); orbEl.click(); }
-      });
-    }
+    /* Event delegation — funciona independientemente del timing del DOM */
+    document.addEventListener('click', function(e) {
+      var orb = e.target.closest('#jarvis-orb, #jarvis-orb *');
+      if (!orb) return;
+      console.log('[Medi] Orb click');
+      if (!window._mediSpeakCancel()) window._mediStartListening();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var orb = e.target.closest('#jarvis-orb');
+      if (!orb) return;
+      e.preventDefault();
+      if (!window._mediSpeakCancel()) window._mediStartListening();
+    });
 
     /* ══════════════════════════════════════════════════════════════
        2. ENVIAR A GROQ (reutiliza /api/chat)
@@ -792,7 +796,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         var cleanText = processVisuals(fullText);
 
         /* Mostrar respuesta */
-        if (transcriptEl) transcriptEl.textContent = cleanText;
+        var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = cleanText;
 
         /* Leer en voz alta */
         speakText(cleanText);
@@ -1388,16 +1392,6 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     var mediBackBtn = document.getElementById('medi-back');
     if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
 
-    /* Reasignar click del orbe por si View Transitions reemplazó el DOM */
-    var orbEl2 = document.getElementById('jarvis-orb');
-    if (orbEl2 && !orbEl2._mediBound) {
-      orbEl2._mediBound = true;
-      orbEl2.addEventListener('click', function() {
-        if (window._mediSpeakCancel && !window._mediSpeakCancel()) {
-          if (window._mediStartListening) window._mediStartListening();
-        }
-      });
-    }
 
     /* ═══════════════════════════════════════════════════════════
        PROMPT
