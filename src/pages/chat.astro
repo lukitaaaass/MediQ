@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import JarvisOrb from '../components/JarvisOrb.astro';
 
 const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
@@ -342,26 +343,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .medi-pill { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; background: color-mix(in oklab, var(--accent) 15%, transparent); color: var(--accent); padding: 3px 10px; border-radius: 999px; font-weight: 500; }
     .medi-subtitle { font-size: 13px; color: var(--ink-mute); }
 
-    /* Mic button */
-    .medi-mic {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: var(--surface); border: 2px solid var(--rule-2);
-      color: var(--ink-soft); display: grid; place-items: center;
-      cursor: pointer; transition: all 0.3s ease;
-    }
-    .medi-mic:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
-    .medi-mic.speaking {
-      background: var(--accent); color: #fff; border-color: var(--accent);
-      animation: medi-pulse 2s ease infinite;
-    }
-    .medi-mic.active {
-      background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
-      animation: medi-pulse 1.5s ease infinite;
-    }
-    @keyframes medi-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 40%, transparent); }
-      50% { box-shadow: 0 0 0 14px color-mix(in oklab, var(--accent) 0%, transparent); }
-    }
+    /* Jarvis orb spacing */
     .medi-status { font-family: var(--f-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.04em; }
     .medi-transcript { font-size: 13px; color: var(--ink-soft); max-width: 400px; text-align: center; min-height: 20px; }
 
@@ -609,14 +591,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <span class="medi-subtitle">Asistente de voz</span>
           </div>
 
-          <button id="medi-mic" class="medi-mic" aria-label="Hablar con Medi">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" fill="currentColor"/>
-              <path d="M19 10v2a7 7 0 01-14 0v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-              <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </button>
+          <JarvisOrb />
           <div id="medi-status" class="medi-status">Pulsa para hablar</div>
           <div id="medi-transcript" class="medi-transcript"></div>
 
@@ -687,11 +662,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
        1. SPEECH-TO-TEXT (microfono del navegador)
        ══════════════════════════════════════════════════════════════ */
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    var micBtn = document.getElementById('medi-mic');
+    var orbEl = document.getElementById('jarvis-orb');
     var statusEl = document.getElementById('medi-status');
     var transcriptEl = document.getElementById('medi-transcript');
 
     function setStatus(text) { if (statusEl) statusEl.textContent = text; }
+    function setOrb(state) { if (orbEl) orbEl.dataset.state = state; }
 
     function startListening() {
       if (!SpeechRecognition) {
@@ -709,7 +685,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       _recognition.interimResults = true;
 
       _recognition.onstart = function() {
-        micBtn.classList.add('active');
+        setOrb('listening');
         setStatus('Escuchando...');
         if (transcriptEl) transcriptEl.textContent = '';
       };
@@ -722,14 +698,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         if (transcriptEl) transcriptEl.textContent = text;
 
         if (e.results[0].isFinal) {
-          micBtn.classList.remove('active');
+          setOrb('thinking');
           setStatus('Pensando...');
           sendToGroq(text);
         }
       };
 
       _recognition.onerror = function(e) {
-        micBtn.classList.remove('active');
+        setOrb('idle');
         if (e.error === 'no-speech') {
           setStatus('No te he escuchado. Pulsa para hablar.');
         } else {
@@ -738,7 +714,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       };
 
       _recognition.onend = function() {
-        micBtn.classList.remove('active');
+        /* Only reset to idle if not already thinking/speaking */
+        if (orbEl && orbEl.dataset.state === 'listening') setOrb('idle');
       };
 
       _recognition.start();
@@ -750,16 +727,19 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       if (_isSpeaking) {
         window.speechSynthesis.cancel();
         _isSpeaking = false;
+        setOrb('idle');
         setStatus('Pulsa para hablar');
         return true;
       }
       return false;
     };
 
-    if (micBtn) {
-      micBtn.addEventListener('click', function() {
-        console.log('[Medi] Mic click');
+    if (orbEl) {
+      orbEl.addEventListener('click', function() {
         if (!window._mediSpeakCancel()) window._mediStartListening();
+      });
+      orbEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); orbEl.click(); }
       });
     }
 
@@ -801,6 +781,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         }
 
         if (!fullText) {
+          setOrb('idle');
           setStatus('No he podido responder. Intenta de nuevo.');
           return;
         }
@@ -818,6 +799,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       })
       .catch(function(err) {
         console.error('[Medi] Error:', err);
+        setOrb('idle');
         setStatus('Error de conexion. Intenta de nuevo.');
       });
     }
@@ -847,14 +829,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       utterance.onstart = function() {
         _isSpeaking = true;
+        setOrb('speaking');
         setStatus('Medi esta hablando... (pulsa para detener)');
-        micBtn.classList.add('speaking');
       };
 
       utterance.onend = function() {
         _isSpeaking = false;
+        setOrb('idle');
         setStatus('Pulsa para hablar');
-        micBtn.classList.remove('speaking');
       };
 
       window.speechSynthesis.speak(utterance);
@@ -1406,12 +1388,11 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     var mediBackBtn = document.getElementById('medi-back');
     if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
 
-    /* Reasignar click del mic por si View Transitions reemplazó el DOM */
-    var micBtn2 = document.getElementById('medi-mic');
-    if (micBtn2 && !micBtn2._mediBound) {
-      micBtn2._mediBound = true;
-      micBtn2.addEventListener('click', function() {
-        console.log('[Medi] Mic click (rebind)');
+    /* Reasignar click del orbe por si View Transitions reemplazó el DOM */
+    var orbEl2 = document.getElementById('jarvis-orb');
+    if (orbEl2 && !orbEl2._mediBound) {
+      orbEl2._mediBound = true;
+      orbEl2.addEventListener('click', function() {
         if (window._mediSpeakCancel && !window._mediSpeakCancel()) {
           if (window._mediStartListening) window._mediStartListening();
         }
