@@ -337,10 +337,71 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ─── Medi (asistente de voz) ─── */
     .medi-view { display: none; flex: 1; align-items: center; justify-content: center; overflow: hidden; }
     .medi-view.active { display: flex; }
-    .medi-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .medi-inner { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 700px; padding: 0 24px; }
     .medi-header { display: flex; align-items: center; gap: 10px; }
     .medi-pill { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; background: color-mix(in oklab, var(--accent) 15%, transparent); color: var(--accent); padding: 3px 10px; border-radius: 999px; font-weight: 500; }
     .medi-subtitle { font-size: 13px; color: var(--ink-mute); }
+
+    /* Mic button */
+    .medi-mic {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--surface); border: 2px solid var(--rule-2);
+      color: var(--ink-soft); display: grid; place-items: center;
+      cursor: pointer; transition: all 0.3s ease;
+    }
+    .medi-mic:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.05); }
+    .medi-mic.active {
+      background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+      animation: medi-pulse 1.5s ease infinite;
+    }
+    @keyframes medi-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 40%, transparent); }
+      50% { box-shadow: 0 0 0 14px color-mix(in oklab, var(--accent) 0%, transparent); }
+    }
+    .medi-status { font-family: var(--f-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.04em; }
+    .medi-transcript { font-size: 13px; color: var(--ink-soft); max-width: 400px; text-align: center; min-height: 20px; }
+
+    /* ─── Medi Canvas (visuales dinámicos) ─── */
+    .medi-canvas { width: 100%; margin-top: 16px; animation: medi-canvas-in 0.3s ease; }
+    .medi-visual-label { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 8px; }
+    .medi-img { width: 100%; max-width: 500px; border-radius: 12px; border: 1px solid var(--rule); }
+    @keyframes medi-canvas-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── ECG Panel con anotaciones ─── */
+    .ecg-panel { position: relative; width: 100%; max-width: 700px; background: var(--bg); border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; }
+    .ecg-trace { display: block; width: 100%; height: auto; }
+    .ecg-annotation {
+      position: absolute; z-index: 2;
+      background: var(--surface); border: 1px solid var(--rule-2); border-radius: 10px;
+      padding: 8px 12px; font-size: 11.5px; line-height: 1.4; color: var(--ink-soft);
+      max-width: 180px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      pointer-events: none;
+    }
+    .ecg-annotation strong { display: block; color: var(--ink); font-size: 12px; margin-bottom: 1px; }
+    .ecg-footer {
+      display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+      padding: 10px 16px; border-top: 1px solid var(--rule);
+      font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--ink-mute);
+    }
+    .ecg-footer strong { color: var(--ink); }
+
+    /* ─── Tarjeta medica generica ─── */
+    .medi-card { width: 100%; max-width: 500px; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 14px; overflow: hidden; }
+    .medi-card-head {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px; border-bottom: 1px solid var(--rule);
+      font-size: 14px; font-weight: 600; color: var(--accent); text-transform: capitalize;
+    }
+    .medi-card-body { padding: 16px 18px; }
+    .medi-card-row {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+      padding: 8px 0; border-bottom: 1px solid var(--rule);
+      font-size: 13px; color: var(--ink);
+    }
+    .medi-card-row:last-child { border-bottom: none; }
+    .medi-card-row strong { color: var(--ink-soft); font-weight: 500; text-transform: capitalize; flex-shrink: 0; }
+    .medi-card-row span { text-align: right; color: var(--ink); }
 
     /* ─── Composer ─── */
     .composer-wrap { border-top: 1px solid var(--rule); padding: 16px 24px 22px; background: color-mix(in oklab, var(--bg) 85%, transparent); backdrop-filter: blur(8px); }
@@ -537,13 +598,24 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       </div>
 
       <!-- Medi: asistente de voz (oculto por defecto) -->
-      <div id="medi-view" class="medi-view">
+      <div id="medi-view" class="medi-view" data-sb-url={SUPABASE_URL} data-sb-key={SUPABASE_ANON_KEY}>
         <div class="medi-inner">
           <div class="medi-header">
             <span class="medi-pill">Medi</span>
             <span class="medi-subtitle">Asistente de voz</span>
           </div>
+
           <elevenlabs-convai agent-id="agent_6201kt445es0f8wbekxtfj4ysk3f"></elevenlabs-convai>
+
+          <!-- Lienzo visual: aquí se renderizan ECG, imágenes, etc. -->
+          <div id="medi-canvas" class="medi-canvas" style="display:none;">
+            <div id="medi-canvas-content"></div>
+            <button id="medi-canvas-close" class="btn btn-ghost" style="margin-top:12px; font-size:12px;">
+              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Cerrar visual
+            </button>
+          </div>
+
           <button id="medi-back" class="btn btn-ghost" style="margin-top:16px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             Volver al chat
@@ -579,6 +651,251 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <!-- ElevenLabs Conversational AI (Medi) -->
   <script is:inline src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+
+  <!-- ElevenLabs Visuales (polling Supabase) -->
+  <script is:inline>
+  (function() {
+    var _ecgAnimId = null;
+    var _lastVisualId = null;
+    var _pollInterval = null;
+    var mediView = document.getElementById('medi-view');
+    var SUPABASE_URL = mediView ? mediView.dataset.sbUrl : '';
+    var SUPABASE_KEY = mediView ? mediView.dataset.sbKey : '';
+
+    /* ══════════════════════════════════════════════════════════════
+       1. POLLING — consultar Supabase cada 2s por nuevos visuals
+       ══════════════════════════════════════════════════════════════ */
+    function startPolling() {
+      if (_pollInterval) return;
+      console.log('[Medi] Polling iniciado.');
+      _pollInterval = setInterval(checkForVisuals, 2000);
+    }
+
+    function stopPolling() {
+      if (_pollInterval) {
+        clearInterval(_pollInterval);
+        _pollInterval = null;
+        console.log('[Medi] Polling detenido.');
+      }
+    }
+
+    function checkForVisuals() {
+      if (!SUPABASE_URL || !SUPABASE_KEY) return;
+
+      var url = SUPABASE_URL + '/rest/v1/medi_visuals?order=created_at.desc&limit=1';
+      fetch(url, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(rows) {
+        if (!rows || !rows.length) return;
+        var latest = rows[0];
+        if (latest.id === _lastVisualId) return;
+        _lastVisualId = latest.id;
+
+        /* Nuevo visual detectado */
+        console.log('[Medi] Nuevo visual:', latest.visual_type, latest.condition);
+        window.dispatchEvent(new CustomEvent('mediq-render-visual', {
+          detail: { visual_type: latest.visual_type, condition: latest.condition }
+        }));
+      })
+      .catch(function(err) { console.error('[Medi] Poll error:', err); });
+    }
+
+    /* Iniciar/detener polling segun modo Medi */
+    var origSetMode = window._mediSetMode;
+    window._mediPollStart = startPolling;
+    window._mediPollStop = stopPolling;
+
+    /* Auto-iniciar si ya estamos en modo Medi */
+    if (new URLSearchParams(window.location.search).get('mode') === 'medi') {
+      startPolling();
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       2. RECEPTOR — escuchar evento y renderizar en el canvas
+       ══════════════════════════════════════════════════════════════ */
+    window.addEventListener('mediq-render-visual', function(e) {
+      var vt = e.detail.visual_type;
+      var cd = e.detail.condition;
+      var canvas  = document.getElementById('medi-canvas');
+      var content = document.getElementById('medi-canvas-content');
+      if (!canvas || !content) return;
+
+      if (_ecgAnimId) { cancelAnimationFrame(_ecgAnimId); _ecgAnimId = null; }
+      content.innerHTML = '';
+      canvas.style.display = '';
+
+      console.log('[Medi] Renderizando:', vt, '—', cd);
+
+      if (vt === 'ecg') { renderECG(content, cd); }
+      else if (vt === 'imagen') {
+        /* cd = descripcion de la imagen o URL directa */
+        var imgUrl;
+        if (cd.indexOf('http') === 0) {
+          imgUrl = cd;
+        } else {
+          /* Generar con Pollinations.ai — gratis, sin API key */
+          var prompt = encodeURIComponent(cd + ', medical illustration, clean, professional, white background');
+          imgUrl = 'https://image.pollinations.ai/prompt/' + prompt + '?width=600&height=400&nologo=true';
+        }
+        content.innerHTML =
+          '<div class="medi-visual-label">Generando imagen...</div>' +
+          '<div class="medi-img-wrap"><img src="' + escapeHTML(imgUrl) + '" alt="' + escapeHTML(cd) + '" class="medi-img" onload="this.parentElement.previousElementSibling.textContent=\'Referencia visual\'" onerror="this.parentElement.innerHTML=\'<p style=color:var(--ink-mute)>No se pudo generar la imagen</p>\'" /></div>';
+      }
+      else { renderInfoCard(content, vt, cd); }
+    });
+
+    /* ══════════════════════════════════════════════════════════════
+       3. Cerrar canvas
+       ══════════════════════════════════════════════════════════════ */
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('#medi-canvas-close');
+      if (!btn) return;
+      var canvas = document.getElementById('medi-canvas');
+      if (canvas) canvas.style.display = 'none';
+      if (_ecgAnimId) { cancelAnimationFrame(_ecgAnimId); _ecgAnimId = null; }
+    });
+
+    /* ══════════════════════════════════════════════════════════════
+       4. TARJETA MEDICA GENERICA
+       ══════════════════════════════════════════════════════════════ */
+    function renderInfoCard(container, title, body) {
+      var items = [];
+      try {
+        var parsed = JSON.parse(body);
+        if (Array.isArray(parsed)) { items = parsed; }
+        else if (typeof parsed === 'object') {
+          for (var k in parsed) { if (parsed.hasOwnProperty(k)) items.push({ label: k, value: parsed[k] }); }
+        }
+      } catch(e) {}
+
+      var titleClean = escapeHTML(title).replace(/_/g, ' ');
+      var html = '<div class="medi-card">';
+      html += '<div class="medi-card-head">';
+      html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l1.5 7.5L21 12l-7.5 1.5L12 22l-1.5-7.5L3 12l7.5-1.5z" fill="currentColor"/></svg>';
+      html += '<span>' + titleClean + '</span>';
+      html += '</div>';
+
+      if (items.length > 0) {
+        html += '<div class="medi-card-body">';
+        for (var i = 0; i < items.length; i++) {
+          var lbl = escapeHTML(String(items[i].label || items[i].titulo || '')).replace(/_/g, ' ');
+          var val = escapeHTML(String(items[i].value || items[i].valor || items[i].descripcion || ''));
+          html += '<div class="medi-card-row"><strong>' + lbl + '</strong><span>' + val + '</span></div>';
+        }
+        html += '</div>';
+      } else {
+        html += '<div class="medi-card-body"><p style="margin:0;color:var(--ink-soft);line-height:1.6;white-space:pre-wrap;">' + escapeHTML(body) + '</p></div>';
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       5. ECG INTERACTIVO CON ANOTACIONES
+       ══════════════════════════════════════════════════════════════ */
+    function renderECG(container, condition) {
+      var cond = (condition || 'normal').toLowerCase();
+
+      var bpm = 72, color = '#22c55e', label = 'Ritmo sinusal normal', status = 'Normal';
+      if (cond === 'taquicardia')  { bpm = 150; color = '#ef4444'; label = 'Taquicardia sinusal'; status = 'Elevada'; }
+      else if (cond === 'bradicardia')  { bpm = 45;  color = '#f59e0b'; label = 'Bradicardia sinusal'; status = 'Baja'; }
+      else if (cond === 'arritmia' || cond === 'fibrilacion_auricular') { bpm = 0; color = '#a855f7'; label = 'Fibrilacion auricular'; status = 'Irregular'; }
+
+      var annotations = [
+        { x: '12%', y: '18%', title: 'Onda P:', desc: 'Despolarizacion auricular.' + (bpm > 0 ? ' ' + (bpm > 100 ? 'Acortada.' : 'Normal, 0.08s.') : ' Ausente.') },
+        { x: '38%', y: '5%',  title: 'Complejo QRS:', desc: 'Despolarizacion ventricular.' + (bpm > 0 ? ' Normal, 0.10s.' : ' Irregular.') },
+        { x: '58%', y: '45%', title: 'Segmento ST:', desc: 'Isoelectrico.' + (bpm > 100 ? ' Valorar infradesnivel.' : ' Sin sobrelevacion.') },
+        { x: '72%', y: '55%', title: 'Onda T:', desc: 'Repolarizacion ventricular.' + (bpm > 0 ? ' Normal.' : ' Variable.') },
+        { x: '8%',  y: '75%', title: 'Intervalo PR:', desc: 'Conduccion AV.' + (bpm > 0 ? ' Normal, <0.20s.' : ' No medible.') }
+      ];
+
+      var html = '<div class="ecg-panel">';
+      for (var i = 0; i < annotations.length; i++) {
+        var a = annotations[i];
+        html += '<div class="ecg-annotation" style="left:' + a.x + ';top:' + a.y + ';"><strong>' + a.title + '</strong> ' + a.desc + '</div>';
+      }
+      html += '<canvas id="ecg-canvas" width="800" height="280" class="ecg-trace"></canvas>';
+      html += '<div class="ecg-footer">';
+      html += '<span>FRECUENCIA: <strong>' + (bpm > 0 ? bpm + ' bpm' : '---') + '</strong></span>';
+      html += '<span>RITMO: <strong>' + label + '</strong></span>';
+      html += '<span>ESTADO: <strong style="color:' + color + ';">' + status + '</strong></span>';
+      html += '<span>ANALISIS DE MEDIQ IA</span>';
+      html += '</div></div>';
+      container.innerHTML = html;
+
+      var c = document.getElementById('ecg-canvas');
+      if (!c) return;
+      var ctx = c.getContext('2d');
+      var W = c.width, H = c.height;
+      var period = bpm > 0 ? (60 / bpm) * 120 : 50;
+      var x = 0, speed = 2;
+
+      function qrs(phase) {
+        if (phase < 0.08) return 0;
+        if (phase < 0.13) return (phase - 0.08) * 240;
+        if (phase < 0.18) return (0.18 - phase) * 240;
+        if (phase < 0.30) return 0;
+        if (phase < 0.33) return -(phase - 0.30) * 700;
+        if (phase < 0.38) return -21 + (phase - 0.33) * 4800;
+        if (phase < 0.44) return 219 - (phase - 0.38) * 4200;
+        if (phase < 0.50) return -33 + (phase - 0.44) * 550;
+        if (phase < 0.65) return 0;
+        if (phase < 0.78) return Math.sin((phase - 0.65) * Math.PI / 0.13) * 22;
+        return 0;
+      }
+
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#fff';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(150,150,150,0.12)';
+      ctx.lineWidth = 0.5;
+      for (var gx = 0; gx < W; gx += 20) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+      for (var gy = 0; gy < H; gy += 20) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+
+      function draw() {
+        ctx.fillStyle = 'rgba(0,0,0,0.02)';
+        ctx.fillRect(x, 0, speed + 6, H);
+        var y1, y2;
+        if (bpm === 0) {
+          y1 = H / 2 + (Math.random() - 0.5) * 40;
+          y2 = H / 2 + (Math.random() - 0.5) * 40;
+        } else {
+          y1 = H / 2 - qrs((x % period) / period);
+          y2 = H / 2 - qrs(((x + speed) % period) / period);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y1);
+        ctx.lineTo(x + speed, y2);
+        ctx.stroke();
+        x += speed;
+        if (x >= W) {
+          x = 0;
+          ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#fff';
+          ctx.fillRect(0, 0, W, H);
+          ctx.strokeStyle = 'rgba(150,150,150,0.12)';
+          ctx.lineWidth = 0.5;
+          for (var gx2 = 0; gx2 < W; gx2 += 20) { ctx.beginPath(); ctx.moveTo(gx2, 0); ctx.lineTo(gx2, H); ctx.stroke(); }
+          for (var gy2 = 0; gy2 < H; gy2 += 20) { ctx.beginPath(); ctx.moveTo(0, gy2); ctx.lineTo(W, gy2); ctx.stroke(); }
+        }
+        _ecgAnimId = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    function escapeHTML(str) {
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+  })();
+  </script>
 
   <!-- ─── Modales ─── -->
   <div class="modal-backdrop" id="modal-profile">
@@ -899,6 +1216,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       if (isMedi) url.searchParams.set('mode', 'medi');
       else url.searchParams.delete('mode');
       history.replaceState(null, '', url);
+      /* Iniciar/detener polling de visuals */
+      if (isMedi && window._mediPollStart) window._mediPollStart();
+      else if (!isMedi && window._mediPollStop) window._mediPollStop();
     }
 
     if (new URLSearchParams(window.location.search).get('mode') === 'medi') {
