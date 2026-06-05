@@ -744,15 +744,22 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       _recognition.start();
     }
 
+    /* Exponer funciones para que el click funcione incluso con View Transitions */
+    window._mediStartListening = startListening;
+    window._mediSpeakCancel = function() {
+      if (_isSpeaking) {
+        window.speechSynthesis.cancel();
+        _isSpeaking = false;
+        setStatus('Pulsa para hablar');
+        return true;
+      }
+      return false;
+    };
+
     if (micBtn) {
       micBtn.addEventListener('click', function() {
-        if (_isSpeaking) {
-          window.speechSynthesis.cancel();
-          _isSpeaking = false;
-          setStatus('Pulsa para hablar');
-          return;
-        }
-        startListening();
+        console.log('[Medi] Mic click');
+        if (!window._mediSpeakCancel()) window._mediStartListening();
       });
     }
 
@@ -1396,6 +1403,20 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       b.addEventListener('click', function() { setMode(b.dataset.mode); });
     });
 
+    var mediBackBtn = document.getElementById('medi-back');
+    if (mediBackBtn) mediBackBtn.addEventListener('click', function() { setMode('chat'); });
+
+    /* Reasignar click del mic por si View Transitions reemplazó el DOM */
+    var micBtn2 = document.getElementById('medi-mic');
+    if (micBtn2 && !micBtn2._mediBound) {
+      micBtn2._mediBound = true;
+      micBtn2.addEventListener('click', function() {
+        console.log('[Medi] Mic click (rebind)');
+        if (window._mediSpeakCancel && !window._mediSpeakCancel()) {
+          if (window._mediStartListening) window._mediStartListening();
+        }
+      });
+    }
 
     /* ═══════════════════════════════════════════════════════════
        PROMPT
