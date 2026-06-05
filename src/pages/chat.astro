@@ -713,13 +713,24 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           }
         };
 
+        var _retries = 0;
         _recognition.onerror = function(e) {
           console.error('[Medi] Error:', e.error);
+          if (e.error === 'network' && _retries < 2) {
+            _retries++;
+            setStatus('Reintentando... (' + _retries + '/2)');
+            setTimeout(function() { startListening(); }, 500);
+            return;
+          }
           setOrb('idle');
           if (e.error === 'no-speech') {
             setStatus('No te he escuchado. Pulsa para hablar.');
           } else if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
             setStatus('Permite el acceso al microfono');
+          } else if (e.error === 'network') {
+            setStatus('Error de red. Usa Chrome para mejor compatibilidad.');
+          } else if (e.error === 'aborted') {
+            setStatus('Pulsa para hablar');
           } else {
             setStatus('Error: ' + e.error);
           }
