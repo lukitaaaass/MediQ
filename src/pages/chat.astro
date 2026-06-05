@@ -667,10 +667,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     function setStatus(text) { var el = getEl('medi-status'); if (el) el.textContent = text; }
     function setOrb(state) { var el = getEl('jarvis-orb'); if (el) el.dataset.state = state; }
 
-    var _micStream = null;
-
     function startListening() {
-      console.log('[Medi] startListening called, SpeechRecognition:', !!SpeechRecognition);
+      console.log('[Medi] startListening called');
       if (!SpeechRecognition) {
         setStatus('Tu navegador no soporta voz');
         return;
@@ -686,80 +684,65 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         _recognition = null;
       }
 
-      /* Pedir permiso y mantener stream vivo mientras dure el reconocimiento */
-      navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(function(stream) {
-        _micStream = stream;
-        console.log('[Medi] Mic stream active, tracks:', stream.getAudioTracks().length);
+      /* Pequeño delay para que el navegador libere el mic del abort previo */
+      setTimeout(function() {
+        try {
+          _recognition = new SpeechRecognition();
+          _recognition.lang = 'es-ES';
+          _recognition.continuous = false;
+          _recognition.interimResults = true;
+          _recognition.maxAlternatives = 1;
 
-        _recognition = new SpeechRecognition();
-        _recognition.lang = 'es';
-        _recognition.continuous = true;
-        _recognition.interimResults = true;
-        _recognition.maxAlternatives = 1;
+          _recognition.onaudiostart = function() { console.log('[Medi] Audio started'); };
+          _recognition.onsoundstart = function() { console.log('[Medi] Sound detected'); };
+          _recognition.onspeechstart = function() { console.log('[Medi] Speech detected'); };
 
-        _recognition.onaudiostart = function() {
-          console.log('[Medi] Audio capture started');
-        };
+          _recognition.onstart = function() {
+            console.log('[Medi] Recognition ACTIVE');
+            setOrb('listening');
+            setStatus('Escuchando...');
+            var t = getEl('medi-transcript'); if (t) t.textContent = '';
+          };
 
-        _recognition.onstart = function() {
-          console.log('[Medi] Recognition started');
-          setOrb('listening');
-          setStatus('Escuchando...');
-          var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = '';
-        };
+          _recognition.onresult = function(e) {
+            var text = '';
+            for (var i = 0; i < e.results.length; i++) {
+              text += e.results[i][0].transcript;
+            }
+            console.log('[Medi] Transcript:', text);
+            var t = getEl('medi-transcript'); if (t) t.textContent = text;
 
-        _recognition.onresult = function(e) {
-          var text = '';
-          for (var i = e.resultIndex; i < e.results.length; i++) {
-            text += e.results[i][0].transcript;
-          }
-          console.log('[Medi] Transcript:', text, 'isFinal:', e.results[e.results.length - 1].isFinal);
-          var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = text;
+            if (e.results[e.results.length - 1].isFinal) {
+              setOrb('thinking');
+              setStatus('Pensando...');
+              sendToGroq(text);
+            }
+          };
 
-          if (e.results[e.results.length - 1].isFinal) {
-            _recognition.stop();
-            _releaseMic();
-            setOrb('thinking');
-            setStatus('Pensando...');
-            sendToGroq(text);
-          }
-        };
+          _recognition.onerror = function(e) {
+            console.error('[Medi] Error:', e.error, e.message);
+            setOrb('idle');
+            if (e.error === 'no-speech') {
+              setStatus('No te he escuchado. Pulsa para hablar.');
+            } else if (e.error === 'not-allowed') {
+              setStatus('Permite el acceso al microfono');
+            } else {
+              setStatus('Error: ' + e.error);
+            }
+          };
 
-        _recognition.onerror = function(e) {
-          console.error('[Medi] Recognition error:', e.error);
-          _releaseMic();
-          setOrb('idle');
-          if (e.error === 'no-speech') {
-            setStatus('No te he escuchado. Pulsa para hablar.');
-          } else if (e.error === 'not-allowed') {
-            setStatus('Permite el acceso al microfono en tu navegador');
-          } else {
-            setStatus('Error: ' + e.error);
-          }
-        };
+          _recognition.onend = function() {
+            console.log('[Medi] Recognition ended');
+            var o = getEl('jarvis-orb'); if (o && o.dataset.state === 'listening') setOrb('idle');
+          };
 
-        _recognition.onend = function() {
-          console.log('[Medi] Recognition ended');
-          _releaseMic();
-          var o = getEl('jarvis-orb'); if (o && o.dataset.state === 'listening') setOrb('idle');
-        };
-
-        _recognition.start();
-        console.log('[Medi] Recognition.start() called');
-      })
-      .catch(function(err) {
-        console.error('[Medi] Mic permission denied:', err);
-        setStatus('Permite el acceso al microfono');
-        setOrb('idle');
-      });
-    }
-
-    function _releaseMic() {
-      if (_micStream) {
-        _micStream.getTracks().forEach(function(t) { t.stop(); });
-        _micStream = null;
-      }
+          _recognition.start();
+          console.log('[Medi] start() called, waiting for browser...');
+        } catch(err) {
+          console.error('[Medi] Exception:', err);
+          setStatus('Error al iniciar el microfono');
+        }
+      }, 200);
     }
 
     /* Exponer funciones para que el click funcione incluso con View Transitions */
