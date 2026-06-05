@@ -678,6 +678,22 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         _isSpeaking = false;
       }
 
+      /* Pedir permiso de microfono explicitamente antes de iniciar */
+      navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(function(stream) {
+        /* Permiso concedido — liberar el stream, SpeechRecognition gestiona el micro */
+        stream.getTracks().forEach(function(t) { t.stop(); });
+        console.log('[Medi] Mic permission granted');
+        _startRecognition();
+      })
+      .catch(function(err) {
+        console.error('[Medi] Mic permission denied:', err);
+        setStatus('Permite el acceso al microfono');
+        setOrb('idle');
+      });
+    }
+
+    function _startRecognition() {
       try {
         _recognition = new SpeechRecognition();
         _recognition.lang = 'es-ES';
