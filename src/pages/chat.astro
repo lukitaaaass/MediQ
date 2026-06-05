@@ -667,6 +667,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     function setStatus(text) { var el = getEl('medi-status'); if (el) el.textContent = text; }
     function setOrb(state) { var el = getEl('jarvis-orb'); if (el) el.dataset.state = state; }
 
+    var _micStream = null;
+
     function startListening() {
       console.log('[Medi] startListening called, SpeechRecognition:', !!SpeechRecognition);
       if (!SpeechRecognition) {
@@ -678,27 +680,27 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         _isSpeaking = false;
       }
 
-      /* Pedir permiso de microfono explicitamente antes de iniciar */
+      /* Abortar reconocimiento previo si existe */
+      if (_recognition) {
+        try { _recognition.abort(); } catch(e) {}
+        _recognition = null;
+      }
+
+      /* Pedir permiso y mantener stream vivo mientras dure el reconocimiento */
       navigator.mediaDevices.getUserMedia({ audio: true })
       .then(function(stream) {
-        /* Permiso concedido — liberar el stream, SpeechRecognition gestiona el micro */
-        stream.getTracks().forEach(function(t) { t.stop(); });
-        console.log('[Medi] Mic permission granted');
-        _startRecognition();
-      })
-      .catch(function(err) {
-        console.error('[Medi] Mic permission denied:', err);
-        setStatus('Permite el acceso al microfono');
-        setOrb('idle');
-      });
-    }
+        _micStream = stream;
+        console.log('[Medi] Mic stream active, tracks:', stream.getAudioTracks().length);
 
-    function _startRecognition() {
-      try {
         _recognition = new SpeechRecognition();
-        _recognition.lang = 'es-ES';
-        _recognition.continuous = false;
+        _recognition.lang = 'es';
+        _recognition.continuous = true;
         _recognition.interimResults = true;
+        _recognition.maxAlternatives = 1;
+
+        _recognition.onaudiostart = function() {
+          console.log('[Medi] Audio capture started');
+        };
 
         _recognition.onstart = function() {
           console.log('[Medi] Recognition started');
@@ -709,13 +711,15 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
         _recognition.onresult = function(e) {
           var text = '';
-          for (var i = 0; i < e.results.length; i++) {
+          for (var i = e.resultIndex; i < e.results.length; i++) {
             text += e.results[i][0].transcript;
           }
-          console.log('[Medi] Transcript:', text);
+          console.log('[Medi] Transcript:', text, 'isFinal:', e.results[e.results.length - 1].isFinal);
           var transcriptEl = getEl('medi-transcript'); if (transcriptEl) transcriptEl.textContent = text;
 
-          if (e.results[0].isFinal) {
+          if (e.results[e.results.length - 1].isFinal) {
+            _recognition.stop();
+            _releaseMic();
             setOrb('thinking');
             setStatus('Pensando...');
             sendToGroq(text);
@@ -724,9 +728,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
         _recognition.onerror = function(e) {
           console.error('[Medi] Recognition error:', e.error);
+          _releaseMic();
           setOrb('idle');
           if (e.error === 'no-speech') {
             setStatus('No te he escuchado. Pulsa para hablar.');
+          } else if (e.error === 'not-allowed') {
+            setStatus('Permite el acceso al microfono en tu navegador');
           } else {
             setStatus('Error: ' + e.error);
           }
@@ -734,14 +741,24 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
         _recognition.onend = function() {
           console.log('[Medi] Recognition ended');
+          _releaseMic();
           var o = getEl('jarvis-orb'); if (o && o.dataset.state === 'listening') setOrb('idle');
         };
 
         _recognition.start();
         console.log('[Medi] Recognition.start() called');
-      } catch(err) {
-        console.error('[Medi] Failed to start recognition:', err);
-        setStatus('Error al iniciar microfono');
+      })
+      .catch(function(err) {
+        console.error('[Medi] Mic permission denied:', err);
+        setStatus('Permite el acceso al microfono');
+        setOrb('idle');
+      });
+    }
+
+    function _releaseMic() {
+      if (_micStream) {
+        _micStream.getTracks().forEach(function(t) { t.stop(); });
+        _micStream = null;
       }
     }
 
