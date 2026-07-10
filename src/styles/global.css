@@ -7,11 +7,14 @@
   --ink-mute: #595f64;
   --rule: #1e23270d;
   --rule-2: #1e232714;
+  /* Acento teal MediQ — misma marca en light/dark, cambia solo la luminosidad */
   --accent: oklch(54% 0.09 195);
-  --accent-ink: #ffffff;
+  --accent-ink: #ffffff;         /* texto sobre bloques con background: var(--accent) */
+  --accent-text: oklch(42% 0.11 195); /* acento como tinta pequeña sobre bg claro — WCAG AA */
   --surface: #ffffff;
-  --warn: oklch(62% 0.14 40);
-  --danger: oklch(58% 0.18 25);
+  /* Estados clínicos: warn y danger bien separados para lectura urgente */
+  --warn: oklch(70% 0.16 55);    /* ámbar amarillento */
+  --danger: oklch(52% 0.22 22);  /* rojo profundo saturado */
   --ok: oklch(60% 0.12 155);
   --success: oklch(62% 0.15 145);
   --info: oklch(60% 0.12 240);
@@ -34,14 +37,16 @@ html[data-dark="true"] {
   --ink-mute: #7f837f;
   --rule: #f2f0ea14;
   --rule-2: #f2f0ea22;
-  --accent: oklch(78% 0.13 155);
+  /* Mismo teal, más luminosidad para bg oscuro */
+  --accent: oklch(74% 0.11 195);
   --accent-ink: #0e1113;
+  --accent-text: var(--accent);  /* sobre bg oscuro, el acento normal ya tiene contraste */
   --surface: #191d20;
   --ok: oklch(70% 0.14 155);
   --success: oklch(72% 0.16 145);
-  --danger: oklch(68% 0.20 25);
+  --danger: oklch(66% 0.22 22);
   --info: oklch(70% 0.14 240);
-  --warn: oklch(75% 0.16 40);
+  --warn: oklch(78% 0.17 55);
 }
 
 *, *::before, *::after { box-sizing: border-box; }

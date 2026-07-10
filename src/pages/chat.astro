@@ -373,7 +373,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     /* ─── Onboarding ─── */
     .ob-backdrop { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.55); z-index: 500; }
     .ob-card { position: fixed; z-index: 502; background: var(--surface); border: 1px solid var(--rule-2); border-radius: 16px; padding: 24px; width: min(320px, calc(100vw - 32px)); box-shadow: 0 24px 64px -20px rgba(0,0,0,.45); top: 50%; left: 50%; transform: translate(-50%, -50%); }
-    .ob-tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .ob-tag { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-text); margin-bottom: 8px; }
     .ob-card h3 { font-family: var(--f-display); font-size: 20px; font-weight: 400; margin-bottom: 8px; letter-spacing: -0.02em; }
     .ob-card p { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin-bottom: 20px; }
     .ob-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -440,7 +440,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <header class="chat-head">
         <div style="display:flex; align-items:center; gap:10px;">
           <h2 id="chat-title">Nueva consulta</h2>
-          <span id="corpus-badge" style="display:none; font-family:var(--f-mono); font-size:10px; letter-spacing:0.06em; background:color-mix(in oklab,var(--accent) 15%,transparent); color:var(--accent); padding:2px 8px; border-radius:999px;"></span>
+          <span id="corpus-badge" style="display:none; font-family:var(--f-mono); font-size:10px; letter-spacing:0.06em; background:color-mix(in oklab,var(--accent) 15%,transparent); color:var(--accent-text); padding:2px 8px; border-radius:999px;"></span>
         </div>
         <div style="position:relative;">
           <button class="specialty" id="specialty-btn">
