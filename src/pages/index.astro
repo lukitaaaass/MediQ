@@ -289,8 +289,8 @@ import Layout from '../layouts/Layout.astro';
         <a class="btn btn-ghost" href="#how">Ver cómo funciona</a>
       </div>
       <div class="hero-meta reveal" style="--d:320ms;">
-        <span>HIPAA · GDPR</span><span class="dot"></span>
-        <span>ISO 27001</span><span class="dot"></span>
+        <span>RGPD · datos en la UE</span><span class="dot"></span>
+        <span>Cifrado TLS 1.3</span><span class="dot"></span>
         <span>Auditable por especialistas</span>
       </div>
     </div>
@@ -409,7 +409,7 @@ import Layout from '../layouts/Layout.astro';
       </div>
       <div class="feat reveal" style="--d:300ms;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">◌</div><span class="num">06</span></div>
-        <div><h3>Privacidad por diseño</h3><p>Datos anonimizados antes del procesamiento. Nunca se entrenan modelos con tus casos. Cumplimiento HIPAA y GDPR.</p></div>
+        <div><h3>Privacidad por diseño</h3><p>Datos anonimizados antes del procesamiento. Nunca se entrenan modelos con tus casos. Cumplimiento RGPD y residencia de datos en la UE.</p></div>
       </div>
     </div>
   </div>
@@ -419,40 +419,17 @@ import Layout from '../layouts/Layout.astro';
 <section id="testimonials" class="testimonials-section">
   <div class="container">
     <div class="section-head reveal center-head">
-      <span class="eyebrow">Lo que dicen los médicos</span>
-      <h2>Confianza construida <em>caso a caso</em>.</h2>
-    </div>
-    <div class="testimonials-grid">
-      <blockquote class="tcard reveal">
-        <p class="tcard-quote">"Lo que antes me llevaba 30 minutos buscando en guías, lo resuelvo entre paciente y paciente."</p>
-        <footer class="tcard-foot">
-          <div class="tcard-ava" aria-hidden="true">CR</div>
-          <div>
-            <cite class="tcard-name">Dr. Carlos Ramírez</cite>
-            <span class="tcard-role">Medicina interna · H. Clínic Barcelona</span>
-          </div>
-        </footer>
-      </blockquote>
-      <blockquote class="tcard reveal" style="--d:80ms;">
-        <p class="tcard-quote">"El diferencial de la IA me dio el diagnóstico que yo había descartado. Era correcto. Salvó tiempo crítico."</p>
-        <footer class="tcard-foot">
-          <div class="tcard-ava" aria-hidden="true" style="background:linear-gradient(135deg,oklch(70% 0.14 30),oklch(55% 0.18 355));">LM</div>
-          <div>
-            <cite class="tcard-name">Dra. Laura Molina</cite>
-            <span class="tcard-role">Urgencias · H. La Paz Madrid</span>
-          </div>
-        </footer>
-      </blockquote>
-      <blockquote class="tcard reveal" style="--d:160ms;">
-        <p class="tcard-quote">"Ideal para MIR. Explica el razonamiento fisiopatológico paso a paso, no solo la respuesta correcta."</p>
-        <footer class="tcard-foot">
-          <div class="tcard-ava" aria-hidden="true" style="background:linear-gradient(135deg,oklch(72% 0.12 145),oklch(55% 0.14 180));">JF</div>
-          <div>
-            <cite class="tcard-name">Jorge Fuentes</cite>
-            <span class="tcard-role">Residente R2 · Cardiología · H. Reina Sofía</span>
-          </div>
-        </footer>
-      </blockquote>
+      <span class="eyebrow">Beta cerrada en curso</span>
+      <h2>Los primeros médicos ya lo están <em>probando</em>.</h2>
+      <p class="lede" style="margin-top:20px; max-width:56ch; color:var(--ink-soft);">
+        Estamos en fase de beta cerrada con un grupo reducido de médicos de urgencias, medicina interna
+        y residentes MIR. Publicaremos aquí sus testimonios en cuanto tengamos su autorización expresa
+        — nunca antes.
+      </p>
+      <div style="margin-top:28px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <a class="btn btn-primary" href="/login">Unirme a la beta →</a>
+        <a class="btn btn-ghost" href="/contact">Escribirnos</a>
+      </div>
     </div>
   </div>
 </section>
@@ -475,7 +452,7 @@ import Layout from '../layouts/Layout.astro';
       </details>
       <details class="q">
         <summary>¿Cómo se protegen los datos del paciente? <span class="ic">+</span></summary>
-        <p class="ans">Cifrado de extremo a extremo, anonimización antes del procesamiento y residencia de datos en la UE. No entrenamos modelos con casos de usuarios. Cumplimos HIPAA, GDPR e ISO 27001.</p>
+        <p class="ans">Cifrado en tránsito (TLS 1.3), anonimización antes del procesamiento y residencia de datos en la UE mediante Supabase. No entrenamos modelos con casos de usuarios y cumplimos con el RGPD. Estamos trabajando en las certificaciones ISO 27001 y SOC 2 durante 2026.</p>
       </details>
       <details class="q">
         <summary>¿Se integra con mi HCE? <span class="ic">+</span></summary>
@@ -682,7 +659,7 @@ import Layout from '../layouts/Layout.astro';
   });
 </script>
 
-<!-- ═══════════════════ TWEAKS PANEL ═══════════════════ -->
+{import.meta.env.DEV && (
 <aside class="tweaks-panel" id="tweaks">
   <h4>Tweaks <button id="t-close" style="font-family:inherit; font-size:14px; color:var(--ink-mute);">×</button></h4>
   <div class="row">
@@ -721,6 +698,7 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </div>
 </aside>
+)}
 
 <!--
   Scripts de index.astro.
@@ -871,9 +849,14 @@ import Layout from '../layouts/Layout.astro';
   window.addEventListener('message', window.__tweakMsgHandler);
   window.parent.postMessage({ type: '__edit_mode_available' }, '*');
 
-  document.getElementById('t-close').addEventListener('click', () => {
-    document.getElementById('tweaks').classList.remove('open');
-  });
+  /* Los listeners solo se enganchan si el panel existe (solo en dev).
+     En producción el aside no se renderiza y estos getElementById devuelven null. */
+  const tCloseBtn = document.getElementById('t-close');
+  if (tCloseBtn) {
+    tCloseBtn.addEventListener('click', () => {
+      document.getElementById('tweaks')?.classList.remove('open');
+    });
+  }
 
   function setTweak(patch) {
     Object.assign(window.TWEAKS, patch);
@@ -881,9 +864,12 @@ import Layout from '../layouts/Layout.astro';
     window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
   }
 
-  document.getElementById('t-brand').addEventListener('input', (e) => {
-    setTweak({ brandName: e.target.value || 'MediQ' });
-  });
+  const tBrandInput = document.getElementById('t-brand');
+  if (tBrandInput) {
+    tBrandInput.addEventListener('input', (e) => {
+      setTweak({ brandName: e.target.value || 'MediQ' });
+    });
+  }
   document.querySelectorAll('.tweaks-panel [data-name]').forEach(b => {
     b.addEventListener('click', () => setTweak({ brandName: b.dataset.name }));
   });
