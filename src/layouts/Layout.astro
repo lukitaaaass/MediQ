@@ -96,14 +96,15 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <slot name="head" />
 
   <!--
-    CSS para el toggle de visibilidad del header según data-auth.
-    Lo metemos aquí para que sea autocontenido.
+    CSS crítico para el toggle de auth. is:inline => se renderiza tal cual
+    en el <head> del HTML, no se bundlea en un archivo externo. Así funciona
+    incluso si el CSS de página falla en cargar (deploy en curso, 404, etc.)
+    y nunca se ven ambos estados a la vez.
   -->
-  <style is:global>
+  <style is:inline>
     .nav-auth-state { display: none !important; }
     html[data-auth="out"] #nav-auth-out { display: flex !important; }
     html[data-auth="in"]  #nav-auth-in  { display: flex !important; }
-    /* Menú móvil: el contenedor exterior es flex-column, cada subestado también */
     html[data-auth="out"] #nav-mobile-auth-out { display: flex !important; flex-direction: column; gap: 10px; }
     html[data-auth="in"]  #nav-mobile-auth-in  { display: flex !important; flex-direction: column; gap: 10px; }
   </style>
@@ -141,7 +142,9 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         var _dark = localStorage.getItem('mediq.theme') === 'dark';
         r.setAttribute('data-dark', _dark ? 'true' : 'false');
         if (_dark) {
-          var _dv = {'--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea','--ink-soft':'#c6c3ba','--ink-mute':'#7f837f','--rule':'#f2f0ea14','--rule-2':'#f2f0ea22','--accent':'oklch(78% 0.13 155)','--accent-ink':'#0e1113','--surface':'#191d20'};
+          // Debe coincidir con las variables de html[data-dark="true"] en global.css.
+          // Si actualizas la paleta allí, actualízala aquí también.
+          var _dv = {'--bg':'#0e1113','--bg-2':'#14181b','--ink':'#f2f0ea','--ink-soft':'#c6c3ba','--ink-mute':'#7f837f','--rule':'#f2f0ea14','--rule-2':'#f2f0ea22','--accent':'oklch(74% 0.11 195)','--accent-ink':'#0e1113','--accent-text':'oklch(74% 0.11 195)','--surface':'#191d20'};
           for (var _k in _dv) r.style.setProperty(_k, _dv[_k]);
         }
       } catch (e) { r.setAttribute('data-dark', 'false'); }
