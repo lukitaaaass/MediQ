@@ -1,0 +1,607 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Demo — MediQ"
+  description="Prueba MediQ con un caso clínico real. 3 consultas gratis, sin registro."
+  navActive="/demo"
+  bodyClass="demo-page"
+>
+
+  <style is:global>
+    body.demo-page {
+      background: var(--bg);
+    }
+
+    .demo-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: clamp(32px, 5vw, 64px) var(--pad) 120px;
+    }
+
+    /* ─── Hero ─── */
+    .demo-hero { text-align: center; margin-bottom: clamp(32px, 4vw, 48px); }
+    .demo-hero .eyebrow { justify-content: center; }
+    .demo-hero h1 {
+      font-family: var(--f-display);
+      font-size: clamp(36px, 4.5vw, 56px);
+      line-height: 1.05;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin: 14px 0 18px;
+    }
+    .demo-hero h1 em { font-style: italic; color: var(--accent); }
+    .demo-hero .sub {
+      max-width: 56ch;
+      margin: 0 auto;
+      font-size: clamp(15px, 1.15vw, 17px);
+      color: var(--ink-soft);
+      line-height: 1.55;
+    }
+
+    /* ─── Counter ─── */
+    .demo-counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--accent) 12%, transparent);
+      color: var(--accent-text);
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .demo-counter .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ─── Case cards ─── */
+    .cases {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-bottom: clamp(32px, 4vw, 48px);
+    }
+    @media (min-width: 780px) {
+      .cases { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    }
+    .case-card {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font: inherit;
+      color: inherit;
+    }
+    .case-card:hover {
+      border-color: var(--ink-soft);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px -12px rgba(0,0,0,.15);
+    }
+    .case-card .tag {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .case-card h3 {
+      font-family: var(--f-display);
+      font-size: 17px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin: 0;
+    }
+    .case-card p {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .case-card .arrow {
+      margin-top: auto;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--accent-text);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ─── Chat area ─── */
+    .demo-chat {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+    .demo-chat-head {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .demo-chat-head .pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ok);
+    }
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 260px;
+      max-height: 500px;
+    }
+    .empty-state {
+      text-align: center;
+      color: var(--ink-mute);
+      font-size: 14px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .empty-state svg { color: var(--ink-mute); opacity: .6; }
+    .msg {
+      max-width: 88%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .msg .meta {
+      font-family: var(--f-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .msg.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .msg.user .content {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 12px 16px;
+      border-radius: 14px 14px 4px 14px;
+      font-size: 14.5px;
+      line-height: 1.55;
+    }
+    .msg.ai .content {
+      background: var(--bg-2);
+      color: var(--ink);
+      padding: 14px 18px;
+      border-radius: 14px 14px 14px 4px;
+      font-size: 14.5px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .msg.ai .content strong { font-weight: 600; }
+    .msg.ai .content em { font-style: italic; color: var(--ink-soft); }
+
+    .typing-dots { display: inline-flex; gap: 4px; padding: 4px 0; }
+    .typing-dots i {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ink-mute);
+      animation: dotp 1.2s infinite;
+    }
+    .typing-dots i:nth-child(2) { animation-delay: .2s; }
+    .typing-dots i:nth-child(3) { animation-delay: .4s; }
+    @keyframes dotp { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    /* ─── Composer ─── */
+    .composer {
+      border-top: 1px solid var(--rule);
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      background: var(--surface);
+    }
+    .composer textarea {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      resize: none;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--ink);
+      padding: 8px 10px;
+      max-height: 140px;
+      min-height: 40px;
+    }
+    .composer textarea::placeholder { color: var(--ink-mute); }
+    .composer .send {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--bg);
+      display: grid; place-items: center;
+      transition: transform .15s ease, opacity .15s ease;
+      align-self: end;
+    }
+    .composer .send:hover:not(:disabled) { transform: scale(1.05); }
+    .composer .send:disabled { opacity: .35; cursor: not-allowed; }
+    .composer .send svg { width: 18px; height: 18px; }
+
+    .demo-foot {
+      margin-top: 16px;
+      text-align: center;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+    .demo-foot a { text-decoration: underline; text-underline-offset: 3px; color: var(--ink-soft); }
+    .demo-foot a:hover { color: var(--ink); }
+
+    /* ─── Modal ─── */
+    .demo-backdrop {
+      position: fixed;
+      inset: 0;
+      background: oklch(0% 0 0 / 0.55);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .demo-backdrop.on { display: flex; }
+    .demo-modal {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: 36px 32px 32px;
+      width: min(460px, 100%);
+      text-align: center;
+      box-shadow: 0 24px 64px -20px rgba(0,0,0,.45);
+    }
+    .demo-modal .eyebrow { justify-content: center; margin-bottom: 8px; }
+    .demo-modal h2 {
+      font-family: var(--f-display);
+      font-size: 28px;
+      font-weight: 300;
+      line-height: 1.15;
+      margin: 0 0 14px;
+    }
+    .demo-modal p {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.55;
+      margin: 0 0 28px;
+      max-width: 40ch;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .demo-modal .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .demo-modal .actions .btn { justify-content: center; }
+  </style>
+
+  <main class="demo-wrap">
+
+    <div class="demo-hero reveal">
+      <span class="eyebrow">Demo pública</span>
+      <h1>Prueba MediQ con un <em>caso real</em>.</h1>
+      <p class="sub">
+        Tres consultas gratis, sin registro. Elige un caso clínico precargado o escribe el tuyo.
+        Herramienta de apoyo — la decisión final siempre es del profesional.
+      </p>
+      <div class="demo-counter" id="demo-counter">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="counter-text">3 consultas disponibles</span>
+      </div>
+    </div>
+
+    <!-- Casos precargados -->
+    <div class="cases">
+      <button type="button" class="case-card" data-case="dolor-toracico">
+        <span class="tag">Urgencias</span>
+        <h3>Dolor torácico opresivo</h3>
+        <p>Varón 58a, dolor retroesternal 40min, sudoración, FR 22, TA 148/92, ECG con T negativas en V4-V6.</p>
+        <span class="arrow">Cargar caso →</span>
+      </button>
+      <button type="button" class="case-card" data-case="fiebre-rigidez">
+        <span class="tag">Urgencias · Neuro</span>
+        <h3>Fiebre y rigidez de nuca</h3>
+        <p>Mujer 24a, 39.2 ºC, cefalea intensa, fotofobia, Kernig positivo, sin focalidad.</p>
+        <span class="arrow">Cargar caso →</span>
+      </button>
+      <button type="button" class="case-card" data-case="disnea-epoc">
+        <span class="tag">Medicina interna</span>
+        <h3>Disnea aguda en EPOC</h3>
+        <p>Varón 72a con EPOC GOLD 3, disnea progresiva 48h, tos con esputo purulento, SatO₂ 88%.</p>
+        <span class="arrow">Cargar caso →</span>
+      </button>
+    </div>
+
+    <!-- Chat -->
+    <div class="demo-chat">
+      <div class="demo-chat-head">
+        <span class="pulse" aria-hidden="true"></span>
+        <span>MediQ · demo pública</span>
+      </div>
+      <div class="messages" id="messages">
+        <div class="empty-state" id="empty">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2l1.5 7.5L21 12l-7.5 1.5L12 22l-1.5-7.5L3 12l7.5-1.5z" fill="currentColor" />
+          </svg>
+          <span>Elige un caso o escribe tu consulta clínica</span>
+        </div>
+      </div>
+      <form class="composer" id="composer">
+        <textarea
+          id="input"
+          rows="1"
+          placeholder="Describe el caso o pregunta… (Enter para enviar)"
+          autocomplete="off"
+        ></textarea>
+        <button class="send" type="submit" id="send" disabled aria-label="Enviar">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <p class="demo-foot">
+      ¿Ya te has convencido? <a href="/login?signup=1">Crea tu cuenta gratis</a> — 14 días de prueba sin tarjeta.
+    </p>
+
+  </main>
+
+  <!-- Modal de límite -->
+  <div class="demo-backdrop" id="limit-backdrop" role="dialog" aria-modal="true" aria-labelledby="limit-title" hidden>
+    <div class="demo-modal">
+      <span class="eyebrow">Fin de la demo</span>
+      <h2 id="limit-title">Has usado las 3 consultas.</h2>
+      <p>Crea tu cuenta gratis para seguir usando MediQ sin límite — 14 días de prueba, sin tarjeta de crédito.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/login?signup=1">Crear cuenta gratis →</a>
+        <a class="btn btn-ghost" href="/pricing">Ver planes</a>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    (function() {
+      const STORAGE_KEY = 'mediq.demo.used';
+      const MAX_QUERIES = 3;
+
+      const messagesEl = document.getElementById('messages');
+      const emptyEl    = document.getElementById('empty');
+      const inputEl    = document.getElementById('input');
+      const sendBtn    = document.getElementById('send');
+      const form       = document.getElementById('composer');
+      const counterEl  = document.getElementById('counter-text');
+      const backdrop   = document.getElementById('limit-backdrop');
+      const caseCards  = document.querySelectorAll('.case-card');
+
+      const CASES = {
+        'dolor-toracico':
+          'Varón de 58 años, hipertenso mal controlado y fumador activo (30 paq/año). Refiere dolor retroesternal opresivo de 40 min de evolución, irradiado a brazo izquierdo, con sudoración y náuseas. Constantes: TA 148/92, FC 96 lpm, SatO2 96%, FR 22, afebril. ECG con inversión de onda T en V4-V6 sin elevación del ST. ¿Cuál es el diagnóstico diferencial más probable y qué actuación inmediata realizas?',
+        'fiebre-rigidez':
+          'Mujer de 24 años sin antecedentes de interés. Acude a Urgencias por fiebre de 39.2 ºC de inicio brusco hace 8 horas, cefalea holocraneal intensa, fotofobia y vómitos. A la exploración: rigidez de nuca marcada, Kernig positivo, Brudzinski positivo, sin focalidad neurológica ni exantema. ¿Diagnóstico diferencial, prioridad de pruebas y actitud inmediata?',
+        'disnea-epoc':
+          'Varón de 72 años con EPOC GOLD 3, ex-fumador, en tratamiento con LABA + LAMA + CI. Acude por disnea progresiva de 48 h con aumento del volumen y purulencia del esputo. Sin fiebre reciente. Constantes: FR 26, SatO2 88% con aire ambiente, FC 108, TA 136/78. Auscultación: sibilancias difusas y roncus dispersos. ¿Diagnóstico más probable, criterios de gravedad y tratamiento inicial?',
+      };
+
+      let history = [];
+      let sending = false;
+
+      function getUsed() {
+        try { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0; }
+        catch { return 0; }
+      }
+      function setUsed(n) {
+        try { localStorage.setItem(STORAGE_KEY, String(n)); }
+        catch {}
+      }
+      function remaining() { return Math.max(0, MAX_QUERIES - getUsed()); }
+
+      function updateCounter() {
+        const r = remaining();
+        counterEl.textContent =
+          r === 0 ? 'Sin consultas disponibles' :
+          r === 1 ? '1 consulta disponible' :
+          `${r} consultas disponibles`;
+      }
+
+      function showLimit() {
+        backdrop.hidden = false;
+        backdrop.classList.add('on');
+        inputEl.disabled = true;
+        sendBtn.disabled = true;
+      }
+
+      function autoResize() {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + 'px';
+      }
+
+      function updateSendState() {
+        sendBtn.disabled = sending || inputEl.value.trim().length === 0 || remaining() === 0;
+      }
+
+      function scrollBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      function appendUser(text) {
+        if (emptyEl && emptyEl.parentNode) emptyEl.remove();
+        const el = document.createElement('div');
+        el.className = 'msg user';
+        el.innerHTML = '<span class="meta">Tú</span><div class="content"></div>';
+        el.querySelector('.content').textContent = text;
+        messagesEl.appendChild(el);
+        scrollBottom();
+      }
+
+      function appendAiPlaceholder() {
+        const el = document.createElement('div');
+        el.className = 'msg ai';
+        el.innerHTML = '<span class="meta">MediQ</span><div class="content"><span class="typing-dots"><i></i><i></i><i></i></span></div>';
+        messagesEl.appendChild(el);
+        scrollBottom();
+        return el.querySelector('.content');
+      }
+
+      function formatMd(text) {
+        // Formateo mínimo seguro: **bold** y *italic*, respetando saltos de línea.
+        const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return esc(text)
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/(^|\W)\*(?!\s)([^*\n]+?)\*(?!\w)/g, '$1<em>$2</em>');
+      }
+
+      async function sendMessage(userText) {
+        if (sending) return;
+        if (remaining() === 0) { showLimit(); return; }
+
+        sending = true;
+        updateSendState();
+        appendUser(userText);
+        history.push({ role: 'user', content: userText });
+
+        const contentEl = appendAiPlaceholder();
+
+        try {
+          const res = await fetch('/api/demo-chat', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ messages: history }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            contentEl.innerHTML = '<em>' + (data.error || 'No se pudo procesar la consulta.') + '</em>';
+            history.pop();
+            return;
+          }
+
+          // Streaming SSE compatible con OpenAI format
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let acc = '';
+          contentEl.textContent = '';
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const s = line.trim();
+              if (!s || !s.startsWith('data:')) continue;
+              const data = s.slice(5).trim();
+              if (data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                const delta = json.choices?.[0]?.delta?.content;
+                if (delta) {
+                  acc += delta;
+                  contentEl.innerHTML = formatMd(acc);
+                  scrollBottom();
+                }
+              } catch {}
+            }
+          }
+
+          if (!acc) contentEl.innerHTML = '<em>Respuesta vacía. Reintenta.</em>';
+          else history.push({ role: 'assistant', content: acc });
+
+          // Consumir 1 uso solo si tuvo respuesta valida
+          if (acc) {
+            setUsed(getUsed() + 1);
+            updateCounter();
+            if (remaining() === 0) {
+              // Pequeño delay para que se vea la respuesta antes del modal
+              setTimeout(showLimit, 800);
+            }
+          }
+        } catch (err) {
+          contentEl.innerHTML = '<em>Error de red. Comprueba tu conexión y reintenta.</em>';
+          history.pop();
+        } finally {
+          sending = false;
+          updateSendState();
+        }
+      }
+
+      // ─── Eventos ───
+      inputEl.addEventListener('input', () => { autoResize(); updateSendState(); });
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (!sendBtn.disabled) form.requestSubmit();
+        }
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = inputEl.value.trim();
+        if (!text) return;
+        inputEl.value = '';
+        autoResize();
+        updateSendState();
+        sendMessage(text);
+      });
+
+      caseCards.forEach(card => {
+        card.addEventListener('click', () => {
+          if (remaining() === 0) { showLimit(); return; }
+          const key = card.dataset.case;
+          const prompt = CASES[key];
+          if (!prompt) return;
+          inputEl.value = prompt;
+          autoResize();
+          updateSendState();
+          inputEl.focus();
+          // Scroll suave al composer
+          document.querySelector('.demo-chat').scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+      });
+
+      // Init
+      updateCounter();
+      updateSendState();
+      if (remaining() === 0) showLimit();
+    })();
+  </script>
+
+</Layout>

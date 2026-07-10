@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout
-  title="Chat clínico — MediQ"
+  title="Chat — MediQ"
   navActive="/chat"
   bodyClass="chat-page"
   includePdfJs={true}
@@ -1282,7 +1282,7 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
       const c = chats.find(x => x.id === id);
       if (!c) return;
       chats = chats.filter(x => x.id !== id);
-      if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat clínico — MediQ'; }
+      if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat — MediQ'; }
       saveChats(); renderSidebar();
       deleteChatFromSupabase(id);
     }
