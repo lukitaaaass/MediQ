@@ -103,6 +103,9 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     .nav-auth-state { display: none !important; }
     html[data-auth="out"] #nav-auth-out { display: flex !important; }
     html[data-auth="in"]  #nav-auth-in  { display: flex !important; }
+    /* Menú móvil: el contenedor exterior es flex-column, cada subestado también */
+    html[data-auth="out"] #nav-mobile-auth-out { display: flex !important; flex-direction: column; gap: 10px; }
+    html[data-auth="in"]  #nav-mobile-auth-in  { display: flex !important; flex-direction: column; gap: 10px; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
@@ -216,6 +219,13 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
             </span>
             <a class="btn btn-ghost" href="/account">Mi cuenta</a>
             <a class="btn btn-ghost" href="/chat">Ir al chat</a>
+            <button type="button" class="btn btn-ghost" id="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M15 3h5a1 1 0 011 1v16a1 1 0 01-1 1h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 17l-5-5 5-5M5 12h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Salir</span>
+            </button>
           </div>
         </slot>
       </div>
@@ -251,8 +261,15 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       <a href="/triadas">Tríadas</a>
     </nav>
     <div id="nav-mobile-auth">
-      <a class="btn btn-ghost" href="/login">Entrar</a>
-      <a class="btn btn-primary" href="/login">Solicitar acceso →</a>
+      <div id="nav-mobile-auth-out" class="nav-auth-state">
+        <a class="btn btn-ghost" href="/login">Entrar</a>
+        <a class="btn btn-primary" href="/login">Solicitar acceso →</a>
+      </div>
+      <div id="nav-mobile-auth-in" class="nav-auth-state">
+        <a class="btn btn-ghost" href="/account">Mi cuenta</a>
+        <a class="btn btn-primary" href="/chat">Ir al chat →</a>
+        <button type="button" class="btn btn-ghost" id="nav-mobile-logout">Cerrar sesión</button>
+      </div>
     </div>
   </div>
 
@@ -413,6 +430,25 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       // Supabase dispara onAuthStateChange en TODAS las pestañas cuando
       // la sesión cambia, gracias a su listener interno de storage.
       sb.auth.onAuthStateChange((_event, session) => applySession(session));
+
+      // ─── Cerrar sesión ───
+      // Botones "Salir" del nav (desktop + móvil). Solo existen en páginas
+      // que usan el slot nav-actions por defecto (index, pricing, demo,
+      // contact, train, triadas). En chat/account/login el slot se
+      // reemplaza y esos elementos no están en el DOM → null-guard.
+      async function doLogout(e) {
+        if (e) e.preventDefault();
+        try { await sb.auth.signOut(); } catch (_) {}
+        try {
+          localStorage.removeItem('mediq.authHint');
+          localStorage.removeItem('mediq.userName');
+        } catch (_) {}
+        location.href = '/';
+      }
+      const desktopLogout = document.getElementById('nav-logout');
+      const mobileLogout  = document.getElementById('nav-mobile-logout');
+      if (desktopLogout) desktopLogout.addEventListener('click', doLogout);
+      if (mobileLogout)  mobileLogout.addEventListener('click', doLogout);
     })();
   </script>
 
