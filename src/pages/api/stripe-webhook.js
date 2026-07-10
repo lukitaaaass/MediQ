@@ -69,6 +69,29 @@ export async function POST({ request }) {
     });
   }
 
+  // Renovación fallida: la tarjeta no cargó. La suscripción entra en past_due.
+  // Marcamos el estado para que el paywall del chat se active y el usuario
+  // reciba el email de reintento de Stripe.
+  if (event.type === 'invoice.payment_failed') {
+    const invoice = event.data.object;
+    const subId   = invoice.subscription;
+    if (subId) {
+      await sb(`subscriptions?stripe_sub_id=eq.${subId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'past_due' }),
+      });
+    }
+  }
+
+  // Trial a punto de terminar (por defecto 3 días antes).
+  // Por ahora solo lo logueamos; cuando integremos email (Resend/Postmark)
+  // aqui se dispara el aviso "quedan X dias de prueba, activa tu tarjeta".
+  if (event.type === 'customer.subscription.trial_will_end') {
+    const sub = event.data.object;
+    console.log('[stripe] trial_will_end for sub', sub.id, 'user', sub.metadata?.user_id);
+    // TODO: integrar email service. Sub.trial_end trae el timestamp del fin.
+  }
+
   return ok();
 }
 
