@@ -1,12 +1,14 @@
 /**
  * Endpoint de la demo publica de MediQ.
- * No requiere autenticacion. Rate-limit estricto por IP para evitar abuso.
- * El system prompt esta fijado en el servidor — el cliente no puede sobrescribirlo.
+ * Se sirve como Vercel serverless function (auto-detectada desde /api).
+ * NO se puede meter en src/pages/api porque Astro esta en output: 'static'
+ * y esos archivos no se despliegan.
+ *
+ * - Sin autenticacion.
+ * - Rate-limit por IP estricto (8 msg / 30 min).
+ * - System prompt fijado en servidor: el cliente no puede sobrescribirlo.
  */
 
-// Rate limit: 8 mensajes / 30 min por IP.
-// Deja margen para que un usuario complete los 3 mensajes de la demo + algun retry,
-// pero corta el paso a bots / scraping intensivo.
 const rateMap = new Map();
 const RATE_LIMIT  = 8;
 const RATE_WINDOW = 30 * 60_000;
@@ -25,6 +27,14 @@ function checkRate(ip) {
   return { ok: true, remaining: RATE_LIMIT - hits.length };
 }
 
+// Limpiar IPs sin actividad reciente para no crecer sin limite.
+setInterval(() => {
+  const cutoff = Date.now() - 30 * 60_000;
+  for (const [ip, hits] of rateMap) {
+    if (!hits.length || hits[hits.length - 1] < cutoff) rateMap.delete(ip);
+  }
+}, 5 * 60_000);
+
 const DEMO_SYSTEM_PROMPT = `Eres MediQ, un asistente clinico con IA para medicos hispanohablantes. Esta es una DEMO publica limitada a 3 consultas.
 
 REGLAS DE LA DEMO:
@@ -40,46 +50,45 @@ REGLAS DE LA DEMO:
 
 Esta es una version demo con capacidades reducidas. Si el usuario quiere usar todas las funciones (carga de PDFs, historial, mas contexto, especialidades), invitalo a registrarse en /login.`;
 
-export async function POST({ request }) {
-  const ip = (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'dev')
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
     .split(',')[0].trim();
 
   const rate = checkRate(ip);
+  res.setHeader('X-RateLimit-Limit',     String(RATE_LIMIT));
+  res.setHeader('X-RateLimit-Remaining', String(rate.ok ? rate.remaining : 0));
+
   if (!rate.ok) {
-    return jsonErr(
-      `Has alcanzado el limite de la demo. Vuelve a intentarlo en ${Math.ceil(rate.resetSec / 60)} min o crea una cuenta gratuita para continuar.`,
-      429,
-      { 'Retry-After': String(rate.resetSec) }
-    );
+    res.setHeader('Retry-After', String(rate.resetSec));
+    return res.status(429).json({
+      error: `Has alcanzado el limite de la demo. Vuelve en ${Math.ceil(rate.resetSec / 60)} min o crea una cuenta gratuita para continuar.`,
+    });
   }
 
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonErr('JSON invalido', 400);
-  }
-
-  const { messages } = payload;
+  const { messages } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return jsonErr('Parametros invalidos: messages vacio', 400);
+    return res.status(400).json({ error: 'Parametros invalidos: messages vacio' });
   }
 
-  // Filtramos por seguridad: solo dejamos pasar roles user/assistant, corto en 6 turnos
-  // (3 user + 3 assistant como maximo). El system prompt lo pone el servidor.
+  // Filtramos por seguridad: solo user/assistant, ultimos 6 turnos, 4000 chars max.
   const safeMessages = messages
     .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
     .slice(-6)
     .map(m => ({ role: m.role, content: m.content.slice(0, 4000) }));
 
   if (safeMessages.length === 0) {
-    return jsonErr('Parametros invalidos', 400);
+    return res.status(400).json({ error: 'Parametros invalidos' });
   }
 
-  const apiKey = import.meta.env.GROQ_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return jsonErr('El servidor no esta configurado (GROQ_API_KEY ausente).', 500);
+    console.error('[/api/demo-chat] GROQ_API_KEY ausente');
+    return res.status(500).json({ error: 'El servidor no esta configurado (GROQ_API_KEY ausente).' });
   }
 
   const groqMessages = [
@@ -104,30 +113,35 @@ export async function POST({ request }) {
     });
   } catch (err) {
     console.error('[/api/demo-chat] fetch error:', err);
-    return jsonErr('Error contactando con el modelo. Reintenta.', 500);
+    return res.status(500).json({ error: 'Error contactando con el modelo. Reintenta.' });
   }
 
   if (!groqRes.ok) {
-    const data = await groqRes.json().catch(() => ({}));
-    const msg = data?.error?.message || `HTTP ${groqRes.status}`;
+    let msg = `HTTP ${groqRes.status}`;
+    try {
+      const data = await groqRes.json();
+      msg = data?.error?.message || JSON.stringify(data);
+    } catch (_) {}
     console.error('[/api/demo-chat] Groq error', groqRes.status, msg);
-    return jsonErr(`Modelo no disponible: ${msg}`, groqRes.status);
+    return res.status(groqRes.status).json({ error: `Modelo no disponible: ${msg}` });
   }
 
-  return new Response(groqRes.body, {
-    headers: {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'X-RateLimit-Limit': String(RATE_LIMIT),
-      'X-RateLimit-Remaining': String(rate.remaining),
-    },
-  });
-}
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
-function jsonErr(msg, status, extra = {}) {
-  return new Response(JSON.stringify({ error: msg }), {
-    status,
-    headers: { 'content-type': 'application/json', ...extra },
-  });
+  const reader = groqRes.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(decoder.decode(value, { stream: true }));
+    }
+  } catch (err) {
+    console.error('[/api/demo-chat] stream error:', err);
+  } finally {
+    res.end();
+  }
 }

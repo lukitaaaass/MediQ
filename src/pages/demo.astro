@@ -505,8 +505,18 @@ import Layout from '../layouts/Layout.astro';
           });
 
           if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            contentEl.innerHTML = '<em>' + (data.error || 'No se pudo procesar la consulta.') + '</em>';
+            let errMsg = '';
+            try {
+              const data = await res.json();
+              errMsg = data && data.error ? data.error : '';
+            } catch (_) {
+              // La respuesta no era JSON (típico: página HTML de error de Vercel).
+              errMsg = 'El servidor devolvió una respuesta inesperada (HTTP ' + res.status + '). Revisa los logs de la función o recarga.';
+            }
+            contentEl.innerHTML = '';
+            const em = document.createElement('em');
+            em.textContent = errMsg || ('Error HTTP ' + res.status);
+            contentEl.appendChild(em);
             history.pop();
             return;
           }
