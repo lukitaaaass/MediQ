@@ -3,10 +3,11 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout
-  title="Demo — MediQ"
-  description="Prueba MediQ con un caso clínico real. 3 consultas gratis, sin registro."
+  title="Prueba MediQ · Demo pública — MediQ"
+  description="Prueba MediQ sin registro: 3 consultas gratis con casos clínicos reales (dolor torácico, meningitis, disnea EPOC) o los tuyos. Respuestas fundamentadas en guías clínicas."
   navActive="/demo"
   bodyClass="demo-page"
+  ogImage="https://mediq.app/og-demo.svg"
 >
 
   <style is:global>
@@ -377,7 +378,7 @@ import Layout from '../layouts/Layout.astro';
     </div>
 
     <p class="demo-foot">
-      ¿Ya te has convencido? <a href="/login?signup=1">Crea tu cuenta gratis</a> — 14 días de prueba sin tarjeta.
+      ¿Ya te has convencido? <a href="/login?signup=1" onclick="try{window.track&&window.track('Demo signup click',{source:'foot'})}catch(_){}">Crea tu cuenta gratis</a> — 14 días de prueba sin tarjeta.
     </p>
 
   </main>
@@ -389,8 +390,8 @@ import Layout from '../layouts/Layout.astro';
       <h2 id="limit-title">Has usado las 3 consultas.</h2>
       <p>Crea tu cuenta gratis para seguir usando MediQ sin límite — 14 días de prueba, sin tarjeta de crédito.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="/login?signup=1">Crear cuenta gratis →</a>
-        <a class="btn btn-ghost" href="/pricing">Ver planes</a>
+        <a class="btn btn-primary" href="/login?signup=1" onclick="try{window.track&&window.track('Demo signup click',{source:'modal'})}catch(_){}">Crear cuenta gratis →</a>
+        <a class="btn btn-ghost" href="/pricing" onclick="try{window.track&&window.track('Demo pricing click',{source:'modal'})}catch(_){}">Ver planes</a>
       </div>
     </div>
   </div>
@@ -444,6 +445,7 @@ import Layout from '../layouts/Layout.astro';
         backdrop.classList.add('on');
         inputEl.disabled = true;
         sendBtn.disabled = true;
+        try { window.track && window.track('Demo limit reached'); } catch (_) {}
       }
 
       function autoResize() {
@@ -557,8 +559,10 @@ import Layout from '../layouts/Layout.astro';
 
           // Consumir 1 uso solo si tuvo respuesta valida
           if (acc) {
-            setUsed(getUsed() + 1);
+            const newCount = getUsed() + 1;
+            setUsed(newCount);
             updateCounter();
+            try { window.track && window.track('Demo message sent', { turn: newCount }); } catch (_) {}
             if (remaining() === 0) {
               // Pequeño delay para que se vea la respuesta antes del modal
               setTimeout(showLimit, 800);
@@ -604,6 +608,7 @@ import Layout from '../layouts/Layout.astro';
           inputEl.focus();
           // Scroll suave al composer
           document.querySelector('.demo-chat').scrollIntoView({ behavior: 'smooth', block: 'end' });
+          try { window.track && window.track('Demo case click', { case: key }); } catch (_) {}
         });
       });
 
