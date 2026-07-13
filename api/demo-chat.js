@@ -1,39 +1,27 @@
 /**
  * Endpoint de la demo publica de MediQ.
- * Se sirve como Vercel serverless function (auto-detectada desde /api).
- * NO se puede meter en src/pages/api porque Astro esta en output: 'static'
- * y esos archivos no se despliegan.
+ * Vercel serverless function (auto-detectada desde /api).
  *
- * - Sin autenticacion.
- * - Rate-limit por IP estricto (8 msg / 30 min).
- * - System prompt fijado en servidor: el cliente no puede sobrescribirlo.
+ * Rate-limit persistente en Supabase (RPC atomica check_demo_usage).
+ * El Map en memoria del anterior commit no funcionaba en produccion porque
+ * cada cold start de Vercel arranca con el contenedor vacio.
+ *
+ * IPs hasheadas con HMAC-SHA256 + salt para no guardarlas en claro.
+ * Si DEMO_RATE_SALT no esta configurado, cae a un salt hardcodeado (menos seguro
+ * pero suficiente para evitar reverse-lookup casual desde la tabla).
  */
+import crypto from 'node:crypto';
 
-const rateMap = new Map();
-const RATE_LIMIT  = 8;
-const RATE_WINDOW = 30 * 60_000;
+const RATE_LIMIT       = 8;
+const RATE_WINDOW_MIN  = 30;
 
-function checkRate(ip) {
-  const now = Date.now();
-  const hits = (rateMap.get(ip) || []).filter(t => now - t < RATE_WINDOW);
-  if (hits.length >= RATE_LIMIT) {
-    return {
-      ok: false,
-      resetSec: Math.ceil((hits[0] + RATE_WINDOW - now) / 1000),
-    };
-  }
-  hits.push(now);
-  rateMap.set(ip, hits);
-  return { ok: true, remaining: RATE_LIMIT - hits.length };
+// Fallback si DEMO_RATE_SALT no esta en el entorno. En produccion deberia estarlo
+// para que el hash no se pueda reproducir con solo mirar este repo.
+const FALLBACK_SALT = 'mediq-demo-v1-fallback-salt-please-override-in-env';
+
+function hashIp(ip, salt) {
+  return crypto.createHmac('sha256', salt).update(String(ip)).digest('hex');
 }
-
-// Limpiar IPs sin actividad reciente para no crecer sin limite.
-setInterval(() => {
-  const cutoff = Date.now() - 30 * 60_000;
-  for (const [ip, hits] of rateMap) {
-    if (!hits.length || hits[hits.length - 1] < cutoff) rateMap.delete(ip);
-  }
-}, 5 * 60_000);
 
 const DEMO_SYSTEM_PROMPT = `Eres MediQ, un asistente clinico con IA para medicos hispanohablantes. Esta es una DEMO publica limitada a 3 consultas.
 
@@ -50,19 +38,86 @@ REGLAS DE LA DEMO:
 
 Esta es una version demo con capacidades reducidas. Si el usuario quiere usar todas las funciones (carga de PDFs, historial, mas contexto, especialidades), invitalo a registrarse en /login.`;
 
+/**
+ * Comprueba y consume una unidad de rate-limit para la IP dada.
+ * Devuelve { allowed, remaining, resetSec }.
+ * Fail-closed: si Supabase no responde, deniega la peticion.
+ */
+async function checkRateSupabase({ supabaseUrl, serviceKey, ipHash }) {
+  try {
+    const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/check_demo_usage`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_ip_hash: ipHash,
+        p_limit: RATE_LIMIT,
+        p_window_minutes: RATE_WINDOW_MIN,
+      }),
+    });
+
+    if (!rpcRes.ok) {
+      const txt = await rpcRes.text();
+      console.error('[/api/demo-chat] Supabase RPC error', rpcRes.status, txt);
+      return { allowed: false, remaining: 0, resetSec: 60, upstreamError: true };
+    }
+
+    const rows = await rpcRes.json();
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return {
+      allowed: !!row.allowed,
+      remaining: Number(row.remaining || 0),
+      resetSec: Number(row.reset_sec || 0),
+    };
+  } catch (err) {
+    console.error('[/api/demo-chat] Supabase RPC fetch failed:', err);
+    return { allowed: false, remaining: 0, resetSec: 60, upstreamError: true };
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SALT         = process.env.DEMO_RATE_SALT || FALLBACK_SALT;
+  const apiKey       = process.env.GROQ_API_KEY;
+
+  if (!apiKey) {
+    console.error('[/api/demo-chat] GROQ_API_KEY ausente');
+    return res.status(500).json({ error: 'El servidor no esta configurado (GROQ_API_KEY ausente).' });
+  }
+
+  if (!SUPABASE_URL || !SERVICE_KEY) {
+    console.error('[/api/demo-chat] Supabase env vars ausentes');
+    return res.status(500).json({ error: 'El servidor no esta configurado (Supabase ausente).' });
+  }
+
+  if (SALT === FALLBACK_SALT) {
+    console.warn('[/api/demo-chat] DEMO_RATE_SALT no definido — usando fallback publico');
+  }
+
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
     .split(',')[0].trim();
+  const ipHash = hashIp(ip, SALT);
 
-  const rate = checkRate(ip);
+  const rate = await checkRateSupabase({ supabaseUrl: SUPABASE_URL, serviceKey: SERVICE_KEY, ipHash });
+
   res.setHeader('X-RateLimit-Limit',     String(RATE_LIMIT));
-  res.setHeader('X-RateLimit-Remaining', String(rate.ok ? rate.remaining : 0));
+  res.setHeader('X-RateLimit-Remaining', String(Math.max(0, rate.remaining)));
 
-  if (!rate.ok) {
+  if (!rate.allowed) {
+    if (rate.upstreamError) {
+      // Fail-closed: preferimos denegar que dejar pasar sin control.
+      return res.status(503).json({
+        error: 'Servicio temporalmente no disponible. Reintenta en unos segundos.',
+      });
+    }
     res.setHeader('Retry-After', String(rate.resetSec));
     return res.status(429).json({
       error: `Has alcanzado el limite de la demo. Vuelve en ${Math.ceil(rate.resetSec / 60)} min o crea una cuenta gratuita para continuar.`,
@@ -83,12 +138,6 @@ export default async function handler(req, res) {
 
   if (safeMessages.length === 0) {
     return res.status(400).json({ error: 'Parametros invalidos' });
-  }
-
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    console.error('[/api/demo-chat] GROQ_API_KEY ausente');
-    return res.status(500).json({ error: 'El servidor no esta configurado (GROQ_API_KEY ausente).' });
   }
 
   const groqMessages = [
