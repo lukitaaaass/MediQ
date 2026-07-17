@@ -186,7 +186,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       <div class="nav-links">
         <a href="/"        class:list={[{ active: navActive === '/'        }]}>Inicio</a>
         <a href="/demo"    class:list={[{ active: navActive === '/demo'    }]}>Demo</a>
-        <a href="/mir"     class:list={[{ active: navActive === '/mir'     }]}>MIR</a>
+        {/* MIR page existe (/mir + waitlist) pero desactivada del nav hasta que decidamos abrir el canal residentes. Reactivar aqui + en mobile nav abajo. */}
         <a href="/pricing" class:list={[{ active: navActive === '/pricing' }]}>Precios</a>
         <a href="/chat"    class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
         <a href="/train"   class:list={[{ active: navActive === '/train'   }]}>Entrenar IA</a>
@@ -259,7 +259,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <nav>
       <a href="/">Inicio</a>
       <a href="/demo">Demo</a>
-      <a href="/mir">MIR</a>
+      {/* MIR page existe (/mir + waitlist) pero desactivada del nav. Reactivar aqui + en desktop nav arriba. */}
       <a href="/pricing">Precios</a>
       <a href="/chat">Chat</a>
       <a href="/train">Entrenar IA</a>
