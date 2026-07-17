@@ -1,0 +1,463 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="MediQ para MIR y residentes — Gratis durante tu formación"
+  description="Casos MIR comentados, fisiopatología paso a paso y consulta rápida durante la guardia. Acceso gratuito verificado por email de facultad para estudiantes y residentes MIR."
+  navActive="/mir"
+  bodyClass="mir-page"
+>
+
+  <style is:global>
+    body.mir-page { background: var(--bg); }
+
+    .mir-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(40px, 6vw, 80px) var(--pad) 120px;
+    }
+
+    /* ─── Hero ─── */
+    .mir-hero { text-align: center; margin-bottom: clamp(48px, 6vw, 80px); }
+    .mir-hero .eyebrow { justify-content: center; }
+    .mir-hero h1 {
+      font-family: var(--f-display);
+      font-size: clamp(40px, 5.2vw, 68px);
+      line-height: 1;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin: 20px 0 24px;
+    }
+    .mir-hero h1 em { font-style: italic; color: var(--accent); }
+    .mir-hero .sub {
+      max-width: 58ch;
+      margin: 0 auto;
+      font-size: clamp(16px, 1.2vw, 19px);
+      color: var(--ink-soft);
+      line-height: 1.55;
+    }
+    .mir-hero-cta {
+      margin-top: 32px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ─── Pains ─── */
+    .pains {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: var(--rule-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: clamp(48px, 6vw, 80px);
+    }
+    @media (min-width: 720px) { .pains { grid-template-columns: 1fr 1fr; } }
+    .pain {
+      background: var(--bg);
+      padding: clamp(20px, 2.4vw, 28px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 140px;
+    }
+    .pain .tag {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .pain h3 {
+      font-family: var(--f-display);
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.25;
+      margin: 0;
+    }
+    .pain p { font-size: 14px; color: var(--ink-soft); line-height: 1.5; margin: 0; }
+
+    /* ─── Value props ─── */
+    .value-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: clamp(48px, 6vw, 80px);
+    }
+    @media (min-width: 820px) { .value-list { grid-template-columns: 1fr 1fr 1fr; } }
+    .value-card {
+      padding: 26px 24px;
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .value-card .num {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--ink-mute);
+    }
+    .value-card h3 { font-size: 20px; font-weight: 500; line-height: 1.25; margin: 0; }
+    .value-card p { color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; margin: 0; }
+
+    /* ─── Waitlist form ─── */
+    .waitlist {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 16px;
+      padding: clamp(28px, 3.5vw, 40px);
+      margin-bottom: clamp(48px, 6vw, 80px);
+    }
+    .waitlist-head {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .waitlist-head h2 {
+      font-family: var(--f-display);
+      font-size: clamp(24px, 2.4vw, 32px);
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+    .waitlist-head p { color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; margin: 0; max-width: 60ch; }
+
+    .waitlist-form { display: grid; gap: 16px; }
+    @media (min-width: 720px) { .waitlist-form { grid-template-columns: 2fr 1.4fr 1fr auto; align-items: end; } }
+    .field { display: grid; gap: 6px; }
+    .field label {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .field input,
+    .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--rule-2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font: inherit;
+      font-size: 14.5px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--ink-soft);
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent);
+    }
+    .waitlist-submit {
+      padding: 12px 22px;
+      border-radius: 10px;
+      background: var(--ink);
+      color: var(--bg);
+      font-weight: 500;
+      font-size: 14.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      transition: transform .15s ease, opacity .15s ease;
+      white-space: nowrap;
+    }
+    .waitlist-submit:hover:not(:disabled) { transform: translateY(-1px); }
+    .waitlist-submit:disabled { opacity: .55; cursor: progress; }
+    .waitlist-note {
+      margin-top: 16px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+
+    .waitlist-alert {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .waitlist-alert.ok {
+      background: color-mix(in oklab, var(--ok) 12%, transparent);
+      color: oklch(35% 0.1 155);
+    }
+    .waitlist-alert.err {
+      background: color-mix(in oklab, var(--danger) 12%, transparent);
+      color: oklch(38% 0.16 25);
+    }
+
+    /* ─── FAQ ─── */
+    .mir-faq { border-top: 1px solid var(--rule); }
+    .mir-faq details {
+      border-bottom: 1px solid var(--rule);
+      padding: 22px 0;
+    }
+    .mir-faq summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      font-family: var(--f-display);
+      font-size: clamp(17px, 1.4vw, 21px);
+      font-weight: 400;
+      line-height: 1.3;
+    }
+    .mir-faq summary::-webkit-details-marker { display: none; }
+    .mir-faq .ans {
+      color: var(--ink-soft);
+      max-width: 70ch;
+      margin-top: 12px;
+      font-size: 14.5px;
+      line-height: 1.55;
+    }
+    .mir-faq .ic {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--rule-2);
+      display: grid;
+      place-items: center;
+      font-family: var(--f-mono);
+      font-size: 14px;
+      color: var(--ink-soft);
+      flex-shrink: 0;
+      transition: transform .25s ease, background .2s ease;
+    }
+    .mir-faq details[open] .ic {
+      transform: rotate(45deg);
+      background: var(--bg-2);
+    }
+  </style>
+
+  <main class="mir-wrap">
+
+    <!-- ─── HERO ─── -->
+    <section class="mir-hero reveal">
+      <span class="eyebrow">Para MIR y residentes</span>
+      <h1>Gratis durante tu <em>formación</em>.</h1>
+      <p class="sub">
+        MediQ para estudiantes de medicina y residentes MIR: casos comentados, fisiopatología paso a paso y
+        consulta rápida durante la guardia. Sin trial que expira, sin tarjeta — mientras estés en formación,
+        es tuyo.
+      </p>
+      <div class="mir-hero-cta">
+        <a class="btn btn-primary" href="#reservar">Reservar mi plaza →</a>
+        <a class="btn btn-ghost" href="/demo">Probar la demo</a>
+      </div>
+    </section>
+
+    <!-- ─── PAINS ─── -->
+    <div class="section-head reveal">
+      <span class="eyebrow">Sabemos por qué estás aquí</span>
+      <h2 style="font-family:var(--f-display); font-size:clamp(28px, 2.8vw, 36px); font-weight:400; letter-spacing:-0.01em; margin:0;">
+        La formación médica en 2026 tiene grietas.
+      </h2>
+    </div>
+    <div class="pains reveal">
+      <div class="pain">
+        <span class="tag">Guardia</span>
+        <h3>Consultar UpToDate a las 3am cuesta minutos que no tienes.</h3>
+        <p>Buscar en 4 tabs mientras el paciente espera. MediQ te lo resume en segundos, con la guía citada.</p>
+      </div>
+      <div class="pain">
+        <span class="tag">MIR</span>
+        <h3>25.000 preguntas y ningún atajo mental que te explique el porqué.</h3>
+        <p>Cada respuesta con razonamiento fisiopatológico paso a paso — no solo la letra correcta.</p>
+      </div>
+      <div class="pain">
+        <span class="tag">Rotación</span>
+        <h3>El adjunto pregunta y no sabes por dónde empezar.</h3>
+        <p>Sospecha diagnóstica estructurada en 20s. Aprendes el patrón, no memorizas.</p>
+      </div>
+      <div class="pain">
+        <span class="tag">Presupuesto</span>
+        <h3>Ninguna herramienta clínica de pago cabe en la beca de un residente.</h3>
+        <p>Por eso es gratis mientras estés en formación. Sin coste, sin trial que caduca, sin tarjeta.</p>
+      </div>
+    </div>
+
+    <!-- ─── VALUE PROPS ─── -->
+    <div class="section-head reveal">
+      <span class="eyebrow">Qué hace por ti</span>
+      <h2 style="font-family:var(--f-display); font-size:clamp(28px, 2.8vw, 36px); font-weight:400; letter-spacing:-0.01em; margin:0;">
+        Tres formas de usarlo el <em>lunes que viene</em>.
+      </h2>
+    </div>
+    <div class="value-list reveal">
+      <div class="value-card">
+        <span class="num">01 — Guardia</span>
+        <h3>Consulta rápida entre paciente y paciente</h3>
+        <p>Describe el caso en lenguaje natural. Recibes diferencial ordenado, hallazgos clave y actitud inmediata en 8s. Con cita a guía SEMES, ESC, NICE o UpToDate.</p>
+      </div>
+      <div class="value-card">
+        <span class="num">02 — MIR</span>
+        <h3>Casos con razonamiento comentado</h3>
+        <p>No solo "la B es correcta". Fisiopatología paso a paso, por qué las otras opciones no encajan, y qué guideline lo respalda. Preparación con criterio, no memorística.</p>
+      </div>
+      <div class="value-card">
+        <span class="num">03 — Rotación</span>
+        <h3>Modo estudiante: aprende el patrón</h3>
+        <p>Explica el porqué de cada paso, no solo el algoritmo. Ideal para OSCE, exposición de casos y preparación de sesiones clínicas.</p>
+      </div>
+    </div>
+
+    <!-- ─── WAITLIST ─── -->
+    <section class="waitlist reveal" id="reservar">
+      <div class="waitlist-head">
+        <span class="eyebrow">Reservar plaza</span>
+        <h2>Estamos abriendo cupos por tandas.</h2>
+        <p>
+          Déjanos tu correo de facultad o de residencia y te avisamos cuando abramos tu tanda —
+          por orden de solicitud. Ningún cargo, ningún compromiso.
+        </p>
+      </div>
+
+      <div id="waitlist-alert-slot"></div>
+
+      <form id="waitlist-form" class="waitlist-form" novalidate>
+        <div class="field">
+          <label for="wl-email">Correo institucional</label>
+          <input id="wl-email" name="email" type="email" placeholder="tu.nombre@universidad.es" required autocomplete="email"/>
+        </div>
+        <div class="field">
+          <label for="wl-university">Facultad / hospital</label>
+          <input id="wl-university" name="university" type="text" placeholder="p. ej. UAM, H. La Paz" required autocomplete="organization"/>
+        </div>
+        <div class="field">
+          <label for="wl-level">Nivel</label>
+          <select id="wl-level" name="level" required>
+            <option value="">Elige…</option>
+            <option value="estudiante">Estudiante</option>
+            <option value="mir_r1">R1 (MIR)</option>
+            <option value="mir_r2">R2</option>
+            <option value="mir_r3">R3</option>
+            <option value="mir_r4">R4</option>
+            <option value="mir_r5">R5</option>
+            <option value="preparando_mir">Preparando MIR</option>
+          </select>
+        </div>
+        <button type="submit" class="waitlist-submit" id="wl-submit">
+          <span id="wl-submit-label">Reservar plaza</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <p class="waitlist-note">
+        Solo usamos tu correo para avisarte cuando abramos tu tanda. Nada de spam ni marketing.
+      </p>
+    </section>
+
+    <!-- ─── FAQ ─── -->
+    <div class="section-head reveal">
+      <span class="eyebrow">Preguntas honestas</span>
+      <h2 style="font-family:var(--f-display); font-size:clamp(28px, 2.8vw, 36px); font-weight:400; letter-spacing:-0.01em; margin:0;">
+        Lo que suele preguntar todo residente.
+      </h2>
+    </div>
+    <div class="mir-faq reveal">
+      <details open>
+        <summary>¿Es <em>realmente</em> gratis? <span class="ic">+</span></summary>
+        <p class="ans">Sí, mientras estés en formación (grado, MIR o preparando MIR). Verificamos con tu correo institucional. No hay letra pequeña, ni cargo diferido, ni "prueba gratuita de 14 días" que caduca. Simplemente gratis mientras dure tu formación.</p>
+      </details>
+      <details>
+        <summary>¿Y cuando termine la residencia? <span class="ic">+</span></summary>
+        <p class="ans">Pasas al plan Práctica Clínica (29 €/mes). Te avisamos con 30 días antes, sin cargos sorpresa, y siempre puedes cancelar o seguir usando la cuenta como demo pública.</p>
+      </details>
+      <details>
+        <summary>¿Qué modelo de IA usa? <span class="ic">+</span></summary>
+        <p class="ans">Modelo abierto de última generación (llama-3.3-70b vía Groq), instruido específicamente para razonamiento clínico en español y calibrado sobre literatura médica revisada por pares.</p>
+      </details>
+      <details>
+        <summary>¿Puedo usarlo con datos de pacientes reales? <span class="ic">+</span></summary>
+        <p class="ans">Solo con datos anonimizados. Nunca pegues nombre, DNI, número de historia clínica ni fecha de nacimiento. MediQ está bajo RGPD, cifrado en tránsito y con datos en la UE — pero la responsabilidad de anonimizar es del profesional.</p>
+      </details>
+      <details>
+        <summary>¿En qué se diferencia de ChatGPT? <span class="ic">+</span></summary>
+        <p class="ans">System prompt clínico específico (guías españolas y europeas), respuestas estructuradas para la práctica (diferencial ordenado, hallazgos clave, cita de guideline), y sin las alucinaciones típicas de ChatGPT sobre fármacos o dosis. Además: es gratis para ti, ChatGPT Plus son 20 €/mes.</p>
+      </details>
+      <details>
+        <summary>¿Puedo compartirlo con mi grupo de guardia? <span class="ic">+</span></summary>
+        <p class="ans">Cada residente/estudiante necesita su propia cuenta verificada (una cuenta = una persona). Pero por favor comparte el enlace — <a href="/mir" style="text-decoration:underline;">/mir</a> — con quien creas que le puede servir. Ese es el objetivo.</p>
+      </details>
+    </div>
+
+  </main>
+
+  <script is:inline>
+    (function() {
+      const form = document.getElementById('waitlist-form');
+      const submit = document.getElementById('wl-submit');
+      const submitLabel = document.getElementById('wl-submit-label');
+      const alertSlot = document.getElementById('waitlist-alert-slot');
+      const emailEl = document.getElementById('wl-email');
+      const uniEl = document.getElementById('wl-university');
+      const levelEl = document.getElementById('wl-level');
+
+      function alertMsg(kind, text) {
+        alertSlot.innerHTML = '';
+        const d = document.createElement('div');
+        d.className = 'waitlist-alert ' + kind;
+        d.textContent = text;
+        alertSlot.appendChild(d);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertSlot.innerHTML = '';
+        const email = emailEl.value.trim().toLowerCase();
+        const university = uniEl.value.trim();
+        const level = levelEl.value;
+
+        if (!email || !university || !level) {
+          alertMsg('err', 'Rellena los tres campos, por favor.');
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          alertMsg('err', 'El correo no parece válido.');
+          return;
+        }
+
+        submit.disabled = true;
+        const oldLabel = submitLabel.textContent;
+        submitLabel.textContent = 'Enviando…';
+
+        try {
+          const res = await fetch('/api/mir-waitlist', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email, university, level }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            alertMsg('err', data.error || 'No se pudo registrar. Inténtalo de nuevo.');
+            return;
+          }
+
+          alertMsg('ok', '✓ Reservado. Te avisaremos por correo cuando abramos tu tanda.');
+          form.reset();
+          try { window.track && window.track('MIR waitlist signup', { level, university_domain: email.split('@')[1] || '' }); } catch (_) {}
+        } catch (err) {
+          alertMsg('err', 'Error de red. Comprueba tu conexión y reintenta.');
+        } finally {
+          submit.disabled = false;
+          submitLabel.textContent = oldLabel;
+        }
+      });
+    })();
+  </script>
+
+</Layout>
