@@ -57,12 +57,32 @@ FORMATO DE SALIDA (JSON puro, sin markdown ni comentarios ni backticks):
   "recommendations": [string]    // 2-5 recomendaciones generales de sentido comun (repetir en X meses, consultar con medico si..., etc.). NO farmacologicas.
 }
 
-REGLAS DE status POR PARAMETRO:
-- "green": dentro de rango normal.
-- "yellow": ligeramente fuera (~5-15% de desviacion), sin urgencia.
-- "orange": claramente alterado, requiere atencion medica en dias/semanas.
-- "red": muy alterado, requiere atencion medica pronto o urgente (segun cual sea).
-- Si dudas entre dos niveles, elige el mas alto.
+REGLAS DE status POR PARAMETRO (cumplelas siempre, no las relajes):
+- "green": el valor esta DENTRO del rango de referencia. NO uses yellow "por precaucion" si esta dentro — usa green.
+- "yellow": el valor esta ligeramente fuera del rango (desviacion < 15% del limite mas cercano), sin urgencia clinica.
+- "orange": desviacion clara (15-40% del limite) o clinicamente relevante que suele requerir consulta medica en dias/semanas.
+- "red": desviacion severa (>40%), o valores clinicamente peligrosos (ej. hemoglobina <8, glucemia >300 o <50, potasio >6, creatinina >2 en adulto sano, transaminasas >5x limite).
+- Si el valor esta EXACTAMENTE en el limite, usa green (no yellow).
+- Si dudas entre dos niveles NO adyacentes al green, elige el mas alto (fail-safe).
+
+EJEMPLOS CONCRETOS DE CLASIFICACION (usa esta calibracion como referencia):
+- Hemoglobina 12.5 g/dL (12-16): green (dentro).
+- Hemoglobina 11.2 g/dL (12-16): yellow (7% por debajo).
+- Hemoglobina 9.5 g/dL (12-16): orange (21% por debajo, anemia moderada).
+- Hemoglobina 7.0 g/dL (12-16): red (anemia severa).
+- Leucocitos 8.5 x10^3/uL (4-10): green (dentro).
+- Leucocitos 12 x10^3/uL (4-10): yellow (20% por encima — leucocitosis leve).
+- Leucocitos 18 x10^3/uL (4-10): orange.
+- Leucocitos 25 x10^3/uL (4-10): red.
+- Colesterol total 195 mg/dL (<200): green (dentro).
+- Colesterol total 210 mg/dL (<200): yellow (5% por encima).
+- Colesterol total 245 mg/dL (<200): orange (22% por encima, hipercolesterolemia clinicamente relevante).
+- Colesterol total 300 mg/dL (<200): red.
+- Glucosa 90 mg/dL (70-100): green.
+- Glucosa 108 mg/dL (70-100): yellow (glucemia basal alterada leve).
+- Glucosa 135 mg/dL (70-100): orange (sospecha de diabetes).
+- Glucosa 220 mg/dL (70-100): red.
+- Creatinina 0.9 mg/dL (0.6-1.2): green.
 
 REGLAS DE overall_status:
 - "normal": todos los parametros green.
@@ -221,20 +241,29 @@ export default async function handler(req, res) {
   const VALID_OVERALL = new Set(['normal', 'attention', 'abnormal', 'concerning', 'no_analitica']);
   const VALID_PARAM_STATUS = new Set(['green', 'yellow', 'orange', 'red']);
 
-  const overall_status = VALID_OVERALL.has(parsed.overall_status) ? parsed.overall_status : 'attention';
-
   const parameters = Array.isArray(parsed.parameters)
-    ? parsed.parameters.slice(0, 40).map(p => ({
-        name:             typeof p?.name === 'string' ? p.name.slice(0, 100) : '',
-        value:            typeof p?.value === 'string' ? p.value.slice(0, 40) : String(p?.value ?? ''),
-        unit:             typeof p?.unit === 'string' ? p.unit.slice(0, 20) : '',
-        normal_range:     typeof p?.normal_range === 'string' ? p.normal_range.slice(0, 60) : '',
-        status:           VALID_PARAM_STATUS.has(p?.status) ? p.status : 'green',
-        what_it_measures: typeof p?.what_it_measures === 'string' ? p.what_it_measures : '',
-        why_altered:      typeof p?.why_altered === 'string' ? p.why_altered : '',
-        when_to_worry:    typeof p?.when_to_worry === 'string' ? p.when_to_worry : '',
-      })).filter(p => p.name)
+    ? parsed.parameters.slice(0, 40).map(p => {
+        const base = {
+          name:             typeof p?.name === 'string' ? p.name.slice(0, 100) : '',
+          value:            typeof p?.value === 'string' ? p.value.slice(0, 40) : String(p?.value ?? ''),
+          unit:             typeof p?.unit === 'string' ? p.unit.slice(0, 20) : '',
+          normal_range:     typeof p?.normal_range === 'string' ? p.normal_range.slice(0, 60) : '',
+          status:           VALID_PARAM_STATUS.has(p?.status) ? p.status : 'green',
+          what_it_measures: typeof p?.what_it_measures === 'string' ? p.what_it_measures : '',
+          why_altered:      typeof p?.why_altered === 'string' ? p.why_altered : '',
+          when_to_worry:    typeof p?.when_to_worry === 'string' ? p.when_to_worry : '',
+        };
+        base.status = correctStatus(base);
+        return base;
+      }).filter(p => p.name)
     : [];
+
+  // Recalcular overall_status a partir de los parametros ya corregidos.
+  // (Sino, el modelo puede decir "attention" cuando ya corrigiendo son todos green.)
+  let overall_status = VALID_OVERALL.has(parsed.overall_status) ? parsed.overall_status : 'attention';
+  if (overall_status !== 'no_analitica' && parameters.length > 0) {
+    overall_status = deriveOverall(parameters);
+  }
 
   const result = {
     overall_status,
@@ -245,3 +274,91 @@ export default async function handler(req, res) {
 
   return res.status(200).json(result);
 }
+
+/**
+ * Corrige el status del modelo si es claramente incorrecto respecto al valor y rango.
+ * El modelo puede marcar "yellow por precaucion" valores que estan claramente dentro
+ * del rango, o subestimar desviaciones grandes. Aqui aplicamos una capa determinista.
+ *
+ * Reglas:
+ * - Si el valor es parseable y el rango es un intervalo "X-Y" y esta DENTRO → force green.
+ * - Si el rango es "<X" y valor < X → force green. Si valor > X, calculamos % excedido.
+ * - Si el rango es ">X" y valor > X → force green.
+ * - Si el valor esta fuera y el % de desviacion es grande, subimos yellow → orange.
+ *
+ * Si no podemos parsear (rangos textuales tipo "normal" o valores no numericos),
+ * confiamos en lo que dijo el modelo.
+ */
+function correctStatus(p) {
+  const value = parseFloat(String(p.value).replace(',', '.'));
+  if (!Number.isFinite(value)) return p.status;
+
+  const range = (p.normal_range || '').trim();
+  if (!range) return p.status;
+
+  // Intervalo cerrado: "12.0-16.0", "12-16", "12,0 - 16,0", con o sin espacios
+  const intervalMatch = range.match(/^\s*([-\d]+[.,]?\d*)\s*[-–—a]{1,3}\s*([-\d]+[.,]?\d*)/i);
+  if (intervalMatch) {
+    const low = parseFloat(intervalMatch[1].replace(',', '.'));
+    const high = parseFloat(intervalMatch[2].replace(',', '.'));
+    if (Number.isFinite(low) && Number.isFinite(high) && low < high) {
+      if (value >= low && value <= high) return 'green';
+      const limit = value < low ? low : high;
+      const deviationPct = Math.abs(value - limit) / Math.abs(limit) * 100;
+      return statusFromDeviation(deviationPct, p.status);
+    }
+  }
+
+  // Cota superior: "<200", "<=200", "< 200"
+  const ltMatch = range.match(/^\s*<\s*=?\s*([-\d]+[.,]?\d*)/);
+  if (ltMatch) {
+    const limit = parseFloat(ltMatch[1].replace(',', '.'));
+    if (Number.isFinite(limit)) {
+      if (value <= limit) return 'green';
+      const deviationPct = (value - limit) / Math.abs(limit) * 100;
+      return statusFromDeviation(deviationPct, p.status);
+    }
+  }
+
+  // Cota inferior: ">40", ">=40"
+  const gtMatch = range.match(/^\s*>\s*=?\s*([-\d]+[.,]?\d*)/);
+  if (gtMatch) {
+    const limit = parseFloat(gtMatch[1].replace(',', '.'));
+    if (Number.isFinite(limit)) {
+      if (value >= limit) return 'green';
+      const deviationPct = (limit - value) / Math.abs(limit) * 100;
+      return statusFromDeviation(deviationPct, p.status);
+    }
+  }
+
+  return p.status;
+}
+
+/**
+ * Dado un % de desviacion respecto al limite, devuelve el status minimo que corresponde.
+ * Nunca BAJA el status marcado por el modelo (si el modelo dice red, no bajamos a orange
+ * aunque la desviacion parezca baja — puede ser un valor absoluto peligroso).
+ */
+function statusFromDeviation(deviationPct, modelStatus) {
+  const RANK = { green: 0, yellow: 1, orange: 2, red: 3 };
+  let derived = 'yellow';
+  if (deviationPct >= 40)      derived = 'red';
+  else if (deviationPct >= 15) derived = 'orange';
+  else                         derived = 'yellow';
+
+  // Devolvemos el MAX entre derivado y lo que dijo el modelo — nunca bajamos.
+  return (RANK[modelStatus] ?? 0) > RANK[derived] ? modelStatus : derived;
+}
+
+/**
+ * Recalcula overall_status a partir de los status individuales corregidos.
+ */
+function deriveOverall(parameters) {
+  const has = { red: 0, orange: 0, yellow: 0, green: 0 };
+  for (const p of parameters) has[p.status] = (has[p.status] || 0) + 1;
+  if (has.red > 0)    return 'concerning';
+  if (has.orange > 0) return 'abnormal';
+  if (has.yellow > 0) return 'attention';
+  return 'normal';
+}
+

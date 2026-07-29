@@ -393,18 +393,29 @@ import Layout from '../layouts/Layout.astro';
     @media (max-width: 640px) { .p-caret { display: none; } }
     .param-card[open] .p-caret { transform: rotate(45deg); }
 
-    /* Colores de status */
-    .status-green .param-status-dot  { background: var(--ok); }
-    .status-yellow .param-status-dot { background: oklch(78% 0.15 90); }
-    .status-orange .param-status-dot { background: var(--warn); }
-    .status-red    .param-status-dot { background: var(--danger); }
-    .status-green .p-value  { color: oklch(35% 0.1 155); }
-    .status-yellow .p-value { color: oklch(45% 0.14 90); }
-    .status-orange .p-value { color: oklch(38% 0.16 40); }
-    .status-red    .p-value { color: oklch(38% 0.16 25); }
+    /* Colores de status — cada uno claramente distinto del anterior en hue y luminosidad.
+       Anillo blanco alrededor del punto para separar visualmente del fondo del card. */
+    .param-status-dot {
+      box-shadow:
+        0 0 0 2px var(--surface),
+        0 0 0 3px color-mix(in oklab, currentColor 25%, transparent);
+    }
+    .status-green  { --dot-c: oklch(62% 0.16 150); }
+    .status-yellow { --dot-c: oklch(84% 0.19 95); }
+    .status-orange { --dot-c: oklch(68% 0.20 45); }
+    .status-red    { --dot-c: oklch(58% 0.24 22); }
+    .status-green  .param-status-dot,
+    .status-yellow .param-status-dot,
+    .status-orange .param-status-dot,
+    .status-red    .param-status-dot { background: var(--dot-c); color: var(--dot-c); }
 
-    .status-red.param-card    { border-color: color-mix(in oklab, var(--danger) 30%, var(--rule-2)); }
-    .status-orange.param-card { border-color: color-mix(in oklab, var(--warn)   30%, var(--rule-2)); }
+    .status-green  .p-value { color: oklch(38% 0.14 150); }
+    .status-yellow .p-value { color: oklch(46% 0.16 88); }
+    .status-orange .p-value { color: oklch(48% 0.19 45); }
+    .status-red    .p-value { color: oklch(45% 0.20 22); }
+
+    .status-red.param-card    { border-color: color-mix(in oklab, oklch(58% 0.24 22) 35%, var(--rule-2)); }
+    .status-orange.param-card { border-color: color-mix(in oklab, oklch(68% 0.20 45) 30%, var(--rule-2)); }
 
     /* Cuerpo desplegable */
     .p-body {
