@@ -107,6 +107,14 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     html[data-auth="in"]  #nav-auth-in  { display: flex !important; }
     html[data-auth="out"] #nav-mobile-auth-out { display: flex !important; flex-direction: column; gap: 10px; }
     html[data-auth="in"]  #nav-mobile-auth-in  { display: flex !important; flex-direction: column; gap: 10px; }
+    /* Enlaces de la nav condicionales segun sesion.
+       Se hacen visibles en distintos contextos con display distinto:
+       inline en desktop (.nav-links), block en mobile (#nav-mobile nav). */
+    .nav-only-in, .nav-only-out { display: none !important; }
+    html[data-auth="in"]  .nav-links .nav-only-in  { display: inline !important; }
+    html[data-auth="out"] .nav-links .nav-only-out { display: inline !important; }
+    html[data-auth="in"]  #nav-mobile .nav-only-in  { display: block !important; }
+    html[data-auth="out"] #nav-mobile .nav-only-out { display: block !important; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
@@ -184,14 +192,18 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       </a>
 
       <div class="nav-links">
+        {/* Enlaces publicos — siempre visibles */}
         <a href="/"          class:list={[{ active: navActive === '/'          }]}>Inicio</a>
-        <a href="/demo"      class:list={[{ active: navActive === '/demo'      }]}>Demo</a>
+        <a href="/demo"      class="nav-only-out" class:list={[{ active: navActive === '/demo' }]}>Demo</a>
         <a href="/informes"  class:list={[{ active: navActive === '/informes'  }]}>Analizar informe</a>
+        <a href="/pricing"   class="nav-only-out" class:list={[{ active: navActive === '/pricing' }]}>Precios</a>
+
+        {/* Enlaces de la app — solo con sesion iniciada */}
+        <a href="/chat"      class="nav-only-in"  class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
+        <a href="/train"     class="nav-only-in"  class:list={[{ active: navActive === '/train'   }]}>Entrenar IA</a>
+        <a href="/triadas"   class="nav-only-in"  class:list={[{ active: navActive === '/triadas' }]}>Tríadas</a>
+
         {/* MIR page existe (/mir + waitlist) pero desactivada del nav hasta que decidamos abrir el canal residentes. Reactivar aqui + en mobile nav abajo. */}
-        <a href="/pricing"   class:list={[{ active: navActive === '/pricing'   }]}>Precios</a>
-        <a href="/chat"      class:list={[{ active: navActive === '/chat'      }]}>Chat</a>
-        <a href="/train"     class:list={[{ active: navActive === '/train'     }]}>Entrenar IA</a>
-        <a href="/triadas"   class:list={[{ active: navActive === '/triadas'   }]}>Tríadas</a>
       </div>
 
       <!--
@@ -223,7 +235,6 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
               <span id="nav-auth-name">&nbsp;</span>
             </span>
             <a class="btn btn-ghost" href="/account">Mi cuenta</a>
-            <a class="btn btn-ghost" href="/chat">Ir al chat</a>
             <button type="button" class="btn btn-ghost" id="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15 3h5a1 1 0 011 1v16a1 1 0 01-1 1h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -259,13 +270,13 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <div id="nav-mobile" aria-hidden="true">
     <nav>
       <a href="/">Inicio</a>
-      <a href="/demo">Demo</a>
+      <a href="/demo" class="nav-only-out">Demo</a>
       <a href="/informes">Analizar informe</a>
+      <a href="/pricing" class="nav-only-out">Precios</a>
+      <a href="/chat" class="nav-only-in">Chat</a>
+      <a href="/train" class="nav-only-in">Entrenar IA</a>
+      <a href="/triadas" class="nav-only-in">Tríadas</a>
       {/* MIR page existe (/mir + waitlist) pero desactivada del nav. Reactivar aqui + en desktop nav arriba. */}
-      <a href="/pricing">Precios</a>
-      <a href="/chat">Chat</a>
-      <a href="/train">Entrenar IA</a>
-      <a href="/triadas">Tríadas</a>
     </nav>
     <div id="nav-mobile-auth">
       <div id="nav-mobile-auth-out" class="nav-auth-state">
