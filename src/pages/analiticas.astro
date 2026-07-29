@@ -374,14 +374,19 @@ import Layout from '../layouts/Layout.astro';
       font-size: 15px;
       font-weight: 600;
       white-space: nowrap;
+      min-width: 105px;
+      text-align: right;
     }
     .p-value .unit { font-weight: 400; color: var(--ink-mute); font-size: 12px; margin-left: 3px; }
     .p-range {
       font-family: var(--f-mono);
       font-size: 11px;
       color: var(--ink-mute);
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
       white-space: nowrap;
+      min-width: 140px;
+      text-align: right;
+      padding-left: 8px;
     }
     .p-caret {
       color: var(--ink-mute);
@@ -793,6 +798,13 @@ import Layout from '../layouts/Layout.astro';
         return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
       }
 
+      // Formatea el rango para separar visualmente '<'/'>' del número siguiente.
+      // La font mono renderiza "<200" con los dos glifos casi pegados; con espacio queda mejor.
+      function formatRange(r) {
+        if (!r) return '';
+        return r.replace(/([<>≤≥])(?!=?\s)=?/g, m => m.trim() + ' ').replace(/\s+/g, ' ').trim();
+      }
+
       const OVERALL_META = {
         normal:     { cls: 'ov-normal',     label: 'Analítica estable' },
         attention:  { cls: 'ov-attention',  label: 'Requiere atención leve' },
@@ -833,7 +845,7 @@ import Layout from '../layouts/Layout.astro';
               '<span class="param-status-dot" aria-hidden="true"></span>' +
               '<span class="p-name">' + escapeHtml(p.name) + '</span>' +
               '<span class="p-value">' + escapeHtml(p.value) + (p.unit ? '<span class="unit">' + escapeHtml(p.unit) + '</span>' : '') + '</span>' +
-              (p.normal_range ? '<span class="p-range">' + escapeHtml(p.normal_range) + '</span>' : '<span class="p-range"></span>') +
+              (p.normal_range ? '<span class="p-range">' + escapeHtml(formatRange(p.normal_range)) + '</span>' : '<span class="p-range"></span>') +
               '<span class="p-caret" aria-hidden="true">+</span>' +
             '</summary>' +
             '<div class="p-body">' +
