@@ -1,0 +1,873 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Analizador de informes médicos — MediQ"
+  description="Sube tu informe médico (PDF, DOCX o texto) y recibe una explicación en lenguaje sencillo, hallazgos importantes, preguntas para tu médico y signos de alarma. Herramienta educativa, no diagnostica."
+  navActive="/informes"
+  bodyClass="informes-page"
+  includePdfJs={true}
+  ogImage="https://mediq.app/og.svg"
+>
+
+  <style is:global>
+    body.informes-page { background: var(--bg); }
+
+    .inf-wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: clamp(32px, 5vw, 64px) var(--pad) 120px;
+    }
+
+    /* ─── Hero ─── */
+    .inf-hero { text-align: center; margin-bottom: clamp(32px, 4vw, 48px); }
+    .inf-hero .eyebrow { justify-content: center; }
+    .inf-hero h1 {
+      font-family: var(--f-display);
+      font-size: clamp(36px, 4.6vw, 56px);
+      line-height: 1.05;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin: 16px 0 18px;
+    }
+    .inf-hero h1 em { font-style: italic; color: var(--accent); }
+    .inf-hero .sub {
+      max-width: 60ch;
+      margin: 0 auto;
+      font-size: clamp(15px, 1.15vw, 17px);
+      color: var(--ink-soft);
+      line-height: 1.55;
+    }
+
+    .disclaimer-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: color-mix(in oklab, var(--warn) 12%, transparent);
+      border: 1px solid color-mix(in oklab, var(--warn) 25%, transparent);
+      color: oklch(38% 0.16 40);
+      font-size: 13px;
+      line-height: 1.4;
+      max-width: 620px;
+      text-align: left;
+    }
+    .disclaimer-top svg { flex-shrink: 0; color: var(--warn); }
+
+    /* ─── Upload zone ─── */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: clamp(24px, 3vw, 36px);
+      margin-bottom: 24px;
+    }
+
+    .tabs {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-2);
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+    .tabs button {
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-family: var(--f-mono);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--ink-mute);
+      transition: background .2s ease, color .2s ease;
+      white-space: nowrap;
+    }
+    .tabs button:hover { color: var(--ink-soft); }
+    .tabs button.on {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.on { display: block; }
+
+    /* Drop zone (PDF/DOCX) */
+    .dropzone {
+      border: 2px dashed var(--rule-2);
+      border-radius: 14px;
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s ease, background .2s ease;
+      background: var(--bg);
+    }
+    .dropzone:hover, .dropzone.hover {
+      border-color: var(--accent);
+      background: color-mix(in oklab, var(--accent) 4%, var(--bg));
+    }
+    .dropzone svg { color: var(--ink-mute); margin-bottom: 12px; }
+    .dropzone p { margin: 0; font-size: 15px; color: var(--ink); }
+    .dropzone p.hint { font-size: 13px; color: var(--ink-mute); margin-top: 6px; }
+    .dropzone.has-file p { color: var(--accent-text); font-weight: 500; }
+
+    /* Textarea */
+    .paste-area {
+      width: 100%;
+      min-height: 200px;
+      max-height: 400px;
+      background: var(--bg);
+      border: 1px solid var(--rule-2);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font: inherit;
+      font-size: 14.5px;
+      line-height: 1.55;
+      color: var(--ink);
+      outline: none;
+      resize: vertical;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .paste-area:focus {
+      border-color: var(--ink-soft);
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 12%, transparent);
+    }
+
+    .upload-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .upload-hint {
+      font-family: var(--f-mono);
+      font-size: 11px;
+      color: var(--ink-mute);
+      letter-spacing: 0.04em;
+    }
+    .analyze-btn {
+      padding: 14px 28px;
+      border-radius: 12px;
+      background: var(--ink);
+      color: var(--bg);
+      font-weight: 500;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .analyze-btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .analyze-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ─── Progress ─── */
+    .progress-card {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: 32px;
+      text-align: center;
+    }
+    .progress-label {
+      font-family: var(--f-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 16px;
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--bg-2);
+      border-radius: 999px;
+      overflow: hidden;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+      width: 0%;
+      transition: width .5s ease;
+    }
+    .progress-sub {
+      margin-top: 14px;
+      font-size: 13.5px;
+      color: var(--ink-mute);
+    }
+
+    /* ─── Alert ─── */
+    .inf-alert {
+      background: color-mix(in oklab, var(--danger) 10%, transparent);
+      border: 1px solid color-mix(in oklab, var(--danger) 25%, transparent);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: oklch(38% 0.16 25);
+    }
+    .inf-alert svg { flex-shrink: 0; margin-top: 2px; color: var(--danger); }
+    .inf-alert .msg { flex: 1; font-size: 14.5px; line-height: 1.5; }
+    .inf-alert button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid color-mix(in oklab, var(--danger) 35%, transparent);
+      color: oklch(38% 0.16 25);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .inf-alert button:hover { background: color-mix(in oklab, var(--danger) 8%, transparent); }
+
+    /* ─── Result ─── */
+    .result-header {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .result-type-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      background: color-mix(in oklab, var(--accent) 14%, transparent);
+      color: var(--accent-text);
+      border-radius: 999px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+      align-self: flex-start;
+    }
+    .result-type-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor;
+    }
+    .result-summary {
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: var(--ink);
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    /* Grid de cards */
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 780px) {
+      .result-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 1080px) {
+      .result-grid { grid-template-columns: 1fr 1fr 1fr; }
+      /* Que la card de significado ocupe todo el ancho arriba */
+      .result-grid .card-meaning { grid-column: 1 / -1; }
+      /* Signos de alarma también ancho completo abajo */
+      .result-grid .card-alarm { grid-column: 1 / -1; }
+    }
+
+    .r-card {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .r-card summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .r-card summary::-webkit-details-marker { display: none; }
+    .r-card .r-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-2);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      color: var(--ink);
+    }
+    .r-card h3 {
+      font-family: var(--f-display);
+      font-size: 17px;
+      font-weight: 500;
+      margin: 0;
+      flex: 1;
+      line-height: 1.25;
+    }
+    .r-card .r-toggle {
+      width: 20px; height: 20px;
+      display: grid; place-items: center;
+      color: var(--ink-mute);
+      font-family: var(--f-mono);
+      font-size: 14px;
+      transition: transform .25s ease;
+    }
+    details[open] .r-toggle { transform: rotate(45deg); }
+    .r-card .r-body { padding-top: 4px; }
+    .r-card ul {
+      margin: 0;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .r-card li { font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+    .r-card p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-soft); white-space: pre-wrap; }
+
+    /* Términos */
+    .term-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--rule);
+    }
+    .term-item:last-child { border-bottom: 0; }
+    .term-item .t { font-weight: 600; color: var(--ink); font-size: 14px; }
+    .term-item .e { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; line-height: 1.55; }
+
+    /* Card de alarma con estilo especial */
+    .card-alarm { border-color: color-mix(in oklab, var(--danger) 35%, transparent); }
+    .card-alarm .r-icon { background: color-mix(in oklab, var(--danger) 14%, transparent); color: var(--danger); }
+    .card-alarm h3 { color: oklch(38% 0.16 25); }
+    .alarm-cta {
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: color-mix(in oklab, var(--danger) 8%, transparent);
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: oklch(38% 0.16 25);
+      line-height: 1.5;
+    }
+    .alarm-cta strong { font-weight: 600; }
+
+    /* Card de significado con estilo destacado */
+    .card-meaning { background: color-mix(in oklab, var(--accent) 5%, var(--surface)); }
+    .card-meaning .r-icon { background: color-mix(in oklab, var(--accent) 14%, transparent); color: var(--accent-text); }
+
+    .disclaimer-bottom {
+      margin-top: 32px;
+      padding: 16px 20px;
+      background: var(--bg-2);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--ink-mute);
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .result-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .result-actions .btn {
+      padding: 10px 20px;
+    }
+
+    /* ─── No medical ─── */
+    .no-medical {
+      background: var(--surface);
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: 32px;
+      text-align: center;
+    }
+    .no-medical svg { color: var(--ink-mute); margin-bottom: 12px; }
+    .no-medical h3 { font-family: var(--f-display); font-size: 20px; font-weight: 400; margin: 0 0 8px; }
+    .no-medical p { font-size: 14.5px; color: var(--ink-soft); max-width: 46ch; margin: 0 auto 20px; line-height: 1.55; }
+
+    /* ─── Animaciones (respetan prefers-reduced-motion) ─── */
+    @media (prefers-reduced-motion: no-preference) {
+      @keyframes card-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .r-card, .result-header, .no-medical {
+        animation: card-in .4s cubic-bezier(.2, .7, .2, 1) both;
+      }
+      .result-header             { animation-delay: 0ms; }
+      .r-card:nth-of-type(1)     { animation-delay: 60ms; }
+      .r-card:nth-of-type(2)     { animation-delay: 120ms; }
+      .r-card:nth-of-type(3)     { animation-delay: 180ms; }
+      .r-card:nth-of-type(4)     { animation-delay: 240ms; }
+      .r-card:nth-of-type(5)     { animation-delay: 300ms; }
+      .r-card:nth-of-type(6)     { animation-delay: 360ms; }
+    }
+
+    [hidden] { display: none !important; }
+  </style>
+
+  <main class="inf-wrap">
+
+    <!-- HERO -->
+    <section class="inf-hero">
+      <span class="eyebrow">Analizador de informes</span>
+      <h1>Entiende tu <em>informe médico</em>.</h1>
+      <p class="sub">
+        Sube un PDF, un Word o pega el texto de un informe (analítica, alta hospitalaria, resonancia,
+        anatomía patológica…) y te lo explicamos en lenguaje llano, con las preguntas que deberías
+        hacerle a tu médico.
+      </p>
+      <div class="disclaimer-top">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span><strong>Herramienta educativa.</strong> No diagnostica ni sustituye a tu médico. Si el informe tiene nombre completo o DNI, mejor táchalos antes de subir.</span>
+      </div>
+    </section>
+
+    <!-- UPLOAD -->
+    <section id="upload-section" class="upload-card">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab-btn on" data-tab="pdf" role="tab" aria-selected="true">PDF</button>
+        <button type="button" class="tab-btn" data-tab="docx" role="tab" aria-selected="false">Word (DOCX)</button>
+        <button type="button" class="tab-btn" data-tab="text" role="tab" aria-selected="false">Pegar texto</button>
+      </div>
+
+      <!-- PDF -->
+      <div class="tab-panel on" data-panel="pdf">
+        <label class="dropzone" id="dz-pdf" for="file-pdf">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M14 2v6h6M9 15l3-3 3 3M12 12v9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p id="dz-pdf-label">Arrastra tu PDF aquí o haz clic para seleccionar</p>
+          <p class="hint">Máximo 10 MB · Solo se procesa el texto</p>
+          <input type="file" id="file-pdf" accept="application/pdf,.pdf" style="display:none" />
+        </label>
+      </div>
+
+      <!-- DOCX -->
+      <div class="tab-panel" data-panel="docx">
+        <label class="dropzone" id="dz-docx" for="file-docx">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 13l1.5 5L11 15l1.5 3L14 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p id="dz-docx-label">Arrastra tu Word (.docx) aquí o haz clic para seleccionar</p>
+          <p class="hint">Máximo 10 MB · No compatible con .doc antiguo</p>
+          <input type="file" id="file-docx" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none" />
+        </label>
+      </div>
+
+      <!-- Texto -->
+      <div class="tab-panel" data-panel="text">
+        <textarea id="paste-text" class="paste-area" placeholder="Pega aquí el texto del informe médico. Mínimo 200 caracteres." autocomplete="off"></textarea>
+      </div>
+
+      <div class="upload-actions">
+        <span class="upload-hint" id="char-hint">Selecciona un archivo o pega texto</span>
+        <button type="button" class="analyze-btn" id="analyze-btn" disabled>
+          <span id="analyze-label">Analizar informe</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- PROGRESS -->
+    <section id="progress-section" class="progress-card" hidden aria-live="polite">
+      <div class="progress-label" id="progress-label">Preparando…</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-sub">Esto puede tardar entre 5 y 20 segundos.</div>
+    </section>
+
+    <!-- ERROR -->
+    <section id="error-section" hidden>
+      <div class="inf-alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <div class="msg" id="error-msg">Ha ocurrido un error.</div>
+        <button type="button" id="error-retry">Volver a intentar</button>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="result-section" hidden>
+      <div class="result-header">
+        <span class="result-type-pill"><span class="dot" aria-hidden="true"></span><span id="r-type">Informe</span></span>
+        <p class="result-summary" id="r-summary"></p>
+      </div>
+
+      <div class="result-grid" id="result-grid">
+        <!-- Cards se inyectan aquí -->
+      </div>
+
+      <div class="result-actions">
+        <button type="button" class="btn btn-ghost" id="r-new">Analizar otro informe</button>
+        <a class="btn btn-primary" href="/login?signup=1">Crear cuenta para guardar análisis →</a>
+      </div>
+
+      <p class="disclaimer-bottom">
+        MediQ es una herramienta de apoyo educativa. Toda decisión médica debe consultarse con un profesional sanitario responsable.
+      </p>
+    </section>
+
+    <!-- NO MEDICAL -->
+    <section id="no-medical-section" hidden>
+      <div class="no-medical">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M8 15s1.5-2 4-2 4 2 4 2M9 9h.01M15 9h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <h3>Esto no parece un informe médico</h3>
+        <p>El texto que has subido no tiene aspecto de ser un informe clínico. Comprueba el archivo y vuelve a intentarlo.</p>
+        <button type="button" class="btn btn-ghost" id="nm-retry">Volver a intentar</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script is:inline>
+    (function() {
+      const MAX_FILE_SIZE = 10 * 1024 * 1024;
+      const MIN_TEXT_LEN  = 200;
+
+      // ─── Refs ───
+      const tabBtns   = document.querySelectorAll('.tab-btn');
+      const panels    = document.querySelectorAll('.tab-panel');
+      const dzPdf     = document.getElementById('dz-pdf');
+      const dzDocx    = document.getElementById('dz-docx');
+      const filePdf   = document.getElementById('file-pdf');
+      const fileDocx  = document.getElementById('file-docx');
+      const pasteText = document.getElementById('paste-text');
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const analyzeLbl = document.getElementById('analyze-label');
+      const charHint  = document.getElementById('char-hint');
+
+      const uploadSection   = document.getElementById('upload-section');
+      const progressSection = document.getElementById('progress-section');
+      const progressLabel   = document.getElementById('progress-label');
+      const progressFill    = document.getElementById('progress-fill');
+      const errorSection    = document.getElementById('error-section');
+      const errorMsg        = document.getElementById('error-msg');
+      const errorRetry      = document.getElementById('error-retry');
+      const resultSection   = document.getElementById('result-section');
+      const noMedicalSection = document.getElementById('no-medical-section');
+      const nmRetry         = document.getElementById('nm-retry');
+      const rNew            = document.getElementById('r-new');
+
+      // ─── Estado ───
+      let currentTab = 'pdf';
+      let pdfFile = null, docxFile = null;
+
+      // ─── Tabs ───
+      tabBtns.forEach(b => {
+        b.addEventListener('click', () => {
+          currentTab = b.dataset.tab;
+          tabBtns.forEach(x => {
+            const on = x.dataset.tab === currentTab;
+            x.classList.toggle('on', on);
+            x.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          panels.forEach(p => p.classList.toggle('on', p.dataset.panel === currentTab));
+          updateAnalyzeState();
+        });
+      });
+
+      // ─── File input handlers ───
+      function attachDropzone(dz, fileInput, kind) {
+        ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('hover'); }));
+        ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('hover'); }));
+        dz.addEventListener('drop', e => {
+          const f = e.dataTransfer.files?.[0];
+          if (f) handleFile(kind, f);
+        });
+        fileInput.addEventListener('change', e => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(kind, f);
+        });
+      }
+      attachDropzone(dzPdf,  filePdf,  'pdf');
+      attachDropzone(dzDocx, fileDocx, 'docx');
+
+      function handleFile(kind, file) {
+        if (file.size > MAX_FILE_SIZE) {
+          alert('El archivo es demasiado grande. Máximo 10 MB.');
+          return;
+        }
+        if (kind === 'pdf') {
+          pdfFile = file;
+          document.getElementById('dz-pdf-label').textContent = '📄 ' + file.name;
+          dzPdf.classList.add('has-file');
+        } else if (kind === 'docx') {
+          docxFile = file;
+          document.getElementById('dz-docx-label').textContent = '📄 ' + file.name;
+          dzDocx.classList.add('has-file');
+        }
+        updateAnalyzeState();
+      }
+
+      // ─── Textarea live count ───
+      pasteText.addEventListener('input', updateAnalyzeState);
+
+      function updateAnalyzeState() {
+        let ready = false;
+        if (currentTab === 'pdf') ready = !!pdfFile;
+        else if (currentTab === 'docx') ready = !!docxFile;
+        else if (currentTab === 'text') ready = pasteText.value.trim().length >= MIN_TEXT_LEN;
+
+        analyzeBtn.disabled = !ready;
+        if (currentTab === 'text') {
+          const len = pasteText.value.trim().length;
+          if (len === 0) charHint.textContent = 'Mínimo 200 caracteres';
+          else if (len < MIN_TEXT_LEN) charHint.textContent = `${MIN_TEXT_LEN - len} caracteres más para poder analizar`;
+          else charHint.textContent = `${len} caracteres · listo para analizar`;
+        } else if ((currentTab === 'pdf' && pdfFile) || (currentTab === 'docx' && docxFile)) {
+          const f = currentTab === 'pdf' ? pdfFile : docxFile;
+          charHint.textContent = `${f.name} · ${(f.size / 1024).toFixed(0)} KB · listo`;
+        } else {
+          charHint.textContent = 'Selecciona un archivo o pega texto';
+        }
+      }
+
+      // ─── Progress helpers ───
+      function setProgress(label, pct) {
+        progressLabel.textContent = label;
+        progressFill.style.width = pct + '%';
+      }
+      function showState(which) {
+        uploadSection.hidden    = which !== 'upload';
+        progressSection.hidden  = which !== 'progress';
+        errorSection.hidden     = which !== 'error';
+        resultSection.hidden    = which !== 'result';
+        noMedicalSection.hidden = which !== 'no-medical';
+      }
+
+      // ─── PDF extraction (reusa pdfjsLib global) ───
+      async function extractPdf(file) {
+        if (!window.pdfjsLib) {
+          for (let i = 0; i < 30; i++) {
+            await new Promise(r => setTimeout(r, 100));
+            if (window.pdfjsLib) break;
+          }
+          if (!window.pdfjsLib) throw new Error('El lector de PDF no ha cargado. Recarga la página.');
+        }
+        const buf = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          setProgress('Extrayendo texto del PDF (' + i + ' de ' + pdf.numPages + ')…', 10 + (i / pdf.numPages) * 30);
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          text += content.items.map(it => it.str).join(' ') + '\n\n';
+        }
+        return text.trim();
+      }
+
+      // ─── DOCX extraction (mammoth.js) ───
+      let mammothLoaded = false;
+      async function loadMammoth() {
+        if (mammothLoaded && window.mammoth) return;
+        setProgress('Cargando lector de Word…', 5);
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+          s.onload = resolve;
+          s.onerror = () => reject(new Error('No se pudo cargar el lector de Word.'));
+          document.head.appendChild(s);
+        });
+        mammothLoaded = true;
+      }
+      async function extractDocx(file) {
+        await loadMammoth();
+        setProgress('Extrayendo texto del documento…', 30);
+        const buf = await file.arrayBuffer();
+        const result = await window.mammoth.extractRawText({ arrayBuffer: buf });
+        return (result.value || '').trim();
+      }
+
+      // ─── Icons SVG por sección ───
+      const ICONS = {
+        findings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+        meaning: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 21h6M12 3a7 7 0 00-4 12.7V17a2 2 0 002 2h4a2 2 0 002-2v-1.3A7 7 0 0012 3z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        terms: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+        questions: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+        next_steps: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        alarm: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+      };
+
+      function cardHTML({ cls, icon, title, body }) {
+        return (
+          '<details class="r-card ' + (cls || '') + '" open>' +
+            '<summary>' +
+              '<span class="r-icon">' + icon + '</span>' +
+              '<h3>' + title + '</h3>' +
+              '<span class="r-toggle" aria-hidden="true">+</span>' +
+            '</summary>' +
+            '<div class="r-body">' + body + '</div>' +
+          '</details>'
+        );
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+      }
+
+      function listHTML(items) {
+        if (!items || !items.length) return '<p style="color:var(--ink-mute); font-style:italic;">Sin contenido.</p>';
+        return '<ul>' + items.map(i => '<li>' + escapeHtml(i) + '</li>').join('') + '</ul>';
+      }
+
+      function termsHTML(terms) {
+        if (!terms || !terms.length) return '<p style="color:var(--ink-mute); font-style:italic;">Sin términos destacados.</p>';
+        return terms.map(t => (
+          '<div class="term-item">' +
+            '<div class="t">' + escapeHtml(t.term || '') + '</div>' +
+            '<div class="e">' + escapeHtml(t.explanation || '') + '</div>' +
+          '</div>'
+        )).join('');
+      }
+
+      function renderResult(data) {
+        if (data.report_type === 'no_medical') {
+          showState('no-medical');
+          return;
+        }
+        document.getElementById('r-type').textContent = data.report_type || 'Informe';
+        document.getElementById('r-summary').textContent = data.summary || 'Sin resumen disponible.';
+
+        const grid = document.getElementById('result-grid');
+        grid.innerHTML = '';
+
+        // Orden: significado (ancho completo) → hallazgos → términos → preguntas → próximos pasos → alarma (ancho completo)
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          cls: 'card-meaning',
+          icon: ICONS.meaning,
+          title: '¿Qué significa esto para mí?',
+          body: '<p>' + escapeHtml(data.meaning || 'Sin información específica.') + '</p>',
+        }));
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          icon: ICONS.findings,
+          title: 'Hallazgos importantes',
+          body: listHTML(data.findings),
+        }));
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          icon: ICONS.terms,
+          title: 'Términos médicos explicados',
+          body: termsHTML(data.terms),
+        }));
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          icon: ICONS.questions,
+          title: 'Preguntas para tu médico',
+          body: listHTML(data.questions),
+        }));
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          icon: ICONS.next_steps,
+          title: 'Próximos pasos habituales',
+          body: listHTML(data.next_steps),
+        }));
+        grid.insertAdjacentHTML('beforeend', cardHTML({
+          cls: 'card-alarm',
+          icon: ICONS.alarm,
+          title: 'Signos de alarma',
+          body: listHTML(data.red_flags) + '<div class="alarm-cta"><strong>Si detectas alguno de estos síntomas, acude a Urgencias inmediatamente.</strong></div>',
+        }));
+
+        showState('result');
+      }
+
+      // ─── Flujo principal ───
+      async function runAnalysis() {
+        try { window.track && window.track('Report analyze start', { source: currentTab }); } catch (_) {}
+
+        showState('progress');
+        setProgress('Preparando…', 5);
+
+        try {
+          let text;
+          if (currentTab === 'pdf') {
+            text = await extractPdf(pdfFile);
+          } else if (currentTab === 'docx') {
+            text = await extractDocx(docxFile);
+          } else {
+            text = pasteText.value.trim();
+            setProgress('Preparando texto…', 40);
+          }
+
+          if (!text || text.length < MIN_TEXT_LEN) {
+            throw new Error('No se pudo extraer suficiente texto. ¿Es el archivo correcto?');
+          }
+
+          setProgress('Analizando con IA…', 55);
+          const res = await fetch('/api/analyze-report', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ text: text.slice(0, 60000) }),
+          });
+
+          setProgress('Casi listo…', 90);
+
+          if (!res.ok) {
+            let msg = 'HTTP ' + res.status;
+            try {
+              const d = await res.json();
+              msg = d.error || msg;
+            } catch (_) {}
+            throw new Error(msg);
+          }
+
+          const data = await res.json();
+          setProgress('Listo', 100);
+          await new Promise(r => setTimeout(r, 200));
+
+          renderResult(data);
+          try { window.track && window.track('Report analyze success', { report_type: data.report_type || 'unknown' }); } catch (_) {}
+        } catch (err) {
+          console.error('[informes]', err);
+          errorMsg.textContent = err.message || 'Ha ocurrido un error inesperado.';
+          showState('error');
+          try { window.track && window.track('Report analyze error', { message: (err.message || '').slice(0, 80) }); } catch (_) {}
+        }
+      }
+
+      // ─── Botones ───
+      analyzeBtn.addEventListener('click', runAnalysis);
+
+      function resetAll() {
+        pdfFile = null; docxFile = null;
+        filePdf.value = ''; fileDocx.value = '';
+        document.getElementById('dz-pdf-label').textContent = 'Arrastra tu PDF aquí o haz clic para seleccionar';
+        document.getElementById('dz-docx-label').textContent = 'Arrastra tu Word (.docx) aquí o haz clic para seleccionar';
+        dzPdf.classList.remove('has-file');
+        dzDocx.classList.remove('has-file');
+        pasteText.value = '';
+        updateAnalyzeState();
+        showState('upload');
+      }
+
+      errorRetry.addEventListener('click', resetAll);
+      rNew.addEventListener('click', resetAll);
+      nmRetry.addEventListener('click', resetAll);
+
+      // Init
+      updateAnalyzeState();
+    })();
+  </script>
+
+</Layout>
