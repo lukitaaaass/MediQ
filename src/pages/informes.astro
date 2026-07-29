@@ -261,6 +261,55 @@ import Layout from '../layouts/Layout.astro';
       width: 6px; height: 6px; border-radius: 50%;
       background: currentColor;
     }
+
+    /* ─── Semáforo de gravedad ─── */
+    .severity-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 14.5px;
+      line-height: 1.4;
+    }
+    .severity-bar .sev-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 15%, transparent);
+    }
+    .severity-bar .sev-label {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .severity-bar .sev-text {
+      flex: 1;
+      color: var(--ink);
+    }
+    .severity-bar .sev-note {
+      font-size: 12px;
+      color: var(--ink-mute);
+      font-style: italic;
+      display: block;
+      margin-top: 2px;
+    }
+    .severity-bar.sev-green  { background: color-mix(in oklab, var(--ok) 10%, var(--surface));      border-color: color-mix(in oklab, var(--ok) 30%, transparent);      color: oklch(35% 0.1 155); }
+    .severity-bar.sev-yellow { background: color-mix(in oklab, var(--warn) 12%, var(--surface));    border-color: color-mix(in oklab, var(--warn) 35%, transparent);    color: oklch(38% 0.16 40); }
+    .severity-bar.sev-red    { background: color-mix(in oklab, var(--danger) 12%, var(--surface));  border-color: color-mix(in oklab, var(--danger) 40%, transparent);  color: oklch(38% 0.16 25); }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .severity-bar.sev-red .sev-dot {
+        animation: sev-pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes sev-pulse {
+        0%, 100% { box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 15%, transparent); }
+        50%      { box-shadow: 0 0 0 8px color-mix(in oklab, currentColor 5%, transparent); }
+      }
+    }
     .result-summary {
       font-size: 15.5px;
       line-height: 1.6;
@@ -517,6 +566,14 @@ import Layout from '../layouts/Layout.astro';
     <section id="result-section" hidden>
       <div class="result-header">
         <span class="result-type-pill"><span class="dot" aria-hidden="true"></span><span id="r-type">Informe</span></span>
+        <div id="r-severity" class="severity-bar" hidden>
+          <span class="sev-dot" aria-hidden="true"></span>
+          <div class="sev-text">
+            <span class="sev-label" id="r-sev-label"></span>
+            <span id="r-sev-message"></span>
+            <span class="sev-note">Orientativo. Confirma siempre con tu médico.</span>
+          </div>
+        </div>
         <p class="result-summary" id="r-summary"></p>
       </div>
 
@@ -750,6 +807,12 @@ import Layout from '../layouts/Layout.astro';
         )).join('');
       }
 
+      const SEV_META = {
+        green:  { cls: 'sev-green',  label: 'Estable' },
+        yellow: { cls: 'sev-yellow', label: 'Atención' },
+        red:    { cls: 'sev-red',    label: 'Requiere atención pronta' },
+      };
+
       function renderResult(data) {
         if (data.report_type === 'no_medical') {
           showState('no-medical');
@@ -757,6 +820,19 @@ import Layout from '../layouts/Layout.astro';
         }
         document.getElementById('r-type').textContent = data.report_type || 'Informe';
         document.getElementById('r-summary').textContent = data.summary || 'Sin resumen disponible.';
+
+        // Semáforo de gravedad (solo si el modelo devuelve green/yellow/red)
+        const sevEl = document.getElementById('r-severity');
+        const sevMeta = SEV_META[data.severity];
+        if (sevMeta && data.severity_message) {
+          sevEl.classList.remove('sev-green', 'sev-yellow', 'sev-red');
+          sevEl.classList.add(sevMeta.cls);
+          document.getElementById('r-sev-label').textContent = sevMeta.label + ' · ';
+          document.getElementById('r-sev-message').textContent = data.severity_message;
+          sevEl.hidden = false;
+        } else {
+          sevEl.hidden = true;
+        }
 
         const grid = document.getElementById('result-grid');
         grid.innerHTML = '';

@@ -44,6 +44,8 @@ Devuelves EXCLUSIVAMENTE un objeto JSON valido con este esquema exacto:
 
 {
   "report_type": string,        // p.ej. "alta hospitalaria", "resonancia magnetica", "TAC", "analitica de sangre", "informe de urgencias", "anatomia patologica", "otro" o "no_medical"
+  "severity": string,           // "green" | "yellow" | "red" | "unknown". Ver reglas abajo.
+  "severity_message": string,   // 1 frase corta (max 90 chars) explicando el nivel. Ej: "Hallazgos rutinarios sin urgencia aparente"
   "summary": string,            // resumen general del informe en 6-10 lineas, lenguaje sencillo
   "terms": [                    // 3 a 10 terminos medicos que aparecen y su explicacion
     { "term": string, "explanation": string }
@@ -55,7 +57,19 @@ Devuelves EXCLUSIVAMENTE un objeto JSON valido con este esquema exacto:
   "red_flags": [string]         // 3-6 signos de alarma que obligan a acudir a Urgencias. Cada uno debe describir un sintoma concreto y observable por el paciente
 }
 
-Si report_type == "no_medical", devuelve summary vacio "", arrays vacios, y meaning con un unico texto explicando que no parece un informe medico.
+REGLAS DEL CAMPO severity (orientativo, nunca diagnostico):
+- "green": el informe describe hallazgos rutinarios, normales o esperados. Sin urgencia clinica aparente. Ej: analitica dentro de valores normales, RM sin hallazgos significativos, alta hospitalaria estable.
+- "yellow": hay hallazgos que requieren seguimiento medico en los proximos dias o semanas, pero NO son urgentes. Ej: valores alterados que requieren revision, hallazgos que exigen prueba complementaria, cambios respecto a un informe previo.
+- "red": hay hallazgos que sugieren gravedad clinica y requieren atencion medica pronta (dias como maximo) o urgente (horas). Ej: shock, insuficiencia organica, sospecha de neoplasia agresiva, hemorragia activa.
+- "unknown": el informe no permite estimar gravedad (ej. solo mide un parametro aislado sin contexto, o texto muy corto).
+
+IMPORTANTE sobre severity:
+- Es orientativo para el paciente, NO un diagnostico. Nunca digas "usted esta grave"; usa formulaciones como "el informe describe una situacion delicada" o "hay hallazgos que requieren atencion".
+- Green no significa "esta sano"; significa "los hallazgos de este informe no muestran urgencia".
+- Red no significa "va a morir"; significa "hay que consultar con un medico cuanto antes".
+- Si dudas entre dos niveles, elige el mas alto (mas seguro).
+
+Si report_type == "no_medical", devuelve severity = "unknown", severity_message = "", summary vacio "", arrays vacios, y meaning con un unico texto explicando que no parece un informe medico.
 
 NO incluyas markdown, NO incluyas comentarios en el JSON, NO envuelvas en \`\`\`. Solo el objeto JSON puro.`;
 
@@ -209,16 +223,25 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'El modelo devolvió un formato inesperado. Reintenta.' });
   }
 
+  // Normalizar severity para que sea siempre un valor conocido, y truncar el message.
+  const VALID_SEV = new Set(['green', 'yellow', 'red', 'unknown']);
+  const severity = VALID_SEV.has(parsed.severity) ? parsed.severity : 'unknown';
+  const severityMessage = typeof parsed.severity_message === 'string'
+    ? parsed.severity_message.slice(0, 120)
+    : '';
+
   // Normalizar arrays por si falta alguno.
   const result = {
-    report_type: parsed.report_type,
-    summary:     typeof parsed.summary === 'string' ? parsed.summary : '',
-    terms:       Array.isArray(parsed.terms) ? parsed.terms.slice(0, 12) : [],
-    findings:    Array.isArray(parsed.findings) ? parsed.findings.slice(0, 12) : [],
-    meaning:     typeof parsed.meaning === 'string' ? parsed.meaning : '',
-    questions:   Array.isArray(parsed.questions) ? parsed.questions.slice(0, 12) : [],
-    next_steps:  Array.isArray(parsed.next_steps) ? parsed.next_steps.slice(0, 10) : [],
-    red_flags:   Array.isArray(parsed.red_flags) ? parsed.red_flags.slice(0, 10) : [],
+    report_type:      parsed.report_type,
+    severity,
+    severity_message: severityMessage,
+    summary:          typeof parsed.summary === 'string' ? parsed.summary : '',
+    terms:            Array.isArray(parsed.terms) ? parsed.terms.slice(0, 12) : [],
+    findings:         Array.isArray(parsed.findings) ? parsed.findings.slice(0, 12) : [],
+    meaning:          typeof parsed.meaning === 'string' ? parsed.meaning : '',
+    questions:        Array.isArray(parsed.questions) ? parsed.questions.slice(0, 12) : [],
+    next_steps:       Array.isArray(parsed.next_steps) ? parsed.next_steps.slice(0, 10) : [],
+    red_flags:        Array.isArray(parsed.red_flags) ? parsed.red_flags.slice(0, 10) : [],
   };
 
   return res.status(200).json(result);
