@@ -195,8 +195,8 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         {/* Enlaces publicos — siempre visibles */}
         <a href="/"          class:list={[{ active: navActive === '/'          }]}>Inicio</a>
         <a href="/demo"      class="nav-only-out" class:list={[{ active: navActive === '/demo' }]}>Demo</a>
-        <a href="/informes"  class:list={[{ active: navActive === '/informes'  }]}>Analizar informe</a>
-        <a href="/pricing"   class="nav-only-out" class:list={[{ active: navActive === '/pricing' }]}>Precios</a>
+        <a href="/informes"  class:list={[{ active: navActive === '/informes'  }]}>Informes</a>
+        <a href="/pricing"   class:list={[{ active: navActive === '/pricing'   }]}>Precios</a>
 
         {/* Enlaces de la app — solo con sesion iniciada */}
         <a href="/chat"      class="nav-only-in"  class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
@@ -271,8 +271,8 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <nav>
       <a href="/">Inicio</a>
       <a href="/demo" class="nav-only-out">Demo</a>
-      <a href="/informes">Analizar informe</a>
-      <a href="/pricing" class="nav-only-out">Precios</a>
+      <a href="/informes">Informes</a>
+      <a href="/pricing">Precios</a>
       <a href="/chat" class="nav-only-in">Chat</a>
       <a href="/train" class="nav-only-in">Entrenar IA</a>
       <a href="/triadas" class="nav-only-in">Tríadas</a>
