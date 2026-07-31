@@ -585,16 +585,6 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       </header>
       <div class="body">
         <div class="row-field">
-          <label for="set-language">Idioma de la interfaz</label>
-          <select id="set-language">
-            <option value="es">Español</option>
-            <option value="en">English</option>
-            <option value="pt">Português</option>
-            <option value="fr">Français</option>
-            <option value="de">Deutsch</option>
-          </select>
-        </div>
-        <div class="row-field">
           <label for="set-default-specialty">Especialidad por defecto</label>
           <select id="set-default-specialty">
             <option>General</option>
@@ -843,23 +833,43 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         ? `\nRESUMEN DE INTERCAMBIOS ANTERIORES (contexto comprimido):\n${chat.historySummary}\n`
         : '';
 
-      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
+      // ── Preferencias que modifican el prompt en tiempo real ──
+      // Se leen del objeto `settings` (localStorage mediq.settings.v1).
+      // Ver modal Configuración en el header del archivo.
+      const wantCite       = settings.cite       !== false;  // default true
+      const wantDisclaimer = settings.disclaimer !== false;  // default true
+      const wantConcise    = settings.concise    === true;   // default false
 
-INSTRUCCIONES GENERALES:
-- Responde SIEMPRE en español, en lenguaje natural y profesional médico.
-- Usa lenguaje claro, estructurado con encabezados (##) y listas cuando ayude a la legibilidad.
+      // Bloques condicionales del prompt.
+      const structureBlock = wantConcise
+        ? '- Prioriza BREVEDAD: 3-5 líneas por respuesta cuando el caso lo permita. NO uses estructura con encabezados ni listas largas salvo que el usuario pida detalle. Da la información esencial en un párrafo directo.'
+        : `- Usa lenguaje claro, estructurado con encabezados (##) y listas cuando ayude a la legibilidad.
 - Cuando se trate de un caso clínico, organiza tu respuesta así:
   ## Resumen del caso
   ## Diagnóstico diferencial (ordenado por probabilidad)
   ## Acciones prioritarias
-  ## Banderas rojas a vigilar
-- Cita evidencia (guías ESC, AHA, NICE, NEJM, UpToDate) cuando sea relevante. Indica el grado/clase de recomendación si la conoces.
+  ## Banderas rojas a vigilar`;
+
+      const citeBlock = wantCite
+        ? '- Cita evidencia (guías ESC, AHA, NICE, NEJM, UpToDate) cuando sea relevante. Indica el grado/clase de recomendación si la conoces.'
+        : '- No cites guías ni referencias externas salvo que el usuario pregunte específicamente por ellas.';
+
+      const disclaimerBlock = wantDisclaimer
+        ? '- AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"'
+        : '- NO añadas nota de disclaimer al final. El usuario ya sabe que esto es una herramienta de apoyo.';
+
+      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
+
+INSTRUCCIONES GENERALES:
+- Responde SIEMPRE en español, en lenguaje natural y profesional médico.
+${structureBlock}
+${citeBlock}
 - Si la consulta es de farmacología, incluye dosis estándar y ajuste por función renal/hepática y embarazo cuando aplique.
 - Si la pregunta es educativa (modo estudiante), explica paso a paso con razonamiento fisiopatológico.
-- AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"
+${disclaimerBlock}
 - Si te preguntan algo no clínico, redirige amablemente al uso clínico.
 - Cuando el usuario adjunte documentos PDF (verás bloques delimitados por "===== DOCUMENTO ADJUNTO ====="), léelos cuidadosamente, identifica si son historias clínicas, analíticas, informes, papers, guías o protocolos, y razona sobre su contenido. Cita textualmente fragmentos relevantes entre comillas cuando aporten valor. Indica si falta información para una conclusión sólida.
-- Sé conciso pero completo. No inventes referencias. Si no sabes algo, dilo.
+- No inventes referencias. Si no sabes algo, dilo.
 
 CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
 - El último mensaje del usuario debe interpretarse SIEMPRE en el contexto del tema actual de la conversación, no como una pregunta aislada.
@@ -1474,7 +1484,6 @@ ${msgsHtml}
     });
 
     function hydrateSettingsModal() {
-      document.getElementById('set-language').value = settings.language || 'es';
       document.getElementById('set-default-specialty').value = settings.defaultSpecialty || 'General';
       document.querySelectorAll('#modal-settings .switch').forEach(sw => {
         const k = sw.dataset.setting;
@@ -1489,7 +1498,6 @@ ${msgsHtml}
       });
     });
     document.getElementById('settings-save').addEventListener('click', () => {
-      settings.language = document.getElementById('set-language').value;
       settings.defaultSpecialty = document.getElementById('set-default-specialty').value;
       document.querySelectorAll('#modal-settings .switch').forEach(sw => {
         settings[sw.dataset.setting] = sw.classList.contains('on');
