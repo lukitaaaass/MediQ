@@ -177,7 +177,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     const STORAGE_KEY = 'mediq.corpus.v1';
     const CAT_LABELS = { guideline: 'Guía', paper: 'Artículo', case: 'Caso', reference: 'Referencia' };
 
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Reutiliza el cliente singleton de Layout.astro para evitar refresh-token
+    // races entre multiples clientes en ViewTransitions (que cierran la sesion).
+    const sb = window.__mediqSb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     let corpus = [];
     let activeCat = 'guideline';
     let currentUser = null;

@@ -314,7 +314,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <div class="acct-toast" id="acct-toast"></div>
 
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Reutiliza el cliente singleton de Layout.astro para evitar refresh-token
+    // races entre multiples clientes en ViewTransitions (que cierran la sesion).
+    const sb = window.__mediqSb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function toast(msg, dur = 3200) {
       const el = document.getElementById('acct-toast');

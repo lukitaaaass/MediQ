@@ -390,7 +390,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const btn = document.getElementById('btn-practica');
       if (!btn) return;
 
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // Reutiliza el cliente singleton de Layout.astro para evitar refresh-token
+      // races entre multiples clientes en ViewTransitions (que cierran la sesion).
+      const sb = window.__mediqSb || window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const PAYMENT_LINKS = {
         monthly: 'https://buy.stripe.com/test_7sY14pcbJ3Ik1eq4cM6wE00',
