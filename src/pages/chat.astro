@@ -415,24 +415,6 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div class="sb-search-info" id="sb-search-info" style="display:none;"></div>
       <div class="sb-section" id="sb-section">Conversaciones recientes</div>
       <div class="sb-list" id="sb-list"></div>
-      <div class="sb-foot">
-        <div class="who" id="who-trigger" style="cursor:pointer;">
-          <div class="ava-mini" id="ava-mini">M</div>
-          <span id="who-label">Invitado</span>
-        </div>
-        <script is:inline>
-          (function(){
-            var n = localStorage.getItem('mediq.userName');
-            if (n && localStorage.getItem('mediq.authHint') === 'in') {
-              var w = document.getElementById('who-label');
-              var a = document.getElementById('ava-mini');
-              if (w) w.textContent = n;
-              if (a) a.textContent = n[0].toUpperCase();
-            }
-          })();
-        </script>
-        <button id="logout-btn" hidden>Salir</button>
-      </div>
     </aside>
 
     <!-- ─── Chat ─── -->
@@ -745,9 +727,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     const accountLabel = document.getElementById('account-label');
     const loginLink   = document.getElementById('login-link');
     const avaNav      = document.getElementById('ava-nav');
-    const whoLabel    = document.getElementById('who-label');
-    const avaMini     = document.getElementById('ava-mini');
-    const logoutBtn   = document.getElementById('logout-btn');
+    // whoLabel, avaMini y logoutBtn del footer del sidebar se eliminaron —
+    // eran duplicado del chip account-btn (arriba dcha) que ya gestiona
+    // nombre + avatar + menú con "Salir".
 
     function displayName() {
       if (profile.name) return profile.name;
@@ -810,32 +792,18 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       if (!user) return;
       accountBtn.style.display = '';
       loginLink.style.display = 'none';
-      whoLabel.textContent = displayName();
-      avaMini.textContent = avaInitial();
       avaNav.textContent = avaInitial();
       accountLabel.textContent = displayName().split(' ')[0];
-      logoutBtn.hidden = false;
       updateWelcomeGreeting();
       loadChatsFromSupabase();
       setTimeout(maybeStartOnboarding, 900);
       setTimeout(initOnboardingBanner, 400);
       loadPendingPrompt();
-      logoutBtn.addEventListener('click', async () => {
-        await sb.auth.signOut();
-        location.href = '/login';
-      });
       accountBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         openUserMenu(accountBtn);
       });
-      const whoTrigger = document.getElementById('who-trigger');
-      if (whoTrigger) {
-        whoTrigger.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openUserMenu(whoTrigger, true);
-        });
-      }
     }
 
     sb.auth.getSession().then(({ data: { session } }) => {
