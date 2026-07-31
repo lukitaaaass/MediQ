@@ -796,8 +796,22 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       });
     }
 
+    /* Guard contra ViewTransitions: este <script is:inline> se re-ejecuta en cada
+       navegación de Astro, incluso al hacer click en el enlace de la propia página
+       "Chat". En esa re-ejecución se crea un cliente Supabase fresco que puede
+       devolver session=null durante unos ms hasta rehidratar de localStorage,
+       disparando un redirect espurio a /login que el usuario percibe como logout.
+
+       Solución: el redirect a /login solo debe correr en la PRIMERA carga real de
+       la página. En ejecuciones posteriores, si getSession devuelve null lo
+       ignoramos (el authState real ya lo verificó Layout.astro y su listener
+       onAuthStateChange nos avisará si de verdad la sesión expira). */
     sb.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { location.href = '/login'; return; }
+      if (!session) {
+        if (!window.__mediqChatSessionChecked) location.href = '/login';
+        return;
+      }
+      window.__mediqChatSessionChecked = true;
       initSessionUI(session.user);
     });
 
