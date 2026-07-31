@@ -350,14 +350,14 @@ import Layout from '../layouts/Layout.astro';
       cursor: pointer;
       padding: 14px 18px;
       display: grid;
-      grid-template-columns: auto 1fr auto auto;
+      grid-template-columns: auto 1fr auto auto auto;
       gap: 14px;
       align-items: center;
     }
     .param-card summary::-webkit-details-marker { display: none; }
     @media (max-width: 640px) {
-      .param-card summary { grid-template-columns: auto 1fr auto; gap: 10px; padding: 12px 14px; }
-      .param-card .p-range { grid-column: 2 / 4; text-align: right; }
+      .param-card summary { grid-template-columns: auto 1fr auto auto; gap: 10px; padding: 12px 14px; }
+      .param-card .p-range { grid-column: 2 / 5; text-align: right; }
     }
     .param-status-dot {
       width: 14px; height: 14px;
@@ -394,11 +394,11 @@ import Layout from '../layouts/Layout.astro';
       place-items: center;
       width: 20px;
       height: 20px;
-      transition: transform .2s ease;
-      grid-column: 4;
+      margin-left: 4px;
+      transition: transform .2s ease, color .15s ease;
     }
     .p-caret svg { display: block; }
-    @media (max-width: 640px) { .p-caret { display: none; } }
+    .param-card summary:hover .p-caret { color: var(--ink-soft); }
     .param-card[open] .p-caret { transform: rotate(180deg); }
 
     /* Colores de status — cada uno claramente distinto del anterior en hue y luminosidad.
