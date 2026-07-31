@@ -390,13 +390,16 @@ import Layout from '../layouts/Layout.astro';
     }
     .p-caret {
       color: var(--ink-mute);
-      font-family: var(--f-mono);
-      font-size: 14px;
-      transition: transform .2s;
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      transition: transform .2s ease;
       grid-column: 4;
     }
+    .p-caret svg { display: block; }
     @media (max-width: 640px) { .p-caret { display: none; } }
-    .param-card[open] .p-caret { transform: rotate(45deg); }
+    .param-card[open] .p-caret { transform: rotate(180deg); }
 
     /* Colores de status — cada uno claramente distinto del anterior en hue y luminosidad.
        Anillo blanco alrededor del punto para separar visualmente del fondo del card. */
@@ -846,7 +849,7 @@ import Layout from '../layouts/Layout.astro';
               '<span class="p-name">' + escapeHtml(p.name) + '</span>' +
               '<span class="p-value">' + escapeHtml(p.value) + (p.unit ? '<span class="unit">' + escapeHtml(p.unit) + '</span>' : '') + '</span>' +
               (p.normal_range ? '<span class="p-range">' + escapeHtml(formatRange(p.normal_range)) + '</span>' : '<span class="p-range"></span>') +
-              '<span class="p-caret" aria-hidden="true">+</span>' +
+              '<span class="p-caret" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' +
             '</summary>' +
             '<div class="p-body">' +
               (p.what_it_measures ? '<div class="p-body-section"><h4>Qué mide</h4><p>' + escapeHtml(p.what_it_measures) + '</p></div>' : '') +
