@@ -188,6 +188,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `El texto excede el máximo (${TEXT_MAX} caracteres). Reduce el contenido o sube solo el panel principal.` });
   }
 
+  // ─── Retrieval de KB ───
+  // Extraemos candidatos de nombres de parámetros del texto, y buscamos en analitica_kb
+  // los que tienen contenido curado. Los matches se inyectan en el prompt del LLM.
+  const kbEntries = await fetchKbEntries({
+    supabaseUrl: SUPABASE_URL,
+    serviceKey: SERVICE_KEY,
+    text: trimmed,
+  });
+
+  const kbContext = kbEntries.length > 0
+    ? '\n\nREFERENCIA AUTORITATIVA — usa esta informacion como fuente prioritaria cuando el parametro coincida. Combinala con el valor especifico del usuario para generar la respuesta. Si un parametro no aparece aqui, usa tu conocimiento general.\n\n' +
+      kbEntries.map(kb => (
+        '## ' + kb.parameter_name + '\n' +
+        '- Qué mide: ' + (kb.what_it_measures || '(sin datos)') + '\n' +
+        (kb.reference_ranges ? '- Rangos de referencia: ' + JSON.stringify(kb.reference_ranges) + '\n' : '') +
+        (kb.causes_high ? '- Causas frecuentes de valor alto: ' + kb.causes_high + '\n' : '') +
+        (kb.causes_low ? '- Causas frecuentes de valor bajo: ' + kb.causes_low + '\n' : '') +
+        (kb.when_to_worry ? '- Cuando suele requerir atencion medica: ' + kb.when_to_worry + '\n' : '')
+      )).join('\n')
+    : '';
+
   let groqRes;
   try {
     groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -200,7 +221,11 @@ export default async function handler(req, res) {
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: ANALITICA_SYSTEM_PROMPT },
-          { role: 'user', content: 'Interpreta esta analítica y devuelve el JSON estructurado que define tu system prompt:\n\n' + trimmed },
+          { role: 'user', content:
+              'Interpreta esta analítica y devuelve el JSON estructurado que define tu system prompt:\n\n' +
+              trimmed +
+              kbContext
+          },
         ],
         max_tokens: 4000,
         temperature: 0.2,
@@ -360,5 +385,82 @@ function deriveOverall(parameters) {
   if (has.orange > 0) return 'abnormal';
   if (has.yellow > 0) return 'attention';
   return 'normal';
+}
+
+/**
+ * Extrae candidatos de nombres de parámetros del texto de la analítica y busca
+ * los que existen en la KB. Devuelve las entradas encontradas (dedupe por id).
+ *
+ * Enfoque intencionalmente simple: normalizamos el texto, extraemos "tokens"
+ * (palabras + bigrams) y usamos ANY-in-array contra parameter_name y aliases.
+ * Es más barato y más predecible que un modelo de embeddings, y para el dominio
+ * (nombres de parámetros de laboratorio estándar en España) funciona igual de bien.
+ *
+ * Si la KB no existe o el fetch falla, devolvemos [] silenciosamente para que el
+ * endpoint siga funcionando con la respuesta del LLM sin contexto extra.
+ */
+async function fetchKbEntries({ supabaseUrl, serviceKey, text }) {
+  try {
+    const candidates = extractCandidateTokens(text);
+    if (candidates.length === 0) return [];
+
+    // PostgREST OR filter: parameter_name ILIKE cada candidato OR aliases contiene cada uno.
+    // Usamos rpc para un lookup más limpio en Postgres.
+    const url = `${supabaseUrl}/rest/v1/analitica_kb?select=parameter_name,what_it_measures,reference_ranges,causes_high,causes_low,when_to_worry&or=(` +
+      candidates.map(c => `parameter_name.ilike.${encodeURIComponent(c)},aliases.cs.{${encodeURIComponent(c.toLowerCase())}}`).join(',') +
+      `)&limit=15`;
+
+    const res = await fetch(url, {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Accept-Profile': 'public',
+      },
+    });
+
+    if (!res.ok) {
+      // No romper el flujo. Solo loguear (útil para saber si la tabla no existe todavía).
+      console.warn('[/api/analyze-analitica] KB lookup failed', res.status);
+      return [];
+    }
+
+    const rows = await res.json();
+    // Dedupe por parameter_name en caso de matches múltiples.
+    const seen = new Set();
+    return rows.filter(r => {
+      if (seen.has(r.parameter_name)) return false;
+      seen.add(r.parameter_name);
+      return true;
+    });
+  } catch (err) {
+    console.warn('[/api/analyze-analitica] KB lookup error:', err.message);
+    return [];
+  }
+}
+
+/**
+ * Extrae "candidatos" de nombres de parámetros del texto.
+ * Idea: cada línea suele ser "Nombre Valor Unidad". Nos quedamos con la parte
+ * inicial (antes del primer dígito) como potencial nombre de parámetro.
+ * Devolvemos hasta 20 candidatos únicos, en minúscula, para hacer lookup.
+ */
+function extractCandidateTokens(text) {
+  const lines = text.split(/\n+/).slice(0, 60);
+  const candidates = new Set();
+  for (const line of lines) {
+    // Nombre = todo antes del primer dígito o del primer signo <, >, (, :
+    const match = line.match(/^([A-Za-zÀ-ÿ\s\-]+?)(?=\d|[<>(:])/);
+    if (match) {
+      const name = match[1].trim().toLowerCase();
+      if (name.length >= 2 && name.length <= 60) candidates.add(name);
+    }
+    // Además, tokens sueltos (palabras) para pillar abreviaturas como "Hb", "HbA1c", "LDL"
+    const words = line.match(/\b[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ0-9]{0,20}\b/g) || [];
+    for (const w of words) {
+      const lw = w.toLowerCase();
+      if (lw.length >= 2 && lw.length <= 20 && !/^\d+$/.test(lw)) candidates.add(lw);
+    }
+  }
+  return Array.from(candidates).slice(0, 20);
 }
 
