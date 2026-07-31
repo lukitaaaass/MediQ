@@ -1,0 +1,213 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+
+const featured = posts[0];
+const rest = posts.slice(1);
+
+const specialtyLabel = {
+  'urgencias': 'Urgencias',
+  'medicina-interna': 'Medicina interna',
+  'cardiología': 'Cardiología',
+  'geriatría': 'Geriatría',
+  'farmacología': 'Farmacología',
+  'legal-y-privacidad': 'Legal y privacidad',
+  'general': 'General',
+};
+
+function fmtDate(d) {
+  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+}
+---
+
+<Layout
+  title="Blog médico — MediQ"
+  description="Análisis clínicos, guías rápidas para médicos y contenidos para pacientes. Artículos revisados por el equipo médico de MediQ."
+  navActive="/blog"
+>
+
+  <style is:global>
+    .blog-wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: clamp(40px, 6vw, 80px) var(--pad) 120px;
+    }
+
+    /* Hero */
+    .blog-hero { margin-bottom: clamp(48px, 6vw, 72px); max-width: 780px; }
+    .blog-hero h1 {
+      font-family: var(--f-display);
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 1.02;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin: 18px 0 20px;
+    }
+    .blog-hero h1 em { font-style: italic; color: var(--accent); }
+    .blog-hero .sub {
+      font-size: clamp(16px, 1.15vw, 18px);
+      color: var(--ink-soft);
+      line-height: 1.55;
+      max-width: 62ch;
+    }
+
+    /* Featured */
+    .featured {
+      border: 1px solid var(--rule-2);
+      border-radius: 18px;
+      padding: clamp(28px, 3.5vw, 44px);
+      background: var(--surface);
+      margin-bottom: clamp(40px, 5vw, 60px);
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      transition: border-color .15s, transform .15s;
+    }
+    .featured:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .featured .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    .featured .kicker::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .featured h2 {
+      font-family: var(--f-display);
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 400;
+      line-height: 1.15;
+      margin: 0 0 14px;
+      letter-spacing: -0.01em;
+    }
+    .featured p {
+      color: var(--ink-soft);
+      font-size: clamp(15px, 1.1vw, 17px);
+      line-height: 1.55;
+      margin: 0 0 20px;
+      max-width: 68ch;
+    }
+    .featured .meta {
+      display: flex;
+      gap: 16px;
+      font-family: var(--f-mono);
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Grid */
+    .post-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: var(--rule-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    @media (min-width: 720px) { .post-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1000px) { .post-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .post-card {
+      background: var(--bg);
+      padding: clamp(22px, 2.4vw, 28px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: inherit;
+      text-decoration: none;
+      min-height: 220px;
+      transition: background .15s;
+    }
+    .post-card:hover { background: var(--surface); }
+    .post-card .tag {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+    }
+    .post-card h3 {
+      font-family: var(--f-display);
+      font-size: 21px;
+      font-weight: 400;
+      line-height: 1.22;
+      margin: 0;
+      letter-spacing: -0.005em;
+    }
+    .post-card p {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      line-height: 1.5;
+      margin: 0;
+      flex: 1;
+    }
+    .post-card .foot {
+      font-family: var(--f-mono);
+      font-size: 10.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--ink-mute);
+      border: 1px dashed var(--rule-2);
+      border-radius: 14px;
+    }
+  </style>
+
+  <section class="blog-wrap">
+    <header class="blog-hero">
+      <span class="eyebrow"><span class="eyebrow-dot"></span> Blog médico</span>
+      <h1>Práctica clínica, <em>en formato leíble</em>.</h1>
+      <p class="sub">Guías rápidas para médicos y residentes, y contenidos claros para pacientes. Revisado por profesionales sanitarios.</p>
+    </header>
+
+    {featured && (
+      <a class="featured" href={`/blog/${featured.slug}/`}>
+        <span class="kicker">Destacado · {specialtyLabel[featured.data.specialty]}</span>
+        <h2>{featured.data.title}</h2>
+        <p>{featured.data.description}</p>
+        <div class="meta">
+          <span>{fmtDate(featured.data.publishDate)}</span>
+          {featured.data.readingMinutes && <span>{featured.data.readingMinutes} min de lectura</span>}
+          <span>{featured.data.author}</span>
+        </div>
+      </a>
+    )}
+
+    {rest.length > 0 ? (
+      <div class="post-grid">
+        {rest.map(p => (
+          <a class="post-card" href={`/blog/${p.slug}/`}>
+            <span class="tag">{specialtyLabel[p.data.specialty]}</span>
+            <h3>{p.data.title}</h3>
+            <p>{p.data.description}</p>
+            <span class="foot">{fmtDate(p.data.publishDate)}{p.data.readingMinutes ? ` · ${p.data.readingMinutes} min` : ''}</span>
+          </a>
+        ))}
+      </div>
+    ) : posts.length === 0 && (
+      <div class="empty">
+        Todavía no hay artículos publicados. Vuelve pronto.
+      </div>
+    )}
+  </section>
+</Layout>

@@ -1,0 +1,265 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map(post => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const specialtyLabel = {
+  'urgencias': 'Urgencias',
+  'medicina-interna': 'Medicina interna',
+  'cardiología': 'Cardiología',
+  'geriatría': 'Geriatría',
+  'farmacología': 'Farmacología',
+  'legal-y-privacidad': 'Legal y privacidad',
+  'general': 'General',
+};
+
+function fmtDate(d) {
+  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+}
+
+const isoPublish = post.data.publishDate.toISOString();
+const isoUpdated = (post.data.updatedDate || post.data.publishDate).toISOString();
+
+// JSON-LD Article schema for SEO
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.data.title,
+  description: post.data.description,
+  author: { '@type': 'Organization', name: post.data.author },
+  publisher: {
+    '@type': 'Organization',
+    name: 'MediQ',
+    logo: { '@type': 'ImageObject', url: 'https://mediq.app/favicon.svg' },
+  },
+  datePublished: isoPublish,
+  dateModified: isoUpdated,
+  mainEntityOfPage: `https://mediq.app/blog/${post.slug}/`,
+  articleSection: specialtyLabel[post.data.specialty],
+  keywords: post.data.tags.join(', '),
+};
+---
+
+<Layout
+  title={`${post.data.title} — MediQ`}
+  description={post.data.description}
+  navActive="/blog"
+  ogImage={post.data.ogImage}
+>
+  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
+
+  <style is:global>
+    .article-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: clamp(32px, 5vw, 64px) var(--pad) 100px;
+    }
+
+    .article-crumb {
+      font-family: var(--f-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-bottom: 22px;
+    }
+    .article-crumb a {
+      color: var(--ink-mute);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .article-crumb a:hover { color: var(--ink); border-color: var(--ink-mute); }
+
+    .article-header { margin-bottom: 36px; }
+    .article-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--f-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .article-kicker::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .article-header h1 {
+      font-family: var(--f-display);
+      font-size: clamp(32px, 4.2vw, 52px);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin: 0 0 20px;
+    }
+    .article-lead {
+      font-size: clamp(17px, 1.25vw, 20px);
+      color: var(--ink-soft);
+      line-height: 1.5;
+      margin: 0 0 24px;
+      font-family: var(--f-serif, 'Newsreader', serif);
+    }
+    .article-meta {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: var(--f-mono);
+      font-size: 11.5px;
+      color: var(--ink-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-top: 1px solid var(--rule-2);
+      border-bottom: 1px solid var(--rule-2);
+      padding: 14px 0;
+    }
+    .article-meta span:not(:last-child)::after {
+      content: '·'; margin-left: 14px; color: var(--ink-mute);
+    }
+
+    /* Prose */
+    .article-body {
+      font-family: var(--f-serif, 'Newsreader', serif);
+      font-size: 18.5px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+    .article-body > * + * { margin-top: 1.1em; }
+    .article-body h2 {
+      font-family: var(--f-display);
+      font-size: clamp(24px, 2.4vw, 32px);
+      font-weight: 400;
+      line-height: 1.2;
+      margin-top: 2.4em;
+      margin-bottom: 0.4em;
+      letter-spacing: -0.01em;
+    }
+    .article-body h3 {
+      font-family: var(--f-display);
+      font-size: 22px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-top: 1.8em;
+      margin-bottom: 0.3em;
+    }
+    .article-body p { margin: 0; }
+    .article-body a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+    .article-body ul, .article-body ol {
+      padding-left: 1.4em;
+    }
+    .article-body li { margin-bottom: 0.5em; }
+    .article-body strong { font-weight: 600; color: var(--ink); }
+    .article-body em { font-style: italic; }
+    .article-body blockquote {
+      margin: 1.6em 0;
+      padding: 4px 20px;
+      border-left: 3px solid var(--accent);
+      color: var(--ink-soft);
+      font-style: italic;
+    }
+    .article-body code {
+      font-family: var(--f-mono);
+      font-size: 0.9em;
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .article-body table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--f-sans, 'Inter', sans-serif);
+      font-size: 15px;
+      margin: 1.4em 0;
+    }
+    .article-body th, .article-body td {
+      border: 1px solid var(--rule-2);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .article-body th {
+      background: var(--surface);
+      font-weight: 600;
+    }
+    .article-body hr {
+      border: none;
+      border-top: 1px solid var(--rule-2);
+      margin: 2.4em 0;
+    }
+
+    /* Disclaimer & CTA blocks */
+    .article-cta {
+      margin-top: 48px;
+      padding: 28px;
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .article-cta h4 {
+      font-family: var(--f-display);
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0 0 8px;
+    }
+    .article-cta p {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.55;
+      margin: 0 0 16px;
+    }
+
+    .article-back {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule-2);
+    }
+    .article-back a {
+      font-family: var(--f-mono);
+      font-size: 12px;
+      color: var(--ink-mute);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .article-back a:hover { color: var(--accent); }
+  </style>
+
+  <article class="article-wrap">
+    <div class="article-crumb">
+      <a href="/blog/">← Blog</a>
+    </div>
+
+    <header class="article-header">
+      <span class="article-kicker">{specialtyLabel[post.data.specialty]}</span>
+      <h1>{post.data.title}</h1>
+      <p class="article-lead">{post.data.description}</p>
+      <div class="article-meta">
+        <span>{fmtDate(post.data.publishDate)}</span>
+        {post.data.readingMinutes && <span>{post.data.readingMinutes} min de lectura</span>}
+        <span>{post.data.author}</span>
+      </div>
+    </header>
+
+    <div class="article-body">
+      <Content />
+    </div>
+
+    <div class="article-back">
+      <a href="/blog/">← Volver al blog</a>
+    </div>
+  </article>
+</Layout>

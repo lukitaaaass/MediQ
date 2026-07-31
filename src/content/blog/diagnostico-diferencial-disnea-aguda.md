@@ -1,0 +1,114 @@
+---
+title: "Diagnóstico diferencial de disnea aguda: enfoque práctico en urgencias"
+description: "Sistemática rápida para abordar al paciente que llega a Urgencias con disnea aguda. Prioridades diagnósticas, red flags y algoritmo de decisión."
+specialty: "urgencias"
+tags: ["disnea", "urgencias", "diagnóstico diferencial", "insuficiencia cardíaca", "TEP", "EPOC"]
+publishDate: 2026-07-10
+readingMinutes: 10
+---
+
+La disnea aguda es una de las cinco causas más frecuentes de consulta en Urgencias. También es uno de los síntomas donde el retraso diagnóstico tiene peor pronóstico: un TEP no reconocido en las primeras horas duplica la mortalidad. Este artículo repasa un enfoque sistemático, orientado a la práctica real, para el paciente que entra por la puerta con "me falta el aire".
+
+## Los primeros 60 segundos: ¿está grave?
+
+Antes de pensar en causas, hay que responder a "¿es una emergencia?". Se hace con la evaluación ABCDE y estos parámetros:
+
+- **Frecuencia respiratoria**: >30 rpm es signo de gravedad
+- **Saturación de oxígeno**: <90% con aire ambiente exige oxigenoterapia inmediata
+- **Nivel de consciencia**: obnubilación → intubación en la cabeza
+- **Signos de shock**: piel fría, TA baja, taquicardia
+
+Cualquiera de esos signos activa **estabilización antes que estudio**. Oxígeno, monitorización continua, dos vías periféricas y aviso a UCI si procede.
+
+## Sistemática: las 6 causas que cubren el 90% de las disneas agudas
+
+Aunque el diferencial es amplio, en la práctica seis diagnósticos cubren la enorme mayoría:
+
+1. **Insuficiencia cardíaca aguda** (edema agudo de pulmón)
+2. **Reagudización de EPOC**
+3. **Crisis asmática**
+4. **Tromboembolismo pulmonar (TEP)**
+5. **Neumonía**
+6. **Neumotórax**
+
+Todo lo demás (derrame pleural masivo, taponamiento cardíaco, síndrome coronario agudo con equivalente anginoso, causas no cardiopulmonares como acidosis metabólica) representa el 10% restante. Un diferencial ampliado siempre es prudente, pero **empezar por estos seis rinde más**.
+
+## Historia clínica dirigida: 6 preguntas que discriminan
+
+En 3 minutos:
+
+1. **Tiempo de instauración**: minutos (neumotórax, TEP, edema agudo) vs. horas-días (neumonía, ICC, EPOC)
+2. **Ortopnea y disnea paroxística nocturna**: sugieren fallo cardíaco izquierdo
+3. **Tos y expectoración**: purulenta → neumonía o EPOC infectada; rosada espumosa → edema agudo
+4. **Dolor torácico**: pleurítico (TEP, neumonía, neumotórax) vs. opresivo (SCA, disección aórtica)
+5. **Antecedente reciente de inmovilización, cirugía, viaje largo o neoplasia**: factor de riesgo trombótico
+6. **Sibilancias**: asma o EPOC (aunque el edema agudo puede simularlas — "asma cardíaca")
+
+## Exploración: hallazgos que orientan
+
+| Hallazgo | Sugiere |
+|----------|---------|
+| Crepitantes basales bilaterales | ICC / edema agudo |
+| Sibilancias difusas | Asma, EPOC, ocasionalmente ICC |
+| Roncus y ruidos gruesos | EPOC agudizado |
+| Hipoventilación unilateral con hipertimpanismo | Neumotórax |
+| Hipoventilación unilateral con matidez | Derrame pleural, neumonía |
+| Crepitantes localizados | Neumonía |
+| Ingurgitación yugular + hepatomegalia | Fallo derecho (cor pulmonale, TEP masivo) |
+| Signos de TVP en miembro inferior | TEP hasta que se demuestre lo contrario |
+
+## Pruebas complementarias iniciales: el paquete mínimo
+
+En prácticamente todos los pacientes:
+
+- **ECG de 12 derivaciones**: descartar SCA, sobrecarga derecha (patrón S1Q3T3 sugestivo de TEP), fibrilación auricular
+- **Radiografía de tórax**: infiltrados, cardiomegalia, derrame, neumotórax, líneas B de Kerley
+- **Gasometría arterial**: hipoxemia, hipercapnia, acidosis, gradiente A-a
+- **Analítica**: hemograma, ionograma, función renal, **troponina** (aunque no sospeches SCA — orienta pronóstico en TEP e ICC), **NT-proBNP** o BNP (excelente valor predictivo negativo para ICC), **dímero-D** si sospecha razonable de TEP
+- **PCR**: apoya sospecha infecciosa
+
+En casos seleccionados: eco cardíaca a pie de cama (POCUS), angio-TC si sospecha de TEP, ecografía pulmonar.
+
+## Los 4 patrones "trampa" que hay que reconocer
+
+### 1. Edema agudo de pulmón que parece EPOC
+
+Paciente añoso con sibilancias, disnea aguda y antecedente de tabaquismo. El reflejo es tratar como EPOC agudizado — pero el patrón de crepitantes basales, la ortopnea previa, el NT-proBNP elevado y la radiografía con cardiomegalia + líneas B deberían hacer replantear. **Un ensayo de furosemida y nitroglicerina puede ser diagnóstico y terapéutico**.
+
+### 2. TEP que parece ansiedad
+
+Mujer joven, sin antecedentes, con disnea aguda y taquicardia. Se descarta con "es una crisis de ansiedad". El factor de riesgo puede ser sutil: anticonceptivos hormonales, viaje reciente, trombofilia no diagnosticada. **Si la clínica no encaja con ansiedad, calcula Wells + dímero-D**.
+
+### 3. Neumonía en el paciente inmunosuprimido con radiografía "normal"
+
+Paciente en tratamiento oncológico o con VIH: la radiografía puede ser rigurosamente normal las primeras 24-48h. Si la sospecha es alta, **TAC de tórax de alta resolución** — no te fíes de la placa.
+
+### 4. Neumotórax en el joven alto y delgado
+
+Varón de 20-30 años, delgado, con dolor pleurítico brusco y disnea. La exploración es sutil: hipoventilación unilateral, a veces solo detectable comparando ambos hemitórax con cuidado. **Radiografía en inspiración forzada** — no siempre se ve al vistazo.
+
+## Algoritmo de decisión rápido
+
+1. **Estabilización primero**: oxígeno para saturación >92% (>88% en EPOC conocido), monitorización.
+2. **Descartar emergencias inmediatas**: neumotórax a tensión (drenaje sin esperar radiografía si compromiso hemodinámico), edema agudo (nitroglicerina, furosemida, ventilación no invasiva).
+3. **Aplicar sistemática de las 6 causas**: historia + exploración + paquete diagnóstico mínimo.
+4. **Ampliar según resultado**: angio-TC si sospecha TEP no aclarada, eco cardíaca si patrón dudoso, punción pleural si derrame significativo.
+5. **Ingresar vs. alta**: cualquier disnea con inestabilidad, mala respuesta al tratamiento inicial, o comorbilidad grave, ingresa.
+
+## Consideraciones especiales según edad
+
+- **Joven (<40 años) sin antecedentes**: piensa primero en asma, neumotórax espontáneo, neumonía, TEP (si factor de riesgo).
+- **Adulto medio con antecedentes cardiovasculares**: ICC, SCA con equivalente anginoso, TEP.
+- **Anciano polimedicado**: causa mixta muy frecuente (EPOC + ICC + infección respiratoria simultáneas).
+
+En el anciano, además, **el NT-proBNP tiene menor especificidad** — puede estar elevado por edad, insuficiencia renal o fibrilación auricular sin fallo cardíaco agudo.
+
+---
+
+## Uso de MediQ en la práctica
+
+Para casos donde el diferencial no está claro o quieres una segunda opinión rápida durante la guardia, **[MediQ Chat](/chat)** te permite plantear el caso completo (con datos y adjuntos) y obtener un análisis estructurado con diferencial ordenado por probabilidad, acciones prioritarias y red flags. No sustituye a tu criterio clínico, pero puede ayudar a no dejarte una posibilidad en el tintero cuando hay presión.
+
+Para casos clínicos con datos parciales o cuando quieres practicar el razonamiento diagnóstico, **[Tríadas](/triadas)** ofrece patrones sindrómicos organizados por síntoma cardinal.
+
+> Este artículo tiene fines formativos y no sustituye guías locales, criterio clínico ni protocolos de tu centro. Las dosis y estrategias específicas deben ajustarse a cada paciente.
