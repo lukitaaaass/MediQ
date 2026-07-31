@@ -422,53 +422,91 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   -->
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
     (function () {
-      const root   = document.documentElement;
-      // nameEl solo existe en páginas con el slot nav-actions por defecto.
-      // En chat/login/account se usa un slot personalizado, pero igual
-      // necesitamos el sync entre pestañas → no hacemos early return.
-      const nameEl = document.getElementById('nav-auth-name');
+      const root = document.documentElement;
 
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // ═══════════════════════════════════════════════════════════════
+      // INIT DE AUTH — solo la PRIMERA vez que se carga el Layout.
+      //
+      // Este <script is:inline> se re-ejecuta en cada navegación de Astro
+      // ViewTransitions (incluidos clicks al link de la propia página).
+      // Sin este guard cada navegación:
+      //   1. Crea un nuevo cliente Supabase (memory leak + race conditions)
+      //   2. Vuelve a suscribirse al onAuthStateChange (listener duplicado)
+      //   3. Llama a getSession que puede devolver null durante ms mientras
+      //      el nuevo cliente rehidrata la sesión de localStorage.
+      //   4. Ese null spurio dispara applySession('out') que borra userName
+      //      y hace que el nav parezca "sin sesión" durante un instante.
+      // ═══════════════════════════════════════════════════════════════
+      if (!window.__mediqLayoutAuthInit) {
+        window.__mediqLayoutAuthInit = true;
 
-      function applySession(session) {
-        const hint = session ? 'in' : 'out';
-        root.setAttribute('data-auth', hint);
-        try { localStorage.setItem('mediq.authHint', hint); } catch (_) {}
-        if (session) {
-          const raw = session.user.user_metadata?.name || session.user.email.split('@')[0];
-          const first = raw.split(' ')[0];
-          try { localStorage.setItem('mediq.userName', first); } catch (_) {}
-          if (nameEl) nameEl.textContent = first;
-        } else {
-          try { localStorage.removeItem('mediq.userName'); } catch (_) {}
-          if (nameEl) nameEl.textContent = '';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.__mediqSb = sb;
+
+        function applySession(session) {
+          const hint = session ? 'in' : 'out';
+          root.setAttribute('data-auth', hint);
+          try { localStorage.setItem('mediq.authHint', hint); } catch (_) {}
+          // Buscar nameEl en tiempo real: el slot nav-actions puede haber
+          // sido swap-eado por ViewTransition y la referencia guardada seria
+          // a un DOM ya obsoleto.
+          const nameEl = document.getElementById('nav-auth-name');
+          if (session) {
+            const raw = session.user.user_metadata?.name || session.user.email.split('@')[0];
+            const first = raw.split(' ')[0];
+            try { localStorage.setItem('mediq.userName', first); } catch (_) {}
+            if (nameEl) nameEl.textContent = first;
+          } else {
+            try { localStorage.removeItem('mediq.userName'); } catch (_) {}
+            if (nameEl) nameEl.textContent = '';
+          }
+        }
+
+        sb.auth.getSession().then(({ data: { session } }) => {
+          // Si getSession devuelve null pero authHint decia "in", NO
+          // invalidamos el estado — el onAuthStateChange nos avisara si
+          // la sesion caduca de verdad. Esto evita el flash "sin sesion"
+          // durante la rehidratacion inicial del cliente.
+          if (session) {
+            applySession(session);
+          } else if (localStorage.getItem('mediq.authHint') !== 'in') {
+            applySession(null);
+          }
+        });
+
+        // Supabase dispara onAuthStateChange en TODAS las pestañas cuando
+        // la sesion cambia (via su listener interno de storage). Esta
+        // suscripcion vive el resto de la sesion del navegador.
+        sb.auth.onAuthStateChange((_event, session) => applySession(session));
+      }
+
+      // ─── Cerrar sesion ───
+      // Los botones "Salir" del nav estan en el DOM que ViewTransition
+      // swap-ea — hay que re-atacharse en cada carga. Guard por elemento
+      // (dataset.mediqLogoutBound) para evitar doble listener si el mismo
+      // DOM persiste entre navegaciones.
+      const sb = window.__mediqSb;
+      if (sb) {
+        async function doLogout(e) {
+          if (e) e.preventDefault();
+          try { await sb.auth.signOut(); } catch (_) {}
+          try {
+            localStorage.removeItem('mediq.authHint');
+            localStorage.removeItem('mediq.userName');
+          } catch (_) {}
+          location.href = '/';
+        }
+        const desktopLogout = document.getElementById('nav-logout');
+        const mobileLogout  = document.getElementById('nav-mobile-logout');
+        if (desktopLogout && !desktopLogout.dataset.mediqLogoutBound) {
+          desktopLogout.dataset.mediqLogoutBound = '1';
+          desktopLogout.addEventListener('click', doLogout);
+        }
+        if (mobileLogout && !mobileLogout.dataset.mediqLogoutBound) {
+          mobileLogout.dataset.mediqLogoutBound = '1';
+          mobileLogout.addEventListener('click', doLogout);
         }
       }
-
-      sb.auth.getSession().then(({ data: { session } }) => applySession(session));
-
-      // Supabase dispara onAuthStateChange en TODAS las pestañas cuando
-      // la sesión cambia, gracias a su listener interno de storage.
-      sb.auth.onAuthStateChange((_event, session) => applySession(session));
-
-      // ─── Cerrar sesión ───
-      // Botones "Salir" del nav (desktop + móvil). Solo existen en páginas
-      // que usan el slot nav-actions por defecto (index, pricing, demo,
-      // contact, train, triadas). En chat/account/login el slot se
-      // reemplaza y esos elementos no están en el DOM → null-guard.
-      async function doLogout(e) {
-        if (e) e.preventDefault();
-        try { await sb.auth.signOut(); } catch (_) {}
-        try {
-          localStorage.removeItem('mediq.authHint');
-          localStorage.removeItem('mediq.userName');
-        } catch (_) {}
-        location.href = '/';
-      }
-      const desktopLogout = document.getElementById('nav-logout');
-      const mobileLogout  = document.getElementById('nav-mobile-logout');
-      if (desktopLogout) desktopLogout.addEventListener('click', doLogout);
-      if (mobileLogout)  mobileLogout.addEventListener('click', doLogout);
     })();
   </script>
 
