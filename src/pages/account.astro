@@ -236,12 +236,16 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </div>
             <div class="acct-card-body">
               <div class="field">
+                <label>Contraseña actual</label>
+                <input type="password" id="inp-pw-current" placeholder="Tu contraseña actual" autocomplete="current-password" />
+              </div>
+              <div class="field">
                 <label>Nueva contraseña</label>
                 <input type="password" id="inp-pw" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
               </div>
               <div class="field">
-                <label>Confirmar contraseña</label>
-                <input type="password" id="inp-pw2" placeholder="Repite la contraseña" autocomplete="new-password" />
+                <label>Confirmar nueva contraseña</label>
+                <input type="password" id="inp-pw2" placeholder="Repite la nueva contraseña" autocomplete="new-password" />
               </div>
               <div style="display:flex; justify-content:flex-end; margin-top:6px;">
                 <button class="btn btn-primary btn-sm" id="save-pw">Cambiar contraseña</button>
@@ -391,17 +395,49 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         toast('Perfil actualizado ✓');
       });
 
-      /* Cambiar contraseña */
-      document.getElementById('save-pw').addEventListener('click', async () => {
+      /* Cambiar contraseña — requiere verificar la contraseña actual antes de
+         cambiarla, para evitar que alguien con acceso físico a una sesión abierta
+         pueda bloquear al usuario fuera de su propia cuenta.
+         La verificación se hace re-autenticando con signInWithPassword; si es OK,
+         se llama a updateUser({ password }). */
+      const btnPw = document.getElementById('save-pw');
+      btnPw.addEventListener('click', async () => {
+        const cur = document.getElementById('inp-pw-current').value;
         const pw  = document.getElementById('inp-pw').value;
         const pw2 = document.getElementById('inp-pw2').value;
-        if (pw.length < 8) { toast('La contraseña debe tener al menos 8 caracteres.'); return; }
-        if (pw !== pw2)    { toast('Las contraseñas no coinciden.'); return; }
-        const { error } = await sb.auth.updateUser({ password: pw });
-        if (error) { toast('Error: ' + error.message); return; }
-        document.getElementById('inp-pw').value  = '';
-        document.getElementById('inp-pw2').value = '';
-        toast('Contraseña actualizada ✓');
+
+        if (!cur)          { toast('Introduce tu contraseña actual.'); return; }
+        if (pw.length < 8) { toast('La nueva contraseña debe tener al menos 8 caracteres.'); return; }
+        if (pw === cur)    { toast('La nueva contraseña debe ser distinta a la actual.'); return; }
+        if (pw !== pw2)    { toast('Las contraseñas nuevas no coinciden.'); return; }
+
+        const email = user?.email;
+        if (!email) { toast('Sesión no válida. Vuelve a entrar.'); return; }
+
+        btnPw.disabled = true;
+        const oldLabel = btnPw.textContent;
+        btnPw.textContent = 'Verificando…';
+
+        try {
+          // 1) Verificar contraseña actual re-autenticando
+          const { error: signInErr } = await sb.auth.signInWithPassword({ email, password: cur });
+          if (signInErr) { toast('La contraseña actual es incorrecta.'); return; }
+
+          // 2) Cambiar contraseña
+          btnPw.textContent = 'Cambiando…';
+          const { error: updateErr } = await sb.auth.updateUser({ password: pw });
+          if (updateErr) { toast('Error: ' + updateErr.message); return; }
+
+          document.getElementById('inp-pw-current').value = '';
+          document.getElementById('inp-pw').value         = '';
+          document.getElementById('inp-pw2').value        = '';
+          toast('Contraseña actualizada ✓');
+        } catch (err) {
+          toast('Error inesperado: ' + (err.message || err));
+        } finally {
+          btnPw.disabled = false;
+          btnPw.textContent = oldLabel;
+        }
       });
 
       /* Gestionar facturación (Stripe portal) */
