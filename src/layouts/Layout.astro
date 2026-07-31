@@ -83,6 +83,19 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <!-- Supabase SDK: disponible como window.supabase en todos los scripts de página -->
   <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!--
+    Singleton de GoTrueClient. DEBE crearse aqui (head, sincrono, tras el SDK)
+    para que exista antes que cualquier <script is:inline> de body — si no,
+    las paginas crean su propio cliente en el fallback `|| createClient(...)`
+    y acaban dos GoTrueClient peleandose por el mismo refresh token single-use,
+    lo que invalida la sesion. El guard evita re-crearlo en ViewTransitions.
+  -->
+  <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
+    if (!window.__mediqSb) {
+      window.__mediqSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+  </script>
+
   <!-- pdf.js: solo en páginas que lo solicitan (chat, train) -->
   {includePdfJs && (
     <script is:inline type="module">
@@ -440,8 +453,9 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       if (!window.__mediqLayoutAuthInit) {
         window.__mediqLayoutAuthInit = true;
 
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        window.__mediqSb = sb;
+        // El cliente singleton se crea en <head> antes de que corran los
+        // scripts is:inline de body. Aqui solo lo consumimos.
+        const sb = window.__mediqSb;
 
         function applySession(session) {
           const hint = session ? 'in' : 'out';
