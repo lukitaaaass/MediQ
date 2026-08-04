@@ -1,0 +1,100 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import TarjetaPost from '../../components/TarjetaPost.astro';
+import { getCollection } from 'astro:content';
+
+const casos = (await getCollection('blog', ({ data }) => !data.draft && data.tipo === 'caso'))
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime());
+---
+
+<Layout
+  title="Casos clínicos comentados — MediQ"
+  description="Casos clínicos reales presentados paso a paso, con corte para razonamiento diagnóstico. Para médicos y estudiantes de medicina."
+  navActive="/blog"
+>
+  <style is:global>
+    .casos-wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: clamp(40px, 6vw, 80px) var(--pad) 120px;
+    }
+    .casos-hero { margin-bottom: clamp(48px, 6vw, 72px); max-width: 780px; }
+    .casos-hero h1 {
+      font-family: var(--f-display);
+      font-size: clamp(40px, 5vw, 64px);
+      line-height: 1.02;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin: 18px 0 20px;
+    }
+    .casos-hero h1 em { font-style: italic; color: var(--accent); }
+    .casos-hero .sub {
+      font-size: clamp(16px, 1.15vw, 18px);
+      color: var(--ink-soft);
+      line-height: 1.55;
+      max-width: 62ch;
+    }
+
+    .casos-subnav {
+      display: flex;
+      gap: 20px;
+      margin-bottom: clamp(32px, 4vw, 48px);
+      font-family: var(--f-mono);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .casos-subnav a {
+      color: var(--ink-mute);
+      text-decoration: none;
+      padding-bottom: 6px;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .casos-subnav a.active { color: var(--ink); border-color: var(--accent); }
+    .casos-subnav a:hover { color: var(--ink); }
+
+    .casos-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1px;
+      background: var(--rule-2);
+      border: 1px solid var(--rule-2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    @media (min-width: 720px) { .casos-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 1000px) { .casos-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .casos-empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--ink-mute);
+      border: 1px dashed var(--rule-2);
+      border-radius: 14px;
+    }
+  </style>
+
+  <section class="casos-wrap">
+    <header class="casos-hero">
+      <span class="eyebrow"><span class="eyebrow-dot"></span> Casos clínicos</span>
+      <h1>Razonamiento clínico <em>en formato caso</em>.</h1>
+      <p class="sub">Casos presentados paso a paso: historia, exploración, pruebas y una pregunta al lector antes de revelar el razonamiento diagnóstico. Discútelos con MediQ cuando quieras.</p>
+    </header>
+
+    <nav class="casos-subnav" aria-label="Navegación del blog">
+      <a href="/blog/">Todos</a>
+      <a href="/blog/casos/" class="active">Casos clínicos</a>
+    </nav>
+
+    {casos.length > 0 ? (
+      <div class="casos-grid">
+        {casos.map(p => <TarjetaPost post={p} variante="compacta" />)}
+      </div>
+    ) : (
+      <div class="casos-empty">
+        Todavía no hay casos clínicos publicados. Vuelve pronto.
+      </div>
+    )}
+  </section>
+</Layout>
