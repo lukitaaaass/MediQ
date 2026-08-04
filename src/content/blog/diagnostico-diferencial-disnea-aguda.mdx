@@ -7,6 +7,9 @@ publishDate: 2026-07-10
 readingMinutes: 10
 ---
 
+import AlgoritmoClinico from '../../components/AlgoritmoClinico.astro';
+import { disneaAguda } from '../../data/algoritmos/disnea-aguda';
+
 La disnea aguda es una de las cinco causas más frecuentes de consulta en Urgencias. También es uno de los síntomas donde el retraso diagnóstico tiene peor pronóstico: un TEP no reconocido en las primeras horas duplica la mortalidad. Este artículo repasa un enfoque sistemático, orientado a la práctica real, para el paciente que entra por la puerta con "me falta el aire".
 
 ## Los primeros 60 segundos: ¿está grave?
@@ -14,7 +17,7 @@ La disnea aguda es una de las cinco causas más frecuentes de consulta en Urgenc
 Antes de pensar en causas, hay que responder a "¿es una emergencia?". Se hace con la evaluación ABCDE y estos parámetros:
 
 - **Frecuencia respiratoria**: >30 rpm es signo de gravedad
-- **Saturación de oxígeno**: <90% con aire ambiente exige oxigenoterapia inmediata
+- **Saturación de oxígeno**: \<90% con aire ambiente exige oxigenoterapia inmediata
 - **Nivel de consciencia**: obnubilación → intubación en la cabeza
 - **Signos de shock**: piel fría, TA baja, taquicardia
 
@@ -95,9 +98,11 @@ Varón de 20-30 años, delgado, con dolor pleurítico brusco y disnea. La explor
 4. **Ampliar según resultado**: angio-TC si sospecha TEP no aclarada, eco cardíaca si patrón dudoso, punción pleural si derrame significativo.
 5. **Ingresar vs. alta**: cualquier disnea con inestabilidad, mala respuesta al tratamiento inicial, o comorbilidad grave, ingresa.
 
+<AlgoritmoClinico datos={disneaAguda} />
+
 ## Consideraciones especiales según edad
 
-- **Joven (<40 años) sin antecedentes**: piensa primero en asma, neumotórax espontáneo, neumonía, TEP (si factor de riesgo).
+- **Joven (\<40 años) sin antecedentes**: piensa primero en asma, neumotórax espontáneo, neumonía, TEP (si factor de riesgo).
 - **Adulto medio con antecedentes cardiovasculares**: ICC, SCA con equivalente anginoso, TEP.
 - **Anciano polimedicado**: causa mixta muy frecuente (EPOC + ICC + infección respiratoria simultáneas).
 

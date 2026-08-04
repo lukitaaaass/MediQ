@@ -14,6 +14,8 @@ draft: true
 
 import Pregunta from '../../components/Pregunta.astro';
 import CasoCTA from '../../components/CasoCTA.astro';
+import AlgoritmoClinico from '../../components/AlgoritmoClinico.astro';
+import { disneaAguda } from '../../data/algoritmos/disnea-aguda';
 
 Este es un caso placeholder para validar que la infraestructura funciona
 end-to-end en dev. **No debe publicarse**: mantén `draft: true` en el
@@ -30,6 +32,12 @@ nocturna. Refiere haber tenido que sentarse en la cama para poder respirar.
 - Frecuencia cardíaca: [DATO A VERIFICAR]
 - Saturación O₂: [DATO A VERIFICAR]
 - Auscultación: crepitantes bibasales
+
+## Pruebas complementarias — algoritmo interactivo
+
+Recorre el algoritmo de disnea aguda tomando como punto de partida los datos de este caso. Los CTAs de nodos terminales continúan la discusión en MediQ con el contexto del caso ya cargado.
+
+<AlgoritmoClinico datos={disneaAguda} slugCaso="caso-ejemplo-disnea-nocturna" />
 
 <Pregunta texto="¿Cuál es tu diagnóstico diferencial y qué prueba pedirías primero?">
 
