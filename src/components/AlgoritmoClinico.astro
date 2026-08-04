@@ -376,7 +376,7 @@ const entradas = Object.entries(datos.nodos);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     cursor: pointer;
-    min-height: 40px;
+    min-height: 44px; /* Touch target — apple HIG minimo */
     transition: color .15s, border-color .15s, background .15s;
   }
   .algoritmo-btn:hover:not(:disabled) {
@@ -489,6 +489,16 @@ const entradas = Object.entries(datos.nodos);
     font-size: 15px;
     line-height: 1.4;
     transition: color .15s, border-color .15s, background .15s;
+  }
+  /* Permite que textos largos hagan wrap en lugar de forzar scroll horizontal */
+  .algoritmo-opcion > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .algoritmo-nodo-pregunta,
+  .algoritmo-nodo-conclusion,
+  .algoritmo-nodo-ayuda {
+    overflow-wrap: anywhere;
   }
   .algoritmo-opcion:hover {
     border-color: var(--accent);
