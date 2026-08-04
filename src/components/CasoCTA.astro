@@ -1,0 +1,143 @@
+---
+/**
+ * CTA al chatbot con el caso precargado.
+ *
+ * Al pulsar:
+ *   1. Guarda el promptInicial en localStorage bajo 'mediq.pendingPrompt'.
+ *      El chat ya tiene loadPendingPrompt() que lo lee al iniciar sesion.
+ *   2. Dispara evento Plausible 'caso_cta_click' con {slug, nivel}.
+ *   3. Redirige a /chat?caso={slug}[&nivel={nivel}]. La ruta del chat lee
+ *      ese parametro para trackear 'caso_chat_iniciado' cuando el usuario
+ *      envie su primer mensaje.
+ *
+ * Uso en MDX:
+ *   <CasoCTA
+ *     slug="disnea-nocturna-72a"
+ *     nivel="fundamentos"
+ *     primeraPregunta="Discutir este caso con MediQ"
+ *     promptInicial="Caso clinico: varon de 72 anos con disnea nocturna..."
+ *   />
+ */
+interface Props {
+  slug: string;
+  nivel?: 'fundamentos' | 'avanzado';
+  primeraPregunta?: string;
+  promptInicial: string;
+}
+
+const {
+  slug,
+  nivel,
+  primeraPregunta = 'Discutir este caso con MediQ',
+  promptInicial,
+} = Astro.props;
+
+// Componemos la URL de destino en tiempo de build para que el <a href>
+// siga funcionando sin JS (fallback). El JS del onclick anade el prompt
+// a localStorage y el tracking.
+const queryParams = new URLSearchParams({ caso: slug });
+if (nivel) queryParams.set('nivel', nivel);
+const chatHref = `/chat?${queryParams.toString()}`;
+---
+
+<aside class="caso-cta">
+  <div class="caso-cta-texto">
+    <span class="caso-cta-etiqueta">Continúa en MediQ</span>
+    <p>Comenta este caso con nuestro chatbot médico: puedes pedir el diagnóstico diferencial, discutir el manejo o profundizar en cualquier hallazgo.</p>
+  </div>
+  <a
+    class="caso-cta-boton"
+    href={chatHref}
+    data-slug={slug}
+    data-nivel={nivel || ''}
+    data-prompt={promptInicial}
+  >
+    {primeraPregunta}
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</aside>
+
+<script>
+  // Instalamos listener una sola vez por pagina, delegado a todos los .caso-cta-boton.
+  // Guard para no duplicar en ViewTransitions.
+  if (!(window as any).__mediqCasoCtaBound) {
+    (window as any).__mediqCasoCtaBound = true;
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('.caso-cta-boton') as HTMLAnchorElement | null;
+      if (!btn) return;
+      const slug = btn.dataset.slug;
+      const nivel = btn.dataset.nivel || undefined;
+      const prompt = btn.dataset.prompt;
+      if (prompt) {
+        try { localStorage.setItem('mediq.pendingPrompt', prompt); } catch (_) {}
+      }
+      try {
+        (window as any).track && (window as any).track('caso_cta_click', { slug, nivel });
+      } catch (_) {}
+      // Dejamos que el navegador siga el href normal. El destino ya lleva
+      // ?caso=slug&nivel=..., que el chat leera al arrancar.
+    });
+  }
+</script>
+
+<style>
+  .caso-cta {
+    margin: 2.4em 0;
+    padding: clamp(20px, 2.6vw, 28px);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    background: var(--surface);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .caso-cta-texto {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+  .caso-cta-etiqueta {
+    display: block;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .caso-cta-texto p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .caso-cta-boton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14.5px;
+    letter-spacing: 0.01em;
+    transition: transform .1s, filter .15s;
+    flex-shrink: 0;
+  }
+  .caso-cta-boton:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .caso-cta-boton:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 480px) {
+    .caso-cta { flex-direction: column; align-items: stretch; }
+    .caso-cta-boton { justify-content: center; }
+  }
+</style>
