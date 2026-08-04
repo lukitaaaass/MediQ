@@ -1369,10 +1369,15 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
       } catch (_) {}
     }
 
-    /* Lee ?caso=slug[&nivel=xxx] de la URL. Guarda el slug en una variable
-       de modulo para que el submit del composer pueda disparar el evento
-       'caso_chat_iniciado' cuando el usuario envie su primer mensaje. Limpia
-       los query params de la URL para que no se re-disparen en un refresh. */
+    /* Lee ?caso=slug[&nivel=xxx][&rama=idNodo] de la URL. Guarda el contexto
+       en una variable global para que el submit del composer pueda disparar
+       el evento 'caso_chat_iniciado' cuando el usuario envie su primer mensaje.
+       Limpia los query params de la URL para que no se re-disparen en refresh.
+
+       `rama` es el ID del nodo terminal del algoritmo clinico si el usuario
+       llego al chat desde <AlgoritmoClinico>. Se incluye como prop en el
+       evento y queda disponible en window.__mediqCasoContext.rama por si
+       se quiere usar en el futuro para variar el system prompt. */
     function readCasoParams() {
       try {
         const params = new URLSearchParams(location.search);
@@ -1381,11 +1386,13 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
         window.__mediqCasoContext = {
           slug: caso,
           nivel: params.get('nivel') || null,
+          rama: params.get('rama') || null,
           tracked: false,
         };
-        // Limpia el query param manteniendo el resto de la URL
+        // Limpia los query params manteniendo el resto de la URL
         params.delete('caso');
         params.delete('nivel');
+        params.delete('rama');
         const qs = params.toString();
         const cleanUrl = location.pathname + (qs ? '?' + qs : '') + location.hash;
         history.replaceState({}, '', cleanUrl);
@@ -1702,7 +1709,11 @@ ${msgsHtml}
           const ctx = window.__mediqCasoContext;
           if (ctx && !ctx.tracked) {
             ctx.tracked = true;
-            window.track('caso_chat_iniciado', { slug: ctx.slug, nivel: ctx.nivel || undefined });
+            window.track('caso_chat_iniciado', {
+              slug: ctx.slug,
+              nivel: ctx.nivel || undefined,
+              rama: ctx.rama || undefined,
+            });
           }
         } catch (_) {}
       }
