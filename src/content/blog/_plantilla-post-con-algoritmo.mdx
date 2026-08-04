@@ -1,0 +1,120 @@
+---
+# ═══════════════════════════════════════════════════════════════════════════
+# PLANTILLA DE POST CON ALGORITMO CLINICO EMBEBIDO
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Este fichero es una PLANTILLA. NO se publica (nombre empieza por "_" y
+# ademas tiene draft: true al final del frontmatter).
+#
+# Para crear un post nuevo:
+#   1) Copia este fichero y renombralo a src/content/blog/mi-nuevo-post.mdx
+#      (el nombre del fichero es la URL: /blog/mi-nuevo-post)
+#   2) Rellena el frontmatter con los datos reales
+#   3) Sustituye el contenido de ejemplo por el del articulo/caso
+#   4) Si NO usas algoritmo, borra los dos "import" y la etiqueta
+#      <AlgoritmoClinico />
+#   5) Cambia draft: true a draft: false para publicar
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ─── OBLIGATORIOS ─────────────────────────────────────────────────────────
+title: "Titulo del post — aparece en la pestaña y en Google"
+description: "Meta description para Google. 140-160 caracteres ideal. Sin clickbait."
+specialty: "urgencias"    # una de: urgencias | medicina-interna | cardiología | geriatría | farmacología | legal-y-privacidad | general
+publishDate: 2026-08-15   # AAAA-MM-DD
+
+# ─── RECOMENDADOS ─────────────────────────────────────────────────────────
+tags: ["tag1", "tag2", "tag3"]
+readingMinutes: 8
+
+# ─── SOLO SI ES UN CASO CLINICO ──────────────────────────────────────────
+# tipo: "caso"                          # descomenta si es un caso
+# nivel: "fundamentos"                  # o "avanzado". Obligatorio en casos.
+# author: "Dra. Nombre Apellidos"       # nombre del revisor. Obligatorio en casos.
+# colegiado: "12345678"                 # numero de colegiado. Obligatorio en casos.
+
+# ─── PUBLICACION ─────────────────────────────────────────────────────────
+draft: true                              # cambia a false cuando este listo
+---
+
+{/*
+  IMPORTS DE COMPONENTES.
+  Van INMEDIATAMENTE despues del frontmatter, antes de cualquier texto.
+
+  Solo importa lo que uses. Si el post no lleva algoritmo, borra las dos
+  lineas de AlgoritmoClinico. Si no lleva pregunta u oculta razonamiento,
+  borra Pregunta. Etc.
+*/}
+import AlgoritmoClinico from '../../components/AlgoritmoClinico.astro';
+import { disneaAguda } from '../../data/algoritmos/disnea-aguda';
+import Pregunta from '../../components/Pregunta.astro';
+import CasoCTA from '../../components/CasoCTA.astro';
+
+Entradilla del post: 2-3 frases explicando por que esto importa en la practica
+real. Sin superlativos. Estilo formacion medica continuada.
+
+## Primer subtitulo
+
+Contenido en Markdown normal. Parrafos, **negritas**, *cursivas*, listas:
+
+- Item uno
+- Item dos
+- Item tres
+
+Ojo con caracteres especiales: para escribir `<40 años` o `>200 mg/dL`,
+en MDX hay que **escapar** el `<` con `\<`. Ejemplo real:
+
+- Frecuencia cardiaca \<60 lpm sugiere bradicardia sintomatica.
+- PA sistolica \>180 mmHg requiere manejo urgente.
+
+Sin escape, MDX intenta parsear `<40` como una etiqueta JSX invalida y el
+build falla. Los `>` no dan problemas.
+
+## Tabla si quieres
+
+| Parametro | Rango normal |
+|-----------|--------------|
+| Ejemplo   | 10-20        |
+
+## Como embeber un algoritmo interactivo
+
+Basta con soltar la etiqueta donde quieras que aparezca. Recibe los datos
+del algoritmo importados arriba:
+
+<AlgoritmoClinico datos={disneaAguda} />
+
+Si el post es un **caso clinico**, pasa tambien el `slugCaso` para que los
+CTAs de nodos terminales lleven al chat con `?caso=&rama=` y el chat sepa
+de que caso venimos:
+
+{/* <AlgoritmoClinico datos={disneaAguda} slugCaso="mi-nuevo-caso" /> */}
+
+## Como embeber una pregunta con razonamiento oculto (solo en casos)
+
+<Pregunta texto="¿Cuál es tu diagnóstico diferencial y qué prueba pedirías primero?">
+
+Aqui va el razonamiento revelado. **Markdown normal**. Se muestra al pulsar
+el boton. Google lo indexa igual (esta en el HTML servido).
+
+- Punto 1
+- Punto 2
+
+</Pregunta>
+
+## Como embeber el CTA al chat (opcional al final del caso)
+
+<CasoCTA
+  slug="mi-nuevo-caso"
+  nivel="fundamentos"
+  primeraPregunta="Discutir este caso con MediQ"
+  promptInicial="Vengo del caso clinico X. Quiero discutir el diagnostico diferencial y el manejo."
+/>
+
+## Cierre del post
+
+Ultimo parrafo con conclusion o CTA. En articulos teoricos, tiende a
+enlazar hacia herramientas relevantes de MediQ (/chat, /informes,
+/analiticas, /triadas).
+
+> Aviso legal para pacientes si el post les incluye. En posts para
+> profesionales no hace falta.
