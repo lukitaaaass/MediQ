@@ -9,6 +9,7 @@
     "postinstall": "node scripts/patch-vercel-adapter.js"
   },
   "dependencies": {
+    "@astrojs/mdx": "^3.1.9",
     "@astrojs/node": "^8.3.4",
     "@astrojs/vercel": "^8.2.11",
     "astro": "^4.16.19",
