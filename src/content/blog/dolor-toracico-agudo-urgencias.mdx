@@ -1,0 +1,128 @@
+---
+title: "Dolor torácico agudo en Urgencias: algoritmo interactivo (ESC 2023)"
+description: "Aproximación diagnóstica al dolor torácico agudo en el adulto siguiendo la guía ESC 2023 de síndromes coronarios agudos. Con algoritmo navegable y calculadora HEART."
+specialty: "cardiología"
+tags: ["dolor torácico", "SCA", "STEMI", "NSTEMI", "ESC 2023", "HEART score", "urgencias", "cardiología"]
+publishDate: 2026-08-04
+readingMinutes: 9
+draft: true
+---
+
+import AlgoritmoClinico from '../../components/AlgoritmoClinico.astro';
+import CalculadoraHEART from '../../components/CalculadoraHEART.astro';
+import { dolorToracico } from '../../data/algoritmos/dolor-toracico';
+
+El dolor torácico agudo es uno de los motivos de consulta más frecuentes en Urgencias y uno de los que peor toleran el retraso diagnóstico. La ESC 2023 unifica por primera vez el manejo del espectro completo de síndromes coronarios agudos (SCA) en una sola guía, con un marco común de evaluación inicial y bifurcaciones claras según ECG y biomarcadores. Este artículo condensa el algoritmo en formato navegable, integra el score HEART como ayuda de estratificación y deja marcados los puntos que exigen decisión local (umbrales de assay, dosis, tiempos).
+
+## Cuándo usar el algoritmo
+
+Aplicable al **adulto** que consulta en Urgencias con **dolor torácico agudo** en el que se plantea el diagnóstico diferencial de SCA. No sustituye la valoración clínica: si el cuadro es sugestivo de disección aórtica, TEP masivo, taponamiento cardíaco o síndrome de Boerhaave, la actuación específica prima sobre esta ruta.
+
+Fuera de perímetro:
+- Población pediátrica
+- Dolor torácico crónico o cardiopatía isquémica estable (guía diferente)
+- Reagudización en paciente con SCA ya diagnosticado y en tratamiento
+
+## Cómo funciona
+
+El algoritmo sigue el **marco A.C.S.** de la ESC 2023 (Assessment / Clinical context / Stability) y bifurca según cuatro decisiones:
+
+1. **ECG en menos de 10 minutos** desde el primer contacto médico
+2. **Elevación ST persistente** → vía STEMI (ICP primaria)
+3. **Sin elevación ST + criterios de muy alto riesgo** → ICA inmediata (\<2 h)
+4. **Sin elevación ST + estable** → algoritmo 0/1 h o 0/2 h de troponina de alta sensibilidad (hs-cTn) + GRACE
+
+Los umbrales concretos de hs-cTn dependen del assay del laboratorio (hs-cTnT vs hs-cTnI, distintos fabricantes) y **no se hardcodean** en este algoritmo — el nodo correspondiente pide al profesional consultar los cutoffs locales.
+
+<AlgoritmoClinico datos={dolorToracico} />
+
+## Explicación paso a paso
+
+### Marco A.C.S. inicial
+
+La ESC 2023 pide **ECG de 12 derivaciones en los primeros 10 minutos** desde el primer contacto médico. Antes de continuar con cualquier bifurcación, esto tiene que estar hecho. Paralelamente:
+
+- **C** (Clinical context): características del dolor, factores desencadenantes, cortejo vegetativo, antecedentes cardiovasculares
+- **S** (Stability): tensión, frecuencia, saturación, nivel de consciencia, signos de fallo hemodinámico
+
+### Bifurcación por ECG
+
+**Con elevación ST persistente** (o equivalente STEMI como bloqueo de rama izquierda de novo, patrón de De Winter, elevación en aVR con descensos difusos) → **vía STEMI**: activar código infarto, ICP primaria como estrategia de reperfusión preferente.
+
+**Sin elevación ST** → evaluar criterios de muy alto riesgo:
+
+- Inestabilidad hemodinámica o shock cardiogénico
+- Dolor torácico refractario a tratamiento
+- Insuficiencia cardíaca aguda atribuible a isquemia
+- Arritmias amenazantes para la vida
+- Complicaciones mecánicas del infarto
+- Cambios ECG dinámicos y recurrentes
+
+Si concurre al menos uno → **ICA inmediata (\<2 h)**. Si el paciente está estable → estratificación con **hs-cTn (algoritmo 0/1 h o 0/2 h)** y **GRACE**.
+
+### Algoritmo 0/1 h o 0/2 h de hs-cTn
+
+Con hs-cTn disponible, la ESC 2023 recomienda determinar el valor en el momento 0 y a la 1 h (o a las 2 h) y clasificar según valores absolutos y delta según **cutoffs específicos del assay**. Tres categorías:
+
+- **Rule-out**: baja probabilidad de NSTEMI. Reevaluar contexto clínico antes de dar de alta — el rule-out por hs-cTn no descarta angina inestable ni causas no coronarias graves
+- **Rule-in**: NSTEMI confirmado. Estratificar con GRACE (>140 → alto riesgo)
+- **Observe / zona indeterminada**: repetir determinación, considerar imagen no invasiva
+
+### Estrategia según riesgo
+
+- **Alto riesgo** (NSTEMI confirmado + GRACE >140 o equivalentes): **ICA precoz (\<24 h)**
+- **Riesgo intermedio-bajo**: estrategia selectiva / pruebas de detección de isquemia
+
+### Score HEART como ayuda a la estratificación
+
+El score HEART (Six et al. 2008) es una herramienta ampliamente utilizada en Urgencias para estratificar el riesgo de eventos cardíacos adversos mayores (MACE) en pacientes con dolor torácico. Combina cinco componentes: **H**istoria, **E**CG, **A**ge, **R**isk factors y **T**roponin. Cada uno con puntuación 0-2. Total 0-10.
+
+- **0-3**: bajo riesgo → candidato a alta precoz
+- **4-6**: moderado → observación y estudio adicional
+- **7-10**: alto → intervención urgente o emergente
+
+El HEART no sustituye al algoritmo ESC — es un complemento útil especialmente en la triage inicial, y muchos protocolos lo integran con hs-cTn seriada (HEART Pathway). El umbral concreto de decisión de alta con HEART bajo depende del protocolo local.
+
+<CalculadoraHEART />
+
+## Limitaciones
+
+- **Umbrales de hs-cTn no incluidos**: son específicos de cada assay del fabricante. Cada laboratorio debe publicar los cutoffs de la Tabla del algoritmo 0/1 h de la ESC 2023 aplicable a su medida. Este algoritmo asume que el profesional los conoce.
+- **Dosis y pautas antitrombóticas no incluidas**: la elección concreta de doble antiagregación (aspirina + P2Y12: prasugrel, ticagrelor o clopidogrel) y anticoagulación depende del contexto del paciente, disponibilidad y protocolo local. La guía ESC 2023 detalla el algoritmo de selección.
+- **No cubre causas no coronarias de dolor torácico agudo grave** (disección aórtica, TEP masivo, taponamiento, neumotórax a tensión, síndrome de Boerhaave). El profesional debe descartarlas en paralelo cuando la clínica lo sugiera.
+- **HEART se validó originalmente con troponina convencional**, no hs-cTn. Su uso combinado con hs-cTn requiere adaptación local (HEART Pathway y variantes).
+- **Población pediátrica excluida**.
+
+## Red flags — reconsulta o vía rápida
+
+- Dolor torácico opresivo persistente con cortejo vegetativo
+- Síncope asociado a dolor torácico
+- Signos de shock: hipotensión, piel fría, oliguria, alteración del nivel de consciencia
+- Dolor migratorio hacia espalda con asimetría de pulsos (disección aórtica)
+- Disnea súbita con dolor pleurítico y taquicardia inexplicada (TEP)
+- Roce pericárdico o pulso paradójico (taponamiento)
+
+## Referencias bibliográficas
+
+- **Byrne RA, Rossello X, Coughlan JJ, et al.** 2023 ESC Guidelines for the management of acute coronary syndromes. *European Heart Journal*. 2023;44(38):3720-3826. DOI: [10.1093/eurheartj/ehad191](https://doi.org/10.1093/eurheartj/ehad191). Acceso: [academic.oup.com](https://academic.oup.com/eurheartj/article/44/38/3720/7243210)
+- **Marx N, Rossello X, Coughlan JJ, et al.** "10 commandments" for the 2023 ESC Guidelines for the management of acute coronary syndromes. *European Heart Journal*. 2024;45(14):1193-1194. Acceso: [academic.oup.com](https://academic.oup.com/eurheartj/article/45/14/1193/7516285)
+- **Six AJ, Backus BE, Kelder JC.** Chest pain in the emergency room: value of the HEART score. *Netherlands Heart Journal*. 2008;16(6):191-6. PMID: [18665203](https://pubmed.ncbi.nlm.nih.gov/18665203/). Acceso: [PMC2442661](https://pmc.ncbi.nlm.nih.gov/articles/PMC2442661/)
+- **NICE Guideline NG185.** Acute coronary syndromes. Published: 18 November 2020. Acceso: [nice.org.uk/guidance/ng185](https://www.nice.org.uk/guidance/ng185)
+- **American College of Cardiology.** 2023 ESC Guidelines for Acute Coronary Syndromes: Key Points. Acceso: [acc.org](https://www.acc.org/latest-in-cardiology/ten-points-to-remember/2023/08/29/14/01/2023-esc-guidelines-acs-esc-2023)
+
+## Fuentes utilizadas
+
+Fuentes oficiales consultadas para la construcción de este algoritmo:
+
+- ESC (European Society of Cardiology) — [Landing oficial 2023 ACS Guidelines](https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/acute-coronary-syndromes/)
+- European Heart Journal — [Guía completa, DOI 10.1093/eurheartj/ehad191](https://academic.oup.com/eurheartj/article/44/38/3720/7243210)
+- European Heart Journal — [10 Commandments editorial 2024](https://academic.oup.com/eurheartj/article/45/14/1193/7516285)
+- ACC (American College of Cardiology) — [Ten Points to Remember, 2023 ESC ACS](https://www.acc.org/latest-in-cardiology/ten-points-to-remember/2023/08/29/14/01/2023-esc-guidelines-acs-esc-2023)
+- NICE — [NG185 Acute coronary syndromes (2020)](https://www.nice.org.uk/guidance/ng185)
+- HEART score, referencia primaria — [Six et al. 2008, PMC2442661](https://pmc.ncbi.nlm.nih.gov/articles/PMC2442661/)
+
+Fuentes NO consultadas (por decisión editorial): Wikipedia, blogs, foros, resúmenes sin referencias oficiales, contenido generado por IA sin trazabilidad.
+
+---
+
+> **Aviso a lectores clínicos**: este artículo es material formativo y no sustituye a las guías completas de la ESC ni al protocolo local de tu centro. Los umbrales de hs-cTn, las pautas antitrombóticas y los tiempos de reperfusión deben consultarse en la guía primaria y adaptarse al assay y protocolos disponibles. **Post en `draft: true` hasta revisión médica formal.**

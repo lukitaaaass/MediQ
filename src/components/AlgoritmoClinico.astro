@@ -46,6 +46,13 @@ const entradas = Object.entries(datos.nodos);
     <span class="algoritmo-etiqueta">Algoritmo interactivo</span>
     <h3 class="algoritmo-titulo">{datos.titulo}</h3>
     {datos.subtitulo && <p class="algoritmo-subtitulo">{datos.subtitulo}</p>}
+    <p class="algoritmo-fuente" data-revisado={datos.fuente.revisadoPor === 'Pendiente' ? 'pendiente' : 'firmado'}>
+      Fuente: <strong>{datos.fuente.sociedad} · {datos.fuente.guia} ({datos.fuente.version})</strong>
+      <span class="algoritmo-fuente-sep">·</span>
+      Revisado por: <strong>{datos.fuente.revisadoPor}</strong>
+      <span class="algoritmo-fuente-sep">·</span>
+      Última verificación: <strong>{datos.fuente.fechaRevision}</strong>
+    </p>
     <div class="algoritmo-controles" role="group" aria-label="Controles del algoritmo">
       <button type="button" class="algoritmo-btn" data-accion="atras" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -354,6 +361,22 @@ const entradas = Object.entries(datos.nodos);
     font-size: 14.5px;
     line-height: 1.5;
     margin: 0 0 14px;
+  }
+  .algoritmo-fuente {
+    margin: 12px 0 0;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+  }
+  .algoritmo-fuente strong { color: var(--ink-soft); font-weight: 500; }
+  .algoritmo-fuente-sep { margin: 0 4px; opacity: 0.5; }
+  .algoritmo-fuente[data-revisado="pendiente"] {
+    padding: 6px 10px;
+    border-left: 2px solid var(--warn);
+    background: color-mix(in oklch, var(--warn) 8%, transparent);
+    border-radius: 0 4px 4px 0;
   }
 
   .algoritmo-controles {

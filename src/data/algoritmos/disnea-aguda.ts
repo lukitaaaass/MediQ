@@ -62,6 +62,14 @@ export const disneaAguda: Algoritmo = {
   id: 'disnea-aguda',
   titulo: 'Algoritmo de disnea aguda [PENDIENTE REVISIÓN CLÍNICA]',
   subtitulo: '[PENDIENTE REVISIÓN CLÍNICA — describir población y escenario, p. ej. "Adulto que consulta en Urgencias por disnea de menos de 24 h"]',
+  fuente: {
+    sociedad: 'otro',
+    guia: 'PENDIENTE — este es un esqueleto de infraestructura, no un algoritmo revisado',
+    version: 'esqueleto',
+    urls: [],
+    fechaRevision: '2026-08-04',
+    revisadoPor: 'Pendiente',
+  },
   nodoInicial: 'A',
   nodos: {
     // ─── NODOS DE EJEMPLO ───────────────────────────────────────────────

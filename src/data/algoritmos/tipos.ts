@@ -48,6 +48,33 @@ export interface OpcionRama {
   siguiente: string;
 }
 
+/**
+ * Trazabilidad de la fuente clínica del algoritmo. Permite en el futuro
+ * localizar qué algoritmos dependen de una guía concreta cuando salga
+ * una revisión (p. ej. ESC 2027) y actualizarlos de forma dirigida.
+ */
+export interface Fuente {
+  /** Sociedad emisora de la guía */
+  sociedad:
+    | 'ESC' | 'AHA' | 'ACC' | 'AHA/ACC' | 'NICE' | 'SEMES' | 'ERC'
+    | 'GOLD' | 'GINA' | 'KDIGO' | 'IDSA' | 'CDC' | 'OMS'
+    | 'Ministerio de Sanidad España' | 'otro';
+  /** Título literal de la guía */
+  guia: string;
+  /** Versión o año de la guía */
+  version: string;
+  /** URLs oficiales consultadas para construir el algoritmo */
+  urls: string[];
+  /** Fecha en que este algoritmo fue verificado/actualizado por última vez (AAAA-MM-DD) */
+  fechaRevision: string;
+  /**
+   * Firma del revisor médico. Formato: "Dr/a Nombre Apellidos (col. NNNNN)".
+   * "Pendiente" hasta que un médico valide el contenido → no publicar hasta
+   * que este campo tenga una firma real.
+   */
+  revisadoPor: string;
+}
+
 export interface Algoritmo {
   /** Identificador único, kebab-case. Se usa en eventos de analítica. */
   id: string;
@@ -59,6 +86,8 @@ export interface Algoritmo {
   nodoInicial: string;
   /** Mapa de nodos por ID */
   nodos: Record<string, Nodo>;
+  /** Trazabilidad clínica. Ver interface Fuente. */
+  fuente: Fuente;
 }
 
 /**

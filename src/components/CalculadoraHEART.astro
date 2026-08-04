@@ -1,0 +1,393 @@
+---
+/**
+ * Calculadora del score HEART para estratificación de riesgo en dolor
+ * torácico en Urgencias.
+ *
+ * Referencia primaria:
+ *   Six AJ, Backus BE, Kelder JC. Chest pain in the emergency room:
+ *   value of the HEART score. Neth Heart J. 2008;16(6):191-6.
+ *   PMID 18665203 · PMC2442661
+ *
+ * Categorias de riesgo (según el estudio original y validaciones posteriores):
+ *   0-3 → bajo riesgo    (candidato a alta precoz)
+ *   4-6 → moderado       (observación + estudio adicional)
+ *   7-10 → alto riesgo   (intervención urgente/emergente)
+ *
+ * Interpretación clínica exacta y umbral de decisión de alta [PENDIENTE
+ * REVISIÓN CLÍNICA — depende del protocolo local y del uso combinado con
+ * hs-cTn seriada según ESC 2023]. Esta calculadora entrega el score bruto
+ * y la categoría de riesgo. La decisión clínica es del profesional.
+ *
+ * Sin dependencias externas. Zero JS runtime hasta el primer input.
+ */
+
+interface ItemHEART {
+  clave: 'H' | 'E' | 'A' | 'R' | 'T';
+  letra: string;
+  titulo: string;
+  ayuda: string;
+  opciones: { valor: 0 | 1 | 2; texto: string }[];
+}
+
+const items: ItemHEART[] = [
+  {
+    clave: 'H',
+    letra: 'H',
+    titulo: 'Historia (anamnesis)',
+    ayuda: 'Grado de sospecha basado en las características del dolor: localización, irradiación, factores desencadenantes y calmantes, cortejo vegetativo, duración típica de SCA.',
+    opciones: [
+      { valor: 0, texto: 'Poco sospechosa' },
+      { valor: 1, texto: 'Moderadamente sospechosa' },
+      { valor: 2, texto: 'Altamente sospechosa' },
+    ],
+  },
+  {
+    clave: 'E',
+    letra: 'E',
+    titulo: 'ECG',
+    ayuda: 'Interpretación del ECG de 12 derivaciones al ingreso.',
+    opciones: [
+      { valor: 0, texto: 'Normal' },
+      { valor: 1, texto: 'Alteraciones de repolarización no específicas' },
+      { valor: 2, texto: 'Depresión ST significativa' },
+    ],
+  },
+  {
+    clave: 'A',
+    letra: 'A',
+    titulo: 'Edad (Age)',
+    ayuda: 'Edad del paciente en años.',
+    opciones: [
+      { valor: 0, texto: '<45 años' },
+      { valor: 1, texto: '45-64 años' },
+      { valor: 2, texto: '≥65 años' },
+    ],
+  },
+  {
+    clave: 'R',
+    letra: 'R',
+    titulo: 'Factores de riesgo (Risk factors)',
+    ayuda: 'Factores considerados: HTA, dislipemia, DM, obesidad (IMC >30), tabaquismo activo o cesado ≤3 meses, historia familiar de enfermedad coronaria precoz, o enfermedad aterosclerótica establecida (IAM previo, ICP/CABG, ictus, arteriopatía periférica).',
+    opciones: [
+      { valor: 0, texto: 'Ningún factor de riesgo' },
+      { valor: 1, texto: '1-2 factores' },
+      { valor: 2, texto: '≥3 factores o enfermedad aterosclerótica establecida' },
+    ],
+  },
+  {
+    clave: 'T',
+    letra: 'T',
+    titulo: 'Troponina',
+    ayuda: 'Valor de troponina respecto al límite superior de la normalidad (LSN) del assay local. [PENDIENTE REVISIÓN CLÍNICA — la validación original usó troponina convencional; con hs-cTn los umbrales pueden requerir adaptación local].',
+    opciones: [
+      { valor: 0, texto: '≤ LSN' },
+      { valor: 1, texto: '>1x y ≤3x LSN' },
+      { valor: 2, texto: '>3x LSN' },
+    ],
+  },
+];
+---
+
+<div class="heart" role="group" aria-label="Calculadora del score HEART para dolor torácico">
+  <header class="heart-header">
+    <span class="heart-etiqueta">Calculadora clínica</span>
+    <h3 class="heart-titulo">Score HEART</h3>
+    <p class="heart-sub">
+      History · ECG · Age · Risk factors · Troponin — Six et al. 2008.
+    </p>
+  </header>
+
+  <ol class="heart-items">
+    {items.map((it, idx) => (
+      <li class="heart-item">
+        <fieldset>
+          <legend>
+            <span class="heart-letra" aria-hidden="true">{it.letra}</span>
+            <span class="heart-item-titulo">{idx + 1}. {it.titulo}</span>
+          </legend>
+          <p class="heart-item-ayuda">{it.ayuda}</p>
+          <div class="heart-opciones">
+            {it.opciones.map(op => (
+              <label class="heart-opcion">
+                <input
+                  type="radio"
+                  name={`heart-${it.clave}`}
+                  value={op.valor}
+                  data-heart-input
+                />
+                <span class="heart-opcion-txt">
+                  <span class="heart-opcion-puntos">{op.valor}</span>
+                  <span>{op.texto}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </li>
+    ))}
+  </ol>
+
+  <output class="heart-resultado" data-heart-resultado aria-live="polite">
+    <span class="heart-resultado-label">Puntuación total</span>
+    <span class="heart-resultado-num" data-heart-total>—</span>
+    <span class="heart-resultado-categoria" data-heart-categoria></span>
+  </output>
+
+  <p class="heart-disclaimer">
+    Resultado orientativo. La decisión clínica debe integrar la historia completa, el
+    ECG evolutivo, la evolución de la troponina y el juicio del profesional. Los
+    umbrales de alta y observación dependen del protocolo local.
+  </p>
+</div>
+
+<script>
+  function inicializarHEART(root: HTMLElement) {
+    if (root.dataset.heartInicializado === '1') return;
+    root.dataset.heartInicializado = '1';
+
+    const totalEl = root.querySelector<HTMLElement>('[data-heart-total]')!;
+    const catEl = root.querySelector<HTMLElement>('[data-heart-categoria]')!;
+    const resultadoEl = root.querySelector<HTMLElement>('[data-heart-resultado]')!;
+
+    root.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target.matches('[data-heart-input]')) return;
+      recalcular();
+    });
+
+    function recalcular() {
+      const inputs = root.querySelectorAll<HTMLInputElement>('[data-heart-input]:checked');
+      if (inputs.length === 0) return;
+      let total = 0;
+      inputs.forEach(i => { total += parseInt(i.value, 10); });
+      const completo = inputs.length === 5;
+      totalEl.textContent = completo ? String(total) : `${total} (${inputs.length}/5)`;
+      if (!completo) {
+        catEl.textContent = 'Completa las 5 categorías';
+        resultadoEl.dataset.categoria = 'incompleto';
+        return;
+      }
+      let categoria: 'bajo' | 'moderado' | 'alto';
+      let etiqueta: string;
+      if (total <= 3) {
+        categoria = 'bajo';
+        etiqueta = 'Riesgo bajo (0-3)';
+      } else if (total <= 6) {
+        categoria = 'moderado';
+        etiqueta = 'Riesgo moderado (4-6)';
+      } else {
+        categoria = 'alto';
+        etiqueta = 'Riesgo alto (7-10)';
+      }
+      catEl.textContent = etiqueta;
+      resultadoEl.dataset.categoria = categoria;
+      try {
+        (window as any).track && (window as any).track('calculadora_heart_completada', {
+          total,
+          categoria,
+        });
+      } catch (_) {}
+    }
+  }
+
+  function inicializarTodas() {
+    document.querySelectorAll<HTMLElement>('.heart').forEach(inicializarHEART);
+  }
+  inicializarTodas();
+  document.addEventListener('astro:page-load', inicializarTodas);
+</script>
+
+<style>
+  .heart {
+    margin: 2.4em 0;
+    padding: clamp(20px, 2.8vw, 32px);
+    border: 1px solid var(--rule-2);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+  .heart-header {
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .heart-etiqueta {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .heart-titulo {
+    font-family: var(--f-display);
+    font-size: clamp(22px, 2vw, 26px);
+    font-weight: 500;
+    line-height: 1.25;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .heart-sub {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .heart-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .heart-item fieldset {
+    border: 1px solid var(--rule-2);
+    border-radius: 10px;
+    padding: 18px;
+    background: var(--bg);
+  }
+  .heart-item legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 8px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .heart-letra {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-family: var(--f-mono);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+  }
+  .heart-item-titulo { color: var(--ink); }
+  .heart-item-ayuda {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 10px 0 14px;
+  }
+
+  .heart-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .heart-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    min-height: 48px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .heart-opcion:hover { border-color: var(--accent); background: var(--bg-2); }
+  .heart-opcion:has(input:checked) {
+    border-color: var(--accent);
+    background: color-mix(in oklch, var(--accent) 10%, var(--surface));
+  }
+  .heart-opcion:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .heart-opcion input[type="radio"] {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .heart-opcion-txt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .heart-opcion-puntos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--ink-mute);
+    background: var(--bg);
+    border: 1px solid var(--rule-2);
+    border-radius: 4px;
+  }
+  .heart-opcion:has(input:checked) .heart-opcion-puntos {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .heart-resultado {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    align-items: center;
+    margin-top: 22px;
+    padding: 18px 22px;
+    border: 1px solid var(--rule-2);
+    border-radius: 10px;
+    background: var(--bg);
+  }
+  .heart-resultado-label {
+    grid-column: 1;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+  }
+  .heart-resultado-num {
+    grid-column: 1;
+    grid-row: 2;
+    font-family: var(--f-display);
+    font-size: clamp(32px, 4vw, 42px);
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .heart-resultado-categoria {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .heart-resultado[data-categoria="bajo"] { border-color: var(--ok); }
+  .heart-resultado[data-categoria="bajo"] .heart-resultado-categoria { color: var(--ok); }
+  .heart-resultado[data-categoria="moderado"] { border-color: var(--warn); }
+  .heart-resultado[data-categoria="moderado"] .heart-resultado-categoria { color: var(--warn); }
+  .heart-resultado[data-categoria="alto"] { border-color: var(--danger); }
+  .heart-resultado[data-categoria="alto"] .heart-resultado-categoria { color: var(--danger); }
+
+  .heart-disclaimer {
+    margin: 18px 0 0;
+    font-size: 13px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+    padding-left: 12px;
+    border-left: 2px solid var(--rule-2);
+  }
+</style>
