@@ -1,0 +1,147 @@
+---
+/**
+ * Corte narrativo del caso clinico: muestra la pregunta y oculta el
+ * razonamiento hasta que el lector pulsa. Base <details>/<summary>, cero JS.
+ *
+ * El contenido oculto vive en el HTML: Google lo indexa y los lectores de
+ * pantalla lo pueden anunciar tras expandir.
+ *
+ * Uso en MDX:
+ *   <Pregunta texto="¿Cuál es tu diagnóstico diferencial?">
+ *     Contenido revelado, MDX arbitrario...
+ *   </Pregunta>
+ */
+interface Props {
+  texto: string;
+}
+
+const { texto } = Astro.props;
+---
+
+<details class="pregunta">
+  <summary>
+    <div class="pregunta-cabecera">
+      <span class="pregunta-etiqueta">Pregunta al lector</span>
+      <span class="pregunta-texto">{texto}</span>
+    </div>
+    <span class="pregunta-boton" aria-hidden="true">
+      <span class="pregunta-boton-txt">Ver razonamiento</span>
+      <svg class="pregunta-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </summary>
+  <div class="pregunta-cuerpo">
+    <slot />
+  </div>
+</details>
+
+<style>
+  .pregunta {
+    margin: 2em 0;
+    border: 1px solid var(--rule-2);
+    border-radius: 14px;
+    background: var(--surface);
+    overflow: hidden;
+    /* Reset del marcador nativo del summary */
+  }
+  .pregunta[open] {
+    border-color: var(--accent);
+  }
+
+  .pregunta summary {
+    list-style: none;
+    cursor: pointer;
+    padding: clamp(18px, 2.4vw, 24px);
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    /* Foco accesible cuando se navega por teclado */
+  }
+  .pregunta summary::-webkit-details-marker { display: none; }
+  .pregunta summary::marker { display: none; }
+  .pregunta summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .pregunta-cabecera {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+  .pregunta-etiqueta {
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .pregunta-texto {
+    font-family: var(--f-display);
+    font-size: clamp(17px, 1.4vw, 20px);
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .pregunta-boton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .pregunta summary:hover .pregunta-boton {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .pregunta-chevron {
+    transition: transform .2s ease;
+  }
+  .pregunta[open] .pregunta-chevron {
+    transform: rotate(180deg);
+  }
+  .pregunta[open] .pregunta-boton-txt::after {
+    content: '';
+  }
+  .pregunta[open] .pregunta-boton-txt {
+    /* Cambia el texto cuando esta abierto */
+  }
+  .pregunta[open] .pregunta-boton {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .pregunta-cuerpo {
+    padding: clamp(18px, 2.4vw, 24px);
+    border-top: 1px solid var(--rule-2);
+    /* Reset de margen del primer hijo para que no doble padding */
+  }
+  .pregunta-cuerpo > :first-child { margin-top: 0; }
+  .pregunta-cuerpo > :last-child { margin-bottom: 0; }
+
+  /* Móvil 375px: el botón pasa debajo y ocupa el ancho */
+  @media (max-width: 480px) {
+    .pregunta summary {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .pregunta-boton {
+      justify-content: center;
+    }
+  }
+</style>
