@@ -1,0 +1,120 @@
+---
+/**
+ * Bloque de contenido relacionado al final del post.
+ *
+ * Reglas:
+ *   - Si el post es un caso (tipo === 'caso'): enlaza a articulos teoricos
+ *     (tipo === 'articulo') de la misma especialidad.
+ *   - Si el post es un articulo: enlaza a casos (tipo === 'caso') de la
+ *     misma especialidad.
+ *   - Se filtran drafts y el propio post.
+ *   - Maximo 3 elementos.
+ *   - Si no hay contenido de esa especialidad, no renderiza nada.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+
+const contrarioTipo = post.data.tipo === 'caso' ? 'articulo' : 'caso';
+
+const relacionados = (await getCollection('blog', ({ data, slug }) =>
+  !data.draft
+  && data.tipo === contrarioTipo
+  && data.specialty === post.data.specialty
+  && slug !== post.slug
+))
+  .sort((a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime())
+  .slice(0, 3);
+
+const titulo = post.data.tipo === 'caso'
+  ? 'Contexto teórico relacionado'
+  : 'Casos clínicos de esta especialidad';
+---
+
+{relacionados.length > 0 && (
+  <aside class="relacionados">
+    <h2>{titulo}</h2>
+    <ul>
+      {relacionados.map(r => (
+        <li>
+          <a href={`/blog/${r.slug}/`}>
+            <span class="rel-etiqueta">{r.data.tipo === 'caso' ? 'Caso' : 'Artículo'}</span>
+            <span class="rel-titulo">{r.data.title}</span>
+            {r.data.readingMinutes && <span class="rel-meta">{r.data.readingMinutes} min</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </aside>
+)}
+
+<style>
+  .relacionados {
+    margin-top: 56px;
+    padding: 28px;
+    border: 1px solid var(--rule-2);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+  .relacionados h2 {
+    font-family: var(--f-display);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 18px;
+    letter-spacing: -0.005em;
+  }
+  .relacionados ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .relacionados li { margin: 0; }
+  .relacionados a {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: background .15s;
+  }
+  .relacionados a:hover { background: var(--bg-2); }
+  .rel-etiqueta {
+    font-family: var(--f-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 3px 7px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+  }
+  .rel-titulo {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .rel-meta {
+    font-family: var(--f-mono);
+    font-size: 11px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 480px) {
+    .relacionados a {
+      grid-template-columns: auto 1fr;
+    }
+    .rel-meta { display: none; }
+  }
+</style>

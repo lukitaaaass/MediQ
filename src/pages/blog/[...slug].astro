@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Relacionados from '../../components/Relacionados.astro';
 import { getCollection } from 'astro:content';
 
 export async function getStaticPaths() {
@@ -257,6 +258,8 @@ const schema = {
     <div class="article-body">
       <Content />
     </div>
+
+    <Relacionados post={post} />
 
     <div class="article-back">
       <a href="/blog/">← Volver al blog</a>
