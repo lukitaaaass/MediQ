@@ -791,6 +791,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       setTimeout(maybeStartOnboarding, 900);
       setTimeout(initOnboardingBanner, 400);
       loadPendingPrompt();
+      readCasoParams();
       accountBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -1368,6 +1369,29 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
       } catch (_) {}
     }
 
+    /* Lee ?caso=slug[&nivel=xxx] de la URL. Guarda el slug en una variable
+       de modulo para que el submit del composer pueda disparar el evento
+       'caso_chat_iniciado' cuando el usuario envie su primer mensaje. Limpia
+       los query params de la URL para que no se re-disparen en un refresh. */
+    function readCasoParams() {
+      try {
+        const params = new URLSearchParams(location.search);
+        const caso = params.get('caso');
+        if (!caso) return;
+        window.__mediqCasoContext = {
+          slug: caso,
+          nivel: params.get('nivel') || null,
+          tracked: false,
+        };
+        // Limpia el query param manteniendo el resto de la URL
+        params.delete('caso');
+        params.delete('nivel');
+        const qs = params.toString();
+        const cleanUrl = location.pathname + (qs ? '?' + qs : '') + location.hash;
+        history.replaceState({}, '', cleanUrl);
+      } catch (_) {}
+    }
+
     function showToast(msg, ms = 2600) {
       let t = document.getElementById('mediq-toast');
       if (!t) { t = document.createElement('div'); t.id = 'mediq-toast'; t.className = 'toast'; document.body.appendChild(t); }
@@ -1671,6 +1695,16 @@ ${msgsHtml}
           chat.title = attachments[0].name.replace(/\.pdf$/i, '');
         }
         window.track('Chat Started', { specialty });
+        // Si el chat viene de un CasoCTA (?caso=slug), trackeamos aparte.
+        // Solo se dispara una vez por sesion de caso — sin repetir en mensajes
+        // subsiguientes de la misma conversacion.
+        try {
+          const ctx = window.__mediqCasoContext;
+          if (ctx && !ctx.tracked) {
+            ctx.tracked = true;
+            window.track('caso_chat_iniciado', { slug: ctx.slug, nivel: ctx.nivel || undefined });
+          }
+        } catch (_) {}
       }
       window.track('Message Sent', { specialty, has_attachment: attachments.length > 0 ? 'yes' : 'no' });
 
