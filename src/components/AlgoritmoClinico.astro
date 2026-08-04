@@ -1,0 +1,558 @@
+---
+/**
+ * Algoritmo clinico interactivo — SSR-first, JS de mejora progresiva.
+ *
+ * ARQUITECTURA DE RENDER (importante para SEO):
+ *   - El HTML servido contiene TODOS los nodos como <section> con id propio.
+ *     Google indexa el arbol completo. Sin JS, cada opcion es un <a href="#id">
+ *     que navega por anchor. Funcional aunque no elegante.
+ *   - Con JS, un pequeno script oculta todo excepto el nodo activo y mantiene
+ *     un historial en memoria para el boton "Volver atras". La navegacion
+ *     usa el hash de la URL (sin recargar) para que compartir un enlace lleve
+ *     al mismo nodo.
+ *
+ * Uso en MDX:
+ *   import AlgoritmoClinico from '../../components/AlgoritmoClinico.astro';
+ *   import { disneaAguda } from '../../data/algoritmos/disnea-aguda';
+ *   <AlgoritmoClinico datos={disneaAguda} slugCaso="opcional" />
+ *
+ * Props:
+ *   datos     — objeto Algoritmo (ver src/data/algoritmos/tipos.ts)
+ *   slugCaso  — opcional. Si viene, los CTAs de nodos terminales navegan a
+ *               /chat?caso={slugCaso}&rama={idNodoTerminal}. Si no viene,
+ *               el CTA navega a /chat sin params.
+ */
+import type { Algoritmo, NodoPregunta, NodoTerminal } from '../data/algoritmos/tipos';
+import { varianteEfectiva } from '../data/algoritmos/tipos';
+
+interface Props {
+  datos: Algoritmo;
+  slugCaso?: string;
+}
+
+const { datos, slugCaso } = Astro.props;
+
+const entradas = Object.entries(datos.nodos);
+---
+
+<nav
+  class="algoritmo"
+  aria-label={`Algoritmo interactivo: ${datos.titulo}`}
+  data-algoritmo-id={datos.id}
+  data-nodo-inicial={datos.nodoInicial}
+  data-slug-caso={slugCaso || ''}
+>
+  <header class="algoritmo-cabecera">
+    <span class="algoritmo-etiqueta">Algoritmo interactivo</span>
+    <h3 class="algoritmo-titulo">{datos.titulo}</h3>
+    {datos.subtitulo && <p class="algoritmo-subtitulo">{datos.subtitulo}</p>}
+    <div class="algoritmo-controles" role="group" aria-label="Controles del algoritmo">
+      <button type="button" class="algoritmo-btn" data-accion="atras" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver atrás
+      </button>
+      <button type="button" class="algoritmo-btn" data-accion="reiniciar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 12a9 9 0 019-9 9 9 0 016.7 3M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Reiniciar
+      </button>
+    </div>
+    <p class="algoritmo-progreso" aria-live="polite" data-progreso></p>
+  </header>
+
+  <ol class="algoritmo-nodos" aria-label="Pasos del algoritmo">
+    {entradas.map(([id, nodo]) => {
+      const esInicial = id === datos.nodoInicial;
+      if ('terminal' in nodo && nodo.terminal) {
+        const t = nodo as NodoTerminal;
+        const variante = varianteEfectiva(t);
+        const hrefChat = slugCaso
+          ? `/chat?caso=${encodeURIComponent(slugCaso)}&rama=${encodeURIComponent(id)}`
+          : '/chat';
+        return (
+          <li
+            class="algoritmo-nodo"
+            id={`nodo-${id}`}
+            data-nodo-id={id}
+            data-nodo-tipo="terminal"
+            data-nodo-inicial={esInicial ? 'true' : 'false'}
+            data-variante={variante}
+          >
+            <section aria-labelledby={`titulo-${id}`}>
+              <span class={`algoritmo-nodo-etiqueta v-${variante}`}>
+                {variante === 'danger' ? 'Red flag' : variante === 'warn' ? 'Atención' : 'Conclusión'}
+              </span>
+              <h4 id={`titulo-${id}`} class="algoritmo-nodo-conclusion">{t.conclusion}</h4>
+              {t.siguientesPasos && t.siguientesPasos.length > 0 && (
+                <ul class="algoritmo-nodo-pasos">
+                  {t.siguientesPasos.map(p => <li>{p}</li>)}
+                </ul>
+              )}
+              <a
+                class="algoritmo-cta"
+                href={hrefChat}
+                data-cta-rama={id}
+              >
+                Discutir esta rama en MediQ
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </section>
+          </li>
+        );
+      } else {
+        const p = nodo as NodoPregunta;
+        return (
+          <li
+            class="algoritmo-nodo"
+            id={`nodo-${id}`}
+            data-nodo-id={id}
+            data-nodo-tipo="pregunta"
+            data-nodo-inicial={esInicial ? 'true' : 'false'}
+          >
+            <section aria-labelledby={`titulo-${id}`}>
+              <span class="algoritmo-nodo-etiqueta">Paso</span>
+              <h4 id={`titulo-${id}`} class="algoritmo-nodo-pregunta">{p.pregunta}</h4>
+              {p.ayuda && <p class="algoritmo-nodo-ayuda">{p.ayuda}</p>}
+              <ul class="algoritmo-opciones">
+                {p.opciones.map(op => (
+                  <li>
+                    <a
+                      class="algoritmo-opcion"
+                      href={`#nodo-${op.siguiente}`}
+                      data-siguiente={op.siguiente}
+                    >
+                      <span>{op.texto}</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </li>
+        );
+      }
+    })}
+  </ol>
+</nav>
+
+<script>
+  /*
+   * Mejora progresiva: transforma el arbol semantico servido en un walker
+   * paso a paso. Sin JS, el usuario ya puede navegar por los anchors del
+   * HTML. Con JS, ocultamos todos los nodos excepto el activo, mantenemos
+   * un historial en memoria y actualizamos el hash de la URL.
+   */
+  interface CtxAlgoritmo {
+    root: HTMLElement;
+    id: string;
+    nodoInicial: string;
+    historial: string[];
+    nodos: Map<string, HTMLElement>;
+    btnAtras: HTMLButtonElement;
+    btnReiniciar: HTMLButtonElement;
+    progresoEl: HTMLElement;
+    total: number;
+  }
+
+  function inicializar(root: HTMLElement) {
+    if (root.dataset.inicializado === '1') return;
+    root.dataset.inicializado = '1';
+
+    const id = root.dataset.algoritmoId || '';
+    const nodoInicial = root.dataset.nodoInicial || '';
+    const nodos = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('.algoritmo-nodo').forEach(n => {
+      const nid = n.dataset.nodoId;
+      if (nid) nodos.set(nid, n);
+    });
+
+    const btnAtras = root.querySelector<HTMLButtonElement>('[data-accion="atras"]')!;
+    const btnReiniciar = root.querySelector<HTMLButtonElement>('[data-accion="reiniciar"]')!;
+    const progresoEl = root.querySelector<HTMLElement>('[data-progreso]')!;
+
+    const ctx: CtxAlgoritmo = {
+      root, id, nodoInicial, historial: [], nodos, btnAtras, btnReiniciar, progresoEl,
+      total: nodos.size,
+    };
+
+    // Determinar nodo activo inicial: si el hash apunta a un nodo valido, ese;
+    // si no, el inicial.
+    const hashMatch = location.hash.match(/^#nodo-(.+)$/);
+    const inicial = hashMatch && nodos.has(hashMatch[1]) ? hashMatch[1] : nodoInicial;
+    mostrarNodo(ctx, inicial, /*añadirAHistorial*/ true, /*evitarScroll*/ true);
+
+    // Interceptar clicks en opciones (delegado)
+    root.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const opcion = target.closest<HTMLAnchorElement>('.algoritmo-opcion');
+      if (opcion) {
+        e.preventDefault();
+        const siguiente = opcion.dataset.siguiente;
+        if (siguiente && nodos.has(siguiente)) {
+          mostrarNodo(ctx, siguiente, true, false);
+          disparaAlgoritmoIniciado(ctx);
+        }
+        return;
+      }
+
+      const btn = target.closest<HTMLButtonElement>('button[data-accion]');
+      if (btn) {
+        const accion = btn.dataset.accion;
+        if (accion === 'atras') volverAtras(ctx);
+        else if (accion === 'reiniciar') reiniciar(ctx);
+      }
+    });
+
+    // Reaccionar a cambios de hash (btn atras del navegador, enlaces externos)
+    window.addEventListener('hashchange', () => {
+      const m = location.hash.match(/^#nodo-(.+)$/);
+      if (m && nodos.has(m[1]) && ctx.historial[ctx.historial.length - 1] !== m[1]) {
+        mostrarNodo(ctx, m[1], true, false);
+      }
+    });
+  }
+
+  function mostrarNodo(ctx: CtxAlgoritmo, idNodo: string, añadirAHistorial: boolean, evitarScroll: boolean) {
+    ctx.nodos.forEach((el, id) => {
+      const activo = id === idNodo;
+      el.hidden = !activo;
+      if (activo) el.setAttribute('aria-current', 'step');
+      else el.removeAttribute('aria-current');
+    });
+    if (añadirAHistorial) {
+      if (ctx.historial[ctx.historial.length - 1] !== idNodo) ctx.historial.push(idNodo);
+    }
+    // Actualiza hash sin scroll (usamos scrollIntoView controlado luego)
+    const nuevoHash = `#nodo-${idNodo}`;
+    if (location.hash !== nuevoHash) {
+      history.replaceState(null, '', nuevoHash);
+    }
+    // Estado de controles
+    ctx.btnAtras.disabled = ctx.historial.length <= 1;
+    // Progreso: solo si el nodo activo es terminal, ocultamos el contador
+    const nodoEl = ctx.nodos.get(idNodo)!;
+    const esTerminal = nodoEl.dataset.nodoTipo === 'terminal';
+    ctx.progresoEl.textContent = esTerminal
+      ? `Rama completada · ${ctx.historial.length} paso${ctx.historial.length === 1 ? '' : 's'}`
+      : `Paso ${ctx.historial.length} · ${ctx.total} nodos en total`;
+    // Poner foco en el h4 del nodo para lectores de pantalla y navegacion teclado
+    const titulo = nodoEl.querySelector<HTMLElement>('h4');
+    if (titulo) {
+      titulo.setAttribute('tabindex', '-1');
+      // Diferimos el foco un tick para que el lector de pantalla lo anuncie
+      requestAnimationFrame(() => titulo.focus({ preventScroll: true }));
+    }
+    // Scroll suave al inicio del nodo (excepto en la carga inicial)
+    if (!evitarScroll) {
+      ctx.root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // Si es terminal, disparar evento de completado (una vez por sesion+id+rama)
+    if (esTerminal) {
+      disparaAlgoritmoCompletado(ctx, idNodo);
+    }
+  }
+
+  function volverAtras(ctx: CtxAlgoritmo) {
+    if (ctx.historial.length <= 1) return;
+    ctx.historial.pop();
+    const anterior = ctx.historial[ctx.historial.length - 1];
+    mostrarNodo(ctx, anterior, false, false);
+  }
+
+  function reiniciar(ctx: CtxAlgoritmo) {
+    ctx.historial = [];
+    mostrarNodo(ctx, ctx.nodoInicial, true, false);
+    // Limpiar marca de "iniciado" y "completado" en sessionStorage para
+    // esta instancia — asi el usuario que reinicia y vuelve a completar
+    // cuenta como un evento nuevo (comportamiento intuitivo).
+    try {
+      sessionStorage.removeItem(`mediq.algoritmo.iniciado.${ctx.id}`);
+      // Los completados los limpiamos por prefijo:
+      Object.keys(sessionStorage).forEach(k => {
+        if (k.startsWith(`mediq.algoritmo.completado.${ctx.id}.`)) {
+          sessionStorage.removeItem(k);
+        }
+      });
+    } catch (_) {}
+  }
+
+  function disparaAlgoritmoIniciado(ctx: CtxAlgoritmo) {
+    try {
+      const key = `mediq.algoritmo.iniciado.${ctx.id}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+      (window as any).track && (window as any).track('algoritmo_iniciado', {
+        idAlgoritmo: ctx.id,
+      });
+    } catch (_) {}
+  }
+
+  function disparaAlgoritmoCompletado(ctx: CtxAlgoritmo, idTerminal: string) {
+    try {
+      const key = `mediq.algoritmo.completado.${ctx.id}.${idTerminal}`;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+      (window as any).track && (window as any).track('algoritmo_completado', {
+        idAlgoritmo: ctx.id,
+        idNodoTerminal: idTerminal,
+        pasos: ctx.historial.length,
+      });
+    } catch (_) {}
+  }
+
+  // Inicializar todos los algoritmos presentes en la pagina.
+  // Se re-ejecuta en cada astro:page-load para cubrir ViewTransitions.
+  function inicializarTodos() {
+    document.querySelectorAll<HTMLElement>('.algoritmo[data-algoritmo-id]')
+      .forEach(inicializar);
+  }
+  inicializarTodos();
+  document.addEventListener('astro:page-load', inicializarTodos);
+</script>
+
+<style>
+  .algoritmo {
+    display: block;
+    margin: 2.4em 0;
+    padding: clamp(20px, 2.8vw, 32px);
+    border: 1px solid var(--rule-2);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+
+  .algoritmo-cabecera {
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .algoritmo-etiqueta {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .algoritmo-titulo {
+    font-family: var(--f-display);
+    font-size: clamp(20px, 1.8vw, 24px);
+    font-weight: 500;
+    line-height: 1.25;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+  .algoritmo-subtitulo {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin: 0 0 14px;
+  }
+
+  .algoritmo-controles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .algoritmo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    font-family: var(--f-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    min-height: 40px;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .algoritmo-btn:hover:not(:disabled) {
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .algoritmo-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .algoritmo-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .algoritmo-progreso {
+    margin: 12px 0 0;
+    font-family: var(--f-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    min-height: 1.2em; /* Evita reflow cuando aparece */
+  }
+
+  .algoritmo-nodos {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .algoritmo-nodo {
+    padding: clamp(18px, 2.4vw, 24px);
+    background: var(--bg);
+    border: 1px solid var(--rule-2);
+    border-radius: 12px;
+    /* Sin JS todos los nodos son visibles y el usuario navega por anchors.
+       Con JS activo, el script pone hidden a los que no son actuales. */
+  }
+  .algoritmo-nodo[aria-current="step"] {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  .algoritmo-nodo[data-nodo-tipo="terminal"][data-variante="danger"] {
+    border-color: var(--danger);
+  }
+  .algoritmo-nodo[data-nodo-tipo="terminal"][data-variante="warn"] {
+    border-color: var(--warn);
+  }
+  .algoritmo-nodo[data-nodo-tipo="terminal"][data-variante="ok"] {
+    border-color: var(--ok);
+  }
+
+  .algoritmo-nodo-etiqueta {
+    display: inline-block;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 10px;
+  }
+  .algoritmo-nodo-etiqueta.v-danger { color: var(--danger); }
+  .algoritmo-nodo-etiqueta.v-warn { color: var(--warn); }
+  .algoritmo-nodo-etiqueta.v-ok { color: var(--ok); }
+
+  .algoritmo-nodo-pregunta,
+  .algoritmo-nodo-conclusion {
+    font-family: var(--f-display);
+    font-size: clamp(17px, 1.4vw, 20px);
+    font-weight: 500;
+    line-height: 1.35;
+    margin: 0 0 10px;
+    color: var(--ink);
+    /* Focus programado sin borde visible del outline nativo del tabindex=-1 */
+  }
+  .algoritmo-nodo-pregunta:focus,
+  .algoritmo-nodo-conclusion:focus {
+    outline: none;
+  }
+  .algoritmo-nodo-ayuda {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+
+  .algoritmo-opciones {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .algoritmo-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    min-height: 48px;
+    border: 1px solid var(--rule-2);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 15px;
+    line-height: 1.4;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .algoritmo-opcion:hover {
+    border-color: var(--accent);
+    background: var(--bg-2);
+  }
+  .algoritmo-opcion:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .algoritmo-nodo-pasos {
+    list-style: none;
+    padding: 0;
+    margin: 14px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .algoritmo-nodo-pasos li {
+    position: relative;
+    padding-left: 20px;
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .algoritmo-nodo-pasos li::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0.65em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-mute);
+  }
+  .algoritmo-nodo[data-variante="danger"] .algoritmo-nodo-pasos li::before { background: var(--danger); }
+  .algoritmo-nodo[data-variante="warn"] .algoritmo-nodo-pasos li::before { background: var(--warn); }
+  .algoritmo-nodo[data-variante="ok"] .algoritmo-nodo-pasos li::before { background: var(--ok); }
+
+  .algoritmo-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 12px 22px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14.5px;
+    min-height: 44px;
+    transition: filter .15s, transform .1s;
+  }
+  .algoritmo-cta:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .algoritmo-cta:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* Movil 375px */
+  @media (max-width: 480px) {
+    .algoritmo-controles { flex-direction: column; align-items: stretch; }
+    .algoritmo-btn { justify-content: center; }
+    .algoritmo-cta { width: 100%; justify-content: center; }
+  }
+</style>
