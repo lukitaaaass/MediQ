@@ -1,0 +1,55 @@
+---
+title: "Caso ejemplo — no publicar"
+description: "Placeholder para verificar el pipeline de casos clinicos (Pregunta, CasoCTA, Relacionados). No es contenido clinico."
+specialty: "urgencias"
+tags: ["placeholder", "infra"]
+publishDate: 2026-08-04
+readingMinutes: 3
+tipo: "caso"
+nivel: "fundamentos"
+author: "[NOMBRE DEL REVISOR — pendiente]"
+colegiado: "[NUMERO COLEGIADO — pendiente]"
+draft: true
+---
+
+import Pregunta from '../../components/Pregunta.astro';
+import CasoCTA from '../../components/CasoCTA.astro';
+
+Este es un caso placeholder para validar que la infraestructura funciona
+end-to-end en dev. **No debe publicarse**: mantén `draft: true` en el
+frontmatter hasta que se sustituya por un caso real revisado.
+
+## Presentación
+
+Varón de 68 años acude al servicio de Urgencias por disnea de aparición
+nocturna. Refiere haber tenido que sentarse en la cama para poder respirar.
+
+## Exploración
+
+- Tensión arterial: [DATO A VERIFICAR]
+- Frecuencia cardíaca: [DATO A VERIFICAR]
+- Saturación O₂: [DATO A VERIFICAR]
+- Auscultación: crepitantes bibasales
+
+<Pregunta texto="¿Cuál es tu diagnóstico diferencial y qué prueba pedirías primero?">
+
+**Diagnóstico diferencial orientativo** (placeholder):
+- Insuficiencia cardíaca aguda con edema pulmonar
+- Reagudización de EPOC
+- Tromboembolismo pulmonar
+- Neumonía
+
+**Prueba inicial**: [PLACEHOLDER — a completar por el revisor clínico]
+
+</Pregunta>
+
+## Manejo
+
+Contenido placeholder tras el corte.
+
+<CasoCTA
+  slug="caso-ejemplo-disnea-nocturna"
+  nivel="fundamentos"
+  primeraPregunta="Discutir este caso con MediQ"
+  promptInicial="Caso clínico: varón de 68 años que acude por disnea nocturna con crepitantes bibasales. ¿Cuál es tu diagnóstico diferencial y qué pruebas complementarias pedirías primero?"
+/>
