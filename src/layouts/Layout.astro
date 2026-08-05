@@ -92,7 +92,10 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   -->
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
     if (!window.__mediqSb) {
+      console.log('[MediQ] singleton createClient @ head');
       window.__mediqSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      console.log('[MediQ] singleton already exists — skip');
     }
   </script>
 
