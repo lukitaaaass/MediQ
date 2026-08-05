@@ -12,7 +12,7 @@ export async function POST({ request }) {
   const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL;
   const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   const STRIPE_KEY = import.meta.env.STRIPE_SECRET_KEY;
-  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'https://mediq.app';
+  const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'https://medi-q-bice.vercel.app';
 
   // Verificar JWT con Supabase
   const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {

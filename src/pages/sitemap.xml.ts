@@ -11,7 +11,7 @@ const STATIC_PAGES: Array<{ path: string; changefreq: string; priority: string }
   { path: '/login',      changefreq: 'yearly',  priority: '0.3' },
 ];
 
-const SITE = 'https://mediq.app';
+const SITE = 'https://medi-q-bice.vercel.app';
 
 export async function GET() {
   const posts = (await getCollection('blog', ({ data }) => !data.draft))

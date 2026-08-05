@@ -33,11 +33,11 @@ const {
   navActive    = '',
   bodyClass    = '',
   includePdfJs = false,
-  ogImage      = 'https://mediq.app/og.svg',
+  ogImage      = 'https://medi-q-bice.vercel.app/og.svg',
   noindex      = false,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, 'https://mediq.app').href;
+const canonicalURL = new URL(Astro.url.pathname, 'https://medi-q-bice.vercel.app').href;
 
 const SUPABASE_URL        = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY   = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;

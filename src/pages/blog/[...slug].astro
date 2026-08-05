@@ -38,11 +38,11 @@ const schema = {
   publisher: {
     '@type': 'Organization',
     name: 'MediQ',
-    logo: { '@type': 'ImageObject', url: 'https://mediq.app/favicon.svg' },
+    logo: { '@type': 'ImageObject', url: 'https://medi-q-bice.vercel.app/favicon.svg' },
   },
   datePublished: isoPublish,
   dateModified: isoUpdated,
-  mainEntityOfPage: `https://mediq.app/blog/${post.slug}/`,
+  mainEntityOfPage: `https://medi-q-bice.vercel.app/blog/${post.slug}/`,
   articleSection: specialtyLabel[post.data.specialty],
   keywords: post.data.tags.join(', '),
 };
