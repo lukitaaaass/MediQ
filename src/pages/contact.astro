@@ -8,7 +8,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 <Layout
   title="Contacto — MediQ"
   navActive=""
-  description="Solicita acceso a MediQ, habla con el equipo de ventas o escríbenos cualquier duda. Respondemos en menos de 48h."
+  description="Solicita acceso a MediQ o escríbenos cualquier duda. Respondemos en menos de 48h."
 >
 
 <style is:global>
@@ -135,11 +135,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </div>
             <div class="channel-body">
               <span class="channel-label">Email general</span>
-              <span class="channel-value">hola@mediq.health</span>
+              <span class="channel-value">infomediq27@gmail.com</span>
               <span class="channel-sub">Respuesta en &lt; 48h</span>
             </div>
           </div>
 
+          {/* Ventas oculto hasta tener email definitivo — no borrar, reactivar cuando esté listo.
           <div class="channel">
             <div class="channel-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -153,6 +154,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
               <span class="channel-sub">Hospitales, clínicas y redes asistenciales</span>
             </div>
           </div>
+          */}
 
           <div class="channel">
             <div class="channel-icon">
@@ -163,7 +165,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             </div>
             <div class="channel-body">
               <span class="channel-label">Oficinas</span>
-              <span class="channel-value">Madrid · CDMX · Bogotá</span>
+              <span class="channel-value">Madrid</span>
               <span class="channel-sub">Reuniones presenciales con cita previa</span>
             </div>
           </div>
@@ -275,7 +277,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       if (error) {
         console.error('[contact] supabase error:', error);
-        showErr('No se pudo enviar el mensaje. Inténtalo de nuevo o escríbenos directamente a hola@mediq.health.');
+        showErr('No se pudo enviar el mensaje. Inténtalo de nuevo o escríbenos directamente a infomediq27@gmail.com.');
         submit.disabled = false;
         submit.textContent = 'Enviar mensaje →';
         return;
