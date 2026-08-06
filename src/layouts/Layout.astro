@@ -430,6 +430,41 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     })();
   </script>
 
+  <!-- Navegación a la propia página -->
+  <script is:inline>
+    (function () {
+      /* ── Clic en un enlace a la página actual (p. ej. "Chat" estando en /chat) ──
+         El ClientRouter de Astro hace igualmente el swap del body, pero NO
+         re-ejecuta los scripts is:inline: su runtime marca como ya ejecutado
+         (data-astro-exec) todo script del documento entrante idéntico a uno del
+         documento actual — y en una navegación a la misma página lo son TODOS.
+         El body queda en su estado estático "sin sesión" y ningún script lo
+         corrige: parece un logout aunque la sesión de Supabase siga viva, y los
+         listeners de la página (chat, etc.) mueren con el DOM viejo.
+
+         Interceptamos en fase de captura (corre antes que el listener del
+         router) y:
+           · misma ruta y misma query → no navegar (no-op)
+           · misma ruta con query distinta (p. ej. /chat?caso=x desde /chat) →
+             carga completa, que sí re-ejecuta todos los scripts */
+      if (!window.__mediqSameNavReg) {
+        window.__mediqSameNavReg = true;
+        var normPath = function (p) { return p.replace(/\/+$/, '') || '/'; };
+        document.addEventListener('click', function (e) {
+          if (e.defaultPrevented || e.button !== 0) return;
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+          if (!a || a.origin !== location.origin) return;
+          if ((a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+          if (normPath(a.pathname) !== normPath(location.pathname)) return;
+          if (a.hash) return; // anclas dentro de la página: comportamiento normal
+          e.preventDefault();
+          if (a.search !== location.search) location.assign(a.href);
+        }, true);
+      }
+    })();
+  </script>
+
   <!--
     Comprobación de sesión Supabase.
     En vez de reescribir el HTML (que provoca el flash), aquí solo:
