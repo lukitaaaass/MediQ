@@ -141,6 +141,23 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
        elemento conserva su display natural (inline-flex en los .btn) cuando
        debe verse, sin que haya que declararlo aqui para cada caso. */
     html[data-auth="in"]  .auth-hide-in { display: none !important; }
+
+    /* Ocultado estructural de la navegacion — DUPLICADO A PROPOSITO desde
+       global.css. Estos dos bloques solo deben verse cuando les toca: el panel
+       movil al pulsar la hamburguesa, y el rail solo en escritorio. Si esas
+       reglas vivieran unicamente en la hoja externa, cualquier momento en que
+       esa hoja no este aplicada todavia (primer render, cache apuntando a un
+       hash antiguo, fallo de red durante un deploy) los pinta como bloques
+       normales al principio del body: el menu entero y el boton "Cerrar sesion"
+       enmarcado, encima del contenido. Al estar aqui, inline en el <head>, no
+       hay ninguna ventana en la que eso pueda pasar.
+
+       El rail se queda oculto aqui y solo lo enciende global.css en escritorio:
+       asi, si esa hoja falta, degrada a "sin rail" en vez de a "menu volcado
+       encima del contenido". */
+    #nav-mobile { position: fixed; inset: 64px 0 0 0; transform: translateY(-110%); pointer-events: none; }
+    #nav-mobile.open { transform: translateY(0); pointer-events: auto; }
+    #nav-rail { display: none; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->

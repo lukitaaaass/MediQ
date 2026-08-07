@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout
-  title="Mi cuenta â€” MediQ"
+  title="Mi cuenta — MediQ"
   navActive="/account"
   noindex={true}
 >
@@ -154,7 +154,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     <div class="container">
       <div class="account-wrap">
 
-        <!-- â”€â”€ Sidebar nav â”€â”€ -->
+        <!-- ── Sidebar nav ── -->
         <nav class="acct-nav">
           <a href="#profile" class="active">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -162,7 +162,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           </a>
           <a href="#plan">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-            Plan y facturaciÃ³n
+            Plan y facturación
           </a>
           <a href="#security">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></svg>
@@ -175,7 +175,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           </a>
         </nav>
 
-        <!-- â”€â”€ Main â”€â”€ -->
+        <!-- ── Main ── -->
         <div>
 
           <!-- PERFIL -->
@@ -183,7 +183,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <div class="profile-hero">
               <div class="ava-lg" id="ava-lg">?</div>
               <div class="profile-meta">
-                <strong id="profile-name">Cargandoâ€¦</strong>
+                <strong id="profile-name">Cargando…</strong>
                 <span id="profile-email"></span>
               </div>
             </div>
@@ -193,7 +193,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
                 <input type="text" id="inp-name" placeholder="Tu nombre" />
               </div>
               <div class="field">
-                <label>Correo electrÃ³nico</label>
+                <label>Correo electrónico</label>
                 <input type="email" id="inp-email" disabled />
               </div>
               <div style="display:flex; justify-content:flex-end; margin-top:6px;">
@@ -205,25 +205,25 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <!-- PLAN -->
           <div class="acct-card" id="plan">
             <div class="acct-card-head">
-              <h2>Plan y facturaciÃ³n</h2>
-              <p>Estado de tu suscripciÃ³n y prÃ³ximo ciclo de pago.</p>
+              <h2>Plan y facturación</h2>
+              <p>Estado de tu suscripción y próximo ciclo de pago.</p>
             </div>
             <div class="acct-card-body">
               <div class="plan-row">
                 <span class="lbl">Estado</span>
-                <span id="plan-status"><span class="plan-badge none"><span class="plan-dot"></span>Sin suscripciÃ³n</span></span>
+                <span id="plan-status"><span class="plan-badge none"><span class="plan-dot"></span>Sin suscripción</span></span>
               </div>
               <div class="plan-row">
                 <span class="lbl">Plan</span>
-                <span class="val" id="plan-name">â€”</span>
+                <span class="val" id="plan-name">—</span>
               </div>
               <div class="plan-row">
-                <span class="lbl">PrÃ³xima renovaciÃ³n</span>
-                <span class="val" id="plan-renews">â€”</span>
+                <span class="lbl">Próxima renovación</span>
+                <span class="val" id="plan-renews">—</span>
               </div>
               <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn btn-ghost btn-sm" id="btn-billing" style="display:none;">Gestionar facturaciÃ³n â†’</button>
-                <a class="btn btn-primary btn-sm" href="/pricing" id="btn-upgrade">Ver planes â†’</a>
+                <button class="btn btn-ghost btn-sm" id="btn-billing" style="display:none;">Gestionar facturación →</button>
+                <a class="btn btn-primary btn-sm" href="/pricing" id="btn-upgrade">Ver planes →</a>
               </div>
             </div>
           </div>
@@ -232,31 +232,31 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <div class="acct-card" id="security">
             <div class="acct-card-head">
               <h2>Seguridad</h2>
-              <p>Cambia tu contraseÃ±a y gestiona el acceso.</p>
+              <p>Cambia tu contraseña y gestiona el acceso.</p>
             </div>
             <div class="acct-card-body">
               <div class="field">
-                <label>ContraseÃ±a actual</label>
-                <input type="password" id="inp-pw-current" placeholder="Tu contraseÃ±a actual" autocomplete="current-password" />
+                <label>Contraseña actual</label>
+                <input type="password" id="inp-pw-current" placeholder="Tu contraseña actual" autocomplete="current-password" />
               </div>
               <div class="field">
-                <label>Nueva contraseÃ±a</label>
-                <input type="password" id="inp-pw" placeholder="MÃ­nimo 8 caracteres" autocomplete="new-password" />
+                <label>Nueva contraseña</label>
+                <input type="password" id="inp-pw" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
               </div>
               <div class="field">
-                <label>Confirmar nueva contraseÃ±a</label>
-                <input type="password" id="inp-pw2" placeholder="Repite la nueva contraseÃ±a" autocomplete="new-password" />
+                <label>Confirmar nueva contraseña</label>
+                <input type="password" id="inp-pw2" placeholder="Repite la nueva contraseña" autocomplete="new-password" />
               </div>
               <div style="display:flex; justify-content:flex-end; margin-top:6px;">
-                <button class="btn btn-primary btn-sm" id="save-pw">Cambiar contraseÃ±a</button>
+                <button class="btn btn-primary btn-sm" id="save-pw">Cambiar contraseña</button>
               </div>
               <div class="acct-sep"></div>
               <div class="row-between">
                 <div>
-                  <div style="font-size:14px; font-weight:500;">Cerrar sesiÃ³n</div>
-                  <div style="font-size:12.5px; color:var(--ink-mute); margin-top:2px;">Cierra la sesiÃ³n en este dispositivo.</div>
+                  <div style="font-size:14px; font-weight:500;">Cerrar sesión</div>
+                  <div style="font-size:12.5px; color:var(--ink-mute); margin-top:2px;">Cierra la sesión en este dispositivo.</div>
                 </div>
-                <button class="btn btn-ghost btn-sm" id="logout-btn">Cerrar sesiÃ³n</button>
+                <button class="btn btn-ghost btn-sm" id="logout-btn">Cerrar sesión</button>
               </div>
             </div>
           </div>
@@ -272,7 +272,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
                 <div>
                   <div style="font-size:14px; font-weight:500;">Eliminar mi cuenta</div>
                   <div style="font-size:12.5px; color:var(--ink-mute); margin-top:3px; max-width:36ch; line-height:1.5;">
-                    Borra tu cuenta, historial de chats y suscripciÃ³n de forma permanente.
+                    Borra tu cuenta, historial de chats y suscripción de forma permanente.
                   </div>
                 </div>
                 <button class="btn btn-sm" id="delete-btn"
@@ -291,9 +291,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <!-- Modal confirmar borrado -->
   <div class="acct-modal" id="modal-delete">
     <div class="acct-modal-box">
-      <h3>Â¿Eliminar tu cuenta?</h3>
+      <h3>¿Eliminar tu cuenta?</h3>
       <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:16px; line-height:1.55;">
-        Esta acciÃ³n borrarÃ¡ permanentemente tu cuenta, tus chats y tus datos. No se puede deshacer.
+        Esta acción borrará permanentemente tu cuenta, tus chats y tus datos. No se puede deshacer.
       </p>
       <p style="font-size:12.5px; color:var(--ink-mute); margin-bottom:10px;">
         Escribe <strong>eliminar</strong> para confirmar:
@@ -325,7 +325,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       setTimeout(() => el.classList.remove('show'), dur);
     }
 
-    /* â”€â”€ Auth check â”€â”€ */
+    /* ── Auth check ── */
     sb.auth.getSession().then(({ data: { session } }) => {
       if (!session) { location.href = '/login'; return; }
       boot(session);
@@ -348,7 +348,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       bindActions(session);
     }
 
-    /* â”€â”€ Plan â”€â”€ */
+    /* ── Plan ── */
     async function loadPlan(userId) {
       try {
         const { data } = await sb
@@ -370,7 +370,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         if (data.status === 'active' || data.status === 'trialing') {
           const active = data.status === 'active';
           statusEl.innerHTML = `<span class="plan-badge ${active ? 'active' : 'trial'}"><span class="plan-dot"></span>${active ? 'Activo' : 'Prueba gratuita'}</span>`;
-          nameEl.textContent = 'MediQ Pro Â· ' + (data.plan_id?.includes('annual') ? 'Anual' : 'Mensual');
+          nameEl.textContent = 'MediQ Pro · ' + (data.plan_id?.includes('annual') ? 'Anual' : 'Mensual');
           if (data.current_period_end) {
             renewsEl.textContent = new Date(data.current_period_end * 1000)
               .toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -379,28 +379,28 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           upgradeBtn.style.display = 'none';
         } else if (data.status === 'canceled') {
           statusEl.innerHTML = `<span class="plan-badge none"><span class="plan-dot"></span>Cancelada</span>`;
-          renewsEl.textContent = 'No se renovarÃ¡';
+          renewsEl.textContent = 'No se renovará';
         }
       } catch (_) {}
     }
 
-    /* â”€â”€ Acciones â”€â”€ */
+    /* ── Acciones ── */
     function bindActions(session) {
       /* Guardar perfil */
       document.getElementById('save-profile').addEventListener('click', async () => {
         const newName = document.getElementById('inp-name').value.trim();
-        if (!newName) { toast('El nombre no puede estar vacÃ­o.'); return; }
+        if (!newName) { toast('El nombre no puede estar vacío.'); return; }
         const { error } = await sb.auth.updateUser({ data: { name: newName } });
         if (error) { toast('Error: ' + error.message); return; }
         document.getElementById('profile-name').textContent = newName;
         document.getElementById('ava-lg').textContent       = newName.charAt(0).toUpperCase();
-        toast('Perfil actualizado âœ“');
+        toast('Perfil actualizado ✓');
       });
 
-      /* Cambiar contraseÃ±a â€” requiere verificar la contraseÃ±a actual antes de
-         cambiarla, para evitar que alguien con acceso fÃ­sico a una sesiÃ³n abierta
+      /* Cambiar contraseña — requiere verificar la contraseña actual antes de
+         cambiarla, para evitar que alguien con acceso físico a una sesión abierta
          pueda bloquear al usuario fuera de su propia cuenta.
-         La verificaciÃ³n se hace re-autenticando con signInWithPassword; si es OK,
+         La verificación se hace re-autenticando con signInWithPassword; si es OK,
          se llama a updateUser({ password }). */
       const btnPw = document.getElementById('save-pw');
       btnPw.addEventListener('click', async () => {
@@ -408,32 +408,32 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         const pw  = document.getElementById('inp-pw').value;
         const pw2 = document.getElementById('inp-pw2').value;
 
-        if (!cur)          { toast('Introduce tu contraseÃ±a actual.'); return; }
-        if (pw.length < 8) { toast('La nueva contraseÃ±a debe tener al menos 8 caracteres.'); return; }
-        if (pw === cur)    { toast('La nueva contraseÃ±a debe ser distinta a la actual.'); return; }
-        if (pw !== pw2)    { toast('Las contraseÃ±as nuevas no coinciden.'); return; }
+        if (!cur)          { toast('Introduce tu contraseña actual.'); return; }
+        if (pw.length < 8) { toast('La nueva contraseña debe tener al menos 8 caracteres.'); return; }
+        if (pw === cur)    { toast('La nueva contraseña debe ser distinta a la actual.'); return; }
+        if (pw !== pw2)    { toast('Las contraseñas nuevas no coinciden.'); return; }
 
         const email = user?.email;
-        if (!email) { toast('SesiÃ³n no vÃ¡lida. Vuelve a entrar.'); return; }
+        if (!email) { toast('Sesión no válida. Vuelve a entrar.'); return; }
 
         btnPw.disabled = true;
         const oldLabel = btnPw.textContent;
-        btnPw.textContent = 'Verificandoâ€¦';
+        btnPw.textContent = 'Verificando…';
 
         try {
-          // 1) Verificar contraseÃ±a actual re-autenticando
+          // 1) Verificar contraseña actual re-autenticando
           const { error: signInErr } = await sb.auth.signInWithPassword({ email, password: cur });
-          if (signInErr) { toast('La contraseÃ±a actual es incorrecta.'); return; }
+          if (signInErr) { toast('La contraseña actual es incorrecta.'); return; }
 
-          // 2) Cambiar contraseÃ±a
-          btnPw.textContent = 'Cambiandoâ€¦';
+          // 2) Cambiar contraseña
+          btnPw.textContent = 'Cambiando…';
           const { error: updateErr } = await sb.auth.updateUser({ password: pw });
           if (updateErr) { toast('Error: ' + updateErr.message); return; }
 
           document.getElementById('inp-pw-current').value = '';
           document.getElementById('inp-pw').value         = '';
           document.getElementById('inp-pw2').value        = '';
-          toast('ContraseÃ±a actualizada âœ“');
+          toast('Contraseña actualizada ✓');
         } catch (err) {
           toast('Error inesperado: ' + (err.message || err));
         } finally {
@@ -442,10 +442,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         }
       });
 
-      /* Gestionar facturaciÃ³n (Stripe portal) */
+      /* Gestionar facturación (Stripe portal) */
       document.getElementById('btn-billing').addEventListener('click', async () => {
         const btn = document.getElementById('btn-billing');
-        btn.textContent = 'Redirigiendoâ€¦';
+        btn.textContent = 'Redirigiendo…';
         btn.disabled = true;
         try {
           const { data: { session: s } } = await sb.auth.getSession();
@@ -457,13 +457,13 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           if (json.url) { location.href = json.url; return; }
           throw new Error();
         } catch {
-          toast('Error al abrir el portal de facturaciÃ³n.');
-          btn.textContent = 'Gestionar facturaciÃ³n â†’';
+          toast('Error al abrir el portal de facturación.');
+          btn.textContent = 'Gestionar facturación →';
           btn.disabled = false;
         }
       });
 
-      /* Cerrar sesiÃ³n */
+      /* Cerrar sesión */
       document.getElementById('logout-btn').addEventListener('click', async () => {
         await sb.auth.signOut();
         try { localStorage.removeItem('mediq.authHint'); } catch (_) {}
@@ -493,7 +493,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
       confirmBtn.addEventListener('click', async () => {
         confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Eliminandoâ€¦';
+        confirmBtn.textContent = 'Eliminando…';
         try {
           const { data: { session: s } } = await sb.auth.getSession();
           const res = await fetch('/api/delete-account', {
@@ -513,7 +513,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       });
     }
 
-    /* â”€â”€ Scroll spy para nav sidebar â”€â”€ */
+    /* ── Scroll spy para nav sidebar ── */
     const navLinks = document.querySelectorAll('.acct-nav a[href^="#"]');
     const obs = new IntersectionObserver((entries) => {
       entries.forEach(e => {
