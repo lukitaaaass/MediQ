@@ -152,12 +152,20 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
        enmarcado, encima del contenido. Al estar aqui, inline en el <head>, no
        hay ninguna ventana en la que eso pueda pasar.
 
-       El rail se queda oculto aqui y solo lo enciende global.css en escritorio:
-       asi, si esa hoja falta, degrada a "sin rail" en vez de a "menu volcado
-       encima del contenido". */
+       Los valores coinciden con los de global.css a proposito: al ser identicos
+       da igual cual de las dos hojas gane la cascada, que es justo lo que hace
+       que esto sea seguro.
+
+       NO añadir aqui reglas de #nav-rail. Se probo `#nav-rail{display:none}` y
+       rompio la navegacion: los <link> del sitio van DESPUES de este <style>,
+       asi que en carga normal ganaba global.css y el rail se veia, pero al
+       navegar con ViewTransitions Astro reordena el head, pasaba a ganar esta
+       regla y el rail desaparecia hasta recargar — dejando la pagina sin
+       ninguna navegacion. Cualquier regla de rail que se ponga aqui compite con
+       global.css a igual especificidad y depende del orden. Que viva solo en
+       global.css. */
     #nav-mobile { position: fixed; inset: 64px 0 0 0; transform: translateY(-110%); pointer-events: none; }
     #nav-mobile.open { transform: translateY(0); pointer-events: auto; }
-    #nav-rail { display: none; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
