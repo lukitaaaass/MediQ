@@ -19,8 +19,11 @@ const RATE_WINDOW_MIN  = 24 * 60;
 
 const FALLBACK_SALT = 'mediq-analitica-v1-fallback-salt-please-override-in-env';
 
-const TEXT_MIN = 40;   // mas laxo que informes: una analitica puede ser corta
+// Mas laxo que informes: una analitica puede ser corta. Dos parametros escritos a mano
+// ("Hb 14" + "Glu 90") son entrada legitima, asi que el suelo va por debajo de eso.
+const TEXT_MIN = 12;
 const TEXT_MAX = 30000;
+const MIN_DIGITS = 2;  // una analitica sin cifras no es una analitica: evita gastar una llamada al modelo
 
 function hashIp(ip, salt) {
   return crypto.createHmac('sha256', salt).update(String(ip)).digest('hex');
@@ -155,6 +158,21 @@ export default async function handler(req, res) {
     console.warn('[/api/analyze-analitica] DEMO_RATE_SALT no definido — usando fallback público');
   }
 
+  // Validamos el cuerpo ANTES de consumir cuota: una peticion malformada no debe
+  // gastarle al usuario una de sus interpretaciones diarias.
+  const { text } = req.body || {};
+  if (typeof text !== 'string') {
+    return res.status(400).json({ error: 'Falta el texto de la analítica.' });
+  }
+
+  const trimmed = text.trim();
+  if (trimmed.length < TEXT_MIN || (trimmed.match(/\d/g) || []).length < MIN_DIGITS) {
+    return res.status(400).json({ error: `El texto es demasiado corto. Añade al menos algunos parámetros con sus valores.` });
+  }
+  if (trimmed.length > TEXT_MAX) {
+    return res.status(400).json({ error: `El texto excede el máximo (${TEXT_MAX} caracteres). Reduce el contenido o sube solo el panel principal.` });
+  }
+
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
     .split(',')[0].trim();
   const ipHash = hashIp(ip, SALT);
@@ -173,19 +191,6 @@ export default async function handler(req, res) {
     return res.status(429).json({
       error: `Has usado las ${RATE_LIMIT} interpretaciones diarias. Vuelve en ${hoursLeft} h.`,
     });
-  }
-
-  const { text } = req.body || {};
-  if (typeof text !== 'string') {
-    return res.status(400).json({ error: 'Falta el texto de la analítica.' });
-  }
-
-  const trimmed = text.trim();
-  if (trimmed.length < TEXT_MIN) {
-    return res.status(400).json({ error: `El texto es demasiado corto. Añade al menos algunos parámetros con sus valores.` });
-  }
-  if (trimmed.length > TEXT_MAX) {
-    return res.status(400).json({ error: `El texto excede el máximo (${TEXT_MAX} caracteres). Reduce el contenido o sube solo el panel principal.` });
   }
 
   // ─── Retrieval de KB ───

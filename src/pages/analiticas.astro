@@ -640,7 +640,11 @@ import Layout from '../layouts/Layout.astro';
   <script is:inline>
     (function() {
       const MAX_FILE_SIZE = 10 * 1024 * 1024;
+      // Umbral de longitud para PDF y texto pegado. La entrada manual NO se mide en
+      // caracteres — dos parámetros cortos ("Glucosa 90 mg/dL") no llegan a 40 — sino
+      // en número de parámetros rellenos (MIN_MANUAL_PARAMS).
       const MIN_TEXT_LEN  = 40;
+      const MIN_MANUAL_PARAMS = 2;
 
       // Refs
       const tabBtns  = document.querySelectorAll('.an-tab');
@@ -742,6 +746,12 @@ import Layout from '../layouts/Layout.astro';
         return lines.join('\n');
       }
 
+      // Número de filas manuales con nombre + valor. Es el criterio de validez de la
+      // pestaña manual, tanto para habilitar el botón como para permitir el análisis.
+      function countManualParams() {
+        return manualToText().split('\n').filter(Boolean).length;
+      }
+
       // ─── Update UI state ───
       function updateAnalyzeState() {
         let ready = false, hint = 'Elige una opción para empezar';
@@ -753,10 +763,9 @@ import Layout from '../layouts/Layout.astro';
           ready = len >= MIN_TEXT_LEN;
           hint = len === 0 ? 'Pega el texto de la analítica' : (ready ? (len + ' caracteres · listo') : ('Añade ' + (MIN_TEXT_LEN - len) + ' caracteres más'));
         } else if (currentTab === 'manual') {
-          const filled = manualList.querySelectorAll('.manual-row').length;
-          const valid = manualToText().split('\n').filter(Boolean).length;
-          ready = valid >= 2;
-          hint = valid === 0 ? 'Rellena al menos 2 parámetros' : (ready ? (valid + ' parámetros · listo') : ('Añade ' + (2 - valid) + ' parámetro más'));
+          const valid = countManualParams();
+          ready = valid >= MIN_MANUAL_PARAMS;
+          hint = valid === 0 ? ('Rellena al menos ' + MIN_MANUAL_PARAMS + ' parámetros') : (ready ? (valid + ' parámetros · listo') : 'Añade 1 parámetro más');
         }
         analyzeBtn.disabled = !ready;
         hintEl.textContent = hint;
@@ -882,19 +891,27 @@ import Layout from '../layouts/Layout.astro';
         setProgress('Preparando…', 5);
 
         try {
+          // Cada origen se valida con su propio criterio: los PDF y el texto pegado por
+          // longitud, la entrada manual por número de parámetros. Medir el modo manual en
+          // caracteres rechazaba analíticas válidas de dos parámetros cortos.
           let text;
           if (currentTab === 'pdf') {
             text = await extractPdf(pdfFile);
+            if (!text || text.length < MIN_TEXT_LEN) {
+              throw new Error('No se pudo extraer suficiente texto. ¿Es el archivo correcto?');
+            }
           } else if (currentTab === 'text') {
             text = paste.value.trim();
             setProgress('Preparando texto…', 40);
+            if (text.length < MIN_TEXT_LEN) {
+              throw new Error('El texto es demasiado corto. Pega la analítica completa.');
+            }
           } else {
             text = manualToText();
             setProgress('Preparando parámetros…', 40);
-          }
-
-          if (!text || text.length < MIN_TEXT_LEN) {
-            throw new Error('No se pudo extraer suficiente texto. ¿Es el archivo correcto?');
+            if (countManualParams() < MIN_MANUAL_PARAMS) {
+              throw new Error('Rellena al menos ' + MIN_MANUAL_PARAMS + ' parámetros con su nombre y su valor.');
+            }
           }
 
           setProgress('Interpretando con IA…', 55);
