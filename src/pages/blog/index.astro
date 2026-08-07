@@ -14,7 +14,7 @@ const hayCasos = posts.some(p => p.data.tipo === 'caso');
 ---
 
 <Layout
-  title="Blog médico — MediQ"
+  title="Biblioteca médica — MediQ"
   description="Análisis clínicos, guías rápidas para médicos y contenidos para pacientes. Artículos revisados por el equipo médico de MediQ."
   navActive="/blog"
 >
@@ -89,12 +89,12 @@ const hayCasos = posts.some(p => p.data.tipo === 'caso');
 
   <section class="blog-wrap">
     <header class="blog-hero">
-      <span class="eyebrow"><span class="eyebrow-dot"></span> Blog médico</span>
+      <span class="eyebrow"><span class="eyebrow-dot"></span> Biblioteca médica</span>
       <h1>Práctica clínica, <em>en formato leíble</em>.</h1>
       <p class="sub">Guías rápidas para médicos y residentes, y contenidos claros para pacientes. Revisado por profesionales sanitarios.</p>
     </header>
 
-    <nav class="blog-subnav" aria-label="Navegación del blog">
+    <nav class="blog-subnav" aria-label="Navegación de la biblioteca">
       <a href="/blog/" class="active">Todos</a>
       {hayCasos && <a href="/blog/casos/">Casos clínicos</a>}
     </nav>
