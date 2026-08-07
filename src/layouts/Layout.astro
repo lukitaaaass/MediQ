@@ -131,6 +131,11 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     html[data-auth="out"] .nav-links .nav-only-out { display: inline !important; }
     html[data-auth="in"]  #nav-mobile .nav-only-in  { display: block !important; }
     html[data-auth="out"] #nav-mobile .nav-only-out { display: block !important; }
+    /* Rail lateral: sus filas son flex (icono + etiqueta), no inline ni block. */
+    html[data-auth="in"]  #nav-rail .nav-only-in  { display: flex !important; }
+    html[data-auth="out"] #nav-rail .nav-only-out { display: flex !important; }
+    html[data-auth="out"] #rail-auth-out { display: flex !important; flex-direction: column; }
+    html[data-auth="in"]  #rail-auth-in  { display: flex !important; flex-direction: column; }
     /* Elementos de CONTENIDO condicionales segun sesion (CTAs de registro, etc.).
        A diferencia de .nav-only-*, estos OCULTAN en vez de mostrar: asi el
        elemento conserva su display natural (inline-flex en los .btn) cuando
@@ -204,6 +209,82 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 <body class={bodyClass}>
 
   <a href="#main-content" class="skip-link">Ir al contenido principal</a>
+
+  {/*
+    Rail lateral — solo visible en escritorio (>720px), donde sustituye a
+    la barra superior. En movil se oculta por CSS y manda nav.top + #nav-mobile.
+    Los enlaces replican los de nav.top; si añades uno, añadelo en los tres
+    sitios (rail, nav.top y #nav-mobile).
+  */}
+  <aside id="nav-rail" aria-label="Navegación principal">
+    <a class="rail-item rail-brand" href="/" aria-label="MediQ — inicio">
+      <span class="brand-mark"></span>
+      <span class="rail-label" data-brand>MediQ</span>
+    </a>
+
+    <nav class="rail-nav">
+      <a href="/" class:list={['rail-item', { active: navActive === '/' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5L12 3.5l8.5 7v9a1 1 0 01-1 1h-4.5v-6h-6v6H4.5a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Inicio</span>
+      </a>
+      <a href="/demo" class:list={['rail-item', 'nav-only-out', { active: navActive === '/demo' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M10 8.5l6 3.5-6 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Demo</span>
+      </a>
+      <a href="/informes" class:list={['rail-item', { active: navActive === '/informes' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 2.5H6.5a1 1 0 00-1 1v17a1 1 0 001 1h11a1 1 0 001-1V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 2.5V7h4.5M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Informes</span>
+      </a>
+      <a href="/analiticas" class:list={['rail-item', { active: navActive === '/analiticas' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2s5.8 6.2 5.8 10a5.8 5.8 0 11-11.6 0c0-3.8 5.8-10 5.8-10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 13.6h5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="rail-label">Analíticas</span>
+      </a>
+      <a href="/blog" class:list={['rail-item', { active: navActive === '/blog' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 5A2.5 2.5 0 017 2.5h12.5v19H7A2.5 2.5 0 004.5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 19A2.5 2.5 0 017 16.5h12.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Biblioteca</span>
+      </a>
+      <a href="/pricing" class:list={['rail-item', { active: navActive === '/pricing' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="rail-label">Precios</span>
+      </a>
+
+      <div class="rail-sep nav-only-in"></div>
+
+      <a href="/chat" class:list={['rail-item', 'nav-only-in', { active: navActive === '/chat' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.5 12.5a7 7 0 01-7 7H9l-5 3v-5.2a7 7 0 013-12.8h4.5a7 7 0 017 7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Chat</span>
+      </a>
+      <a href="/train" class:list={['rail-item', 'nav-only-in', { active: navActive === '/train' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Entrenar IA</span>
+      </a>
+      <a href="/triadas" class:list={['rail-item', 'nav-only-in', { active: navActive === '/triadas' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="18.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.8 7.1l-4.1 8.3M13.2 7.1l4.1 8.3M8 17.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="rail-label">Tríadas</span>
+      </a>
+    </nav>
+
+    <div class="rail-spacer"></div>
+    <div class="rail-sep"></div>
+
+    <div id="rail-auth-out" class="nav-auth-state">
+      <a class="rail-item" href="/login">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3.5H4.5a1 1 0 00-1 1v15a1 1 0 001 1H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 16l5-4-5-4M19 12H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Entrar</span>
+      </a>
+    </div>
+
+    <div id="rail-auth-in" class="nav-auth-state">
+      <a href="/account" class:list={['rail-item', { active: navActive === '/account' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.6"/><path d="M4.8 20.2a7.4 7.4 0 0114.4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <span class="rail-label">Mi cuenta</span>
+      </a>
+      <button type="button" class="rail-item" id="nav-rail-logout">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 3.5h4.5a1 1 0 011 1v15a1 1 0 01-1 1H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 16l-5-4 5-4M5 12h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="rail-label">Salir</span>
+      </button>
+    </div>
+  </aside>
 
   <nav class="top">
     <div class="container row">
@@ -555,16 +636,13 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           } catch (_) {}
           location.href = '/';
         }
-        const desktopLogout = document.getElementById('nav-logout');
-        const mobileLogout  = document.getElementById('nav-mobile-logout');
-        if (desktopLogout && !desktopLogout.dataset.mediqLogoutBound) {
-          desktopLogout.dataset.mediqLogoutBound = '1';
-          desktopLogout.addEventListener('click', doLogout);
-        }
-        if (mobileLogout && !mobileLogout.dataset.mediqLogoutBound) {
-          mobileLogout.dataset.mediqLogoutBound = '1';
-          mobileLogout.addEventListener('click', doLogout);
-        }
+        ['nav-logout', 'nav-mobile-logout', 'nav-rail-logout'].forEach(function (id) {
+          const el = document.getElementById(id);
+          if (el && !el.dataset.mediqLogoutBound) {
+            el.dataset.mediqLogoutBound = '1';
+            el.addEventListener('click', doLogout);
+          }
+        });
       }
     })();
   </script>

@@ -3,13 +3,13 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout
-  title="¡Bienvenido a MediQ! — Empieza aquí"
+  title="Â¡Bienvenido a MediQ! â€” Empieza aquÃ­"
   navActive=""
   noindex={true}
 >
 <style is:global>
   .onboarding-page {
-    min-height: calc(100vh - 64px);
+    min-height: calc(100vh - var(--topbar-h));
     display: flex; align-items: flex-start; justify-content: center;
     padding: clamp(32px, 6vw, 64px) var(--pad);
   }
@@ -125,8 +125,8 @@ import Layout from '../layouts/Layout.astro';
         </svg>
       </div>
       <h1>Bienvenido, <em id="ob-name">doctor</em>.</h1>
-      <p>Tu prueba de 14 días ya está activa. Sigue estos pasos para sacarle partido desde el primer día.</p>
-      <div class="trial-badge"><span class="dot"></span> 14 días gratis · sin cargo hasta <span id="ob-trial-end">—</span></div>
+      <p>Tu prueba de 14 dÃ­as ya estÃ¡ activa. Sigue estos pasos para sacarle partido desde el primer dÃ­a.</p>
+      <div class="trial-badge"><span class="dot"></span> 14 dÃ­as gratis Â· sin cargo hasta <span id="ob-trial-end">â€”</span></div>
     </div>
 
     <!-- Steps -->
@@ -139,7 +139,7 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div class="ob-step-body">
           <h3>Completa tu perfil</h3>
-          <p>Nombre, especialidad y rol — la IA te responde de forma personalizada</p>
+          <p>Nombre, especialidad y rol â€” la IA te responde de forma personalizada</p>
         </div>
         <a href="/chat" class="ob-step-cta" id="step-profile-cta">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -152,19 +152,19 @@ import Layout from '../layouts/Layout.astro';
         <div class="ob-step-num">2</div>
         <div class="ob-step-body">
           <h3>Haz tu primera consulta</h3>
-          <p>Describe un caso clínico o usa uno de los prompts de abajo</p>
+          <p>Describe un caso clÃ­nico o usa uno de los prompts de abajo</p>
         </div>
-        <a href="/chat" class="ob-step-cta">Ir al chat →</a>
+        <a href="/chat" class="ob-step-cta">Ir al chat â†’</a>
       </div>
 
       <!-- Step 3: Entrena -->
       <div class="ob-step" id="step-train">
         <div class="ob-step-num">3</div>
         <div class="ob-step-body">
-          <h3>Sube tu documentación</h3>
-          <p>Protocolos, guías clínicas o historias — la IA razona sobre tu corpus</p>
+          <h3>Sube tu documentaciÃ³n</h3>
+          <p>Protocolos, guÃ­as clÃ­nicas o historias â€” la IA razona sobre tu corpus</p>
         </div>
-        <a href="/train" class="ob-step-cta">Subir docs →</a>
+        <a href="/train" class="ob-step-cta">Subir docs â†’</a>
       </div>
 
     </div>
@@ -173,17 +173,17 @@ import Layout from '../layouts/Layout.astro';
     <div class="ob-quick">
       <h4>Empieza con un caso real</h4>
       <div class="ob-prompts">
-        <button class="ob-prompt" data-prompt="Varón 58a, dolor torácico opresivo 40 min, irradia a brazo izquierdo. ECG: supradesnivel ST en DII, DIII, aVF. ¿Diagnóstico diferencial y pasos a seguir?">
+        <button class="ob-prompt" data-prompt="VarÃ³n 58a, dolor torÃ¡cico opresivo 40 min, irradia a brazo izquierdo. ECG: supradesnivel ST en DII, DIII, aVF. Â¿DiagnÃ³stico diferencial y pasos a seguir?">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Dolor torácico — diferencial urgente
+          Dolor torÃ¡cico â€” diferencial urgente
         </button>
-        <button class="ob-prompt" data-prompt="¿Cuáles son las interacciones relevantes entre warfarina, amoxicilina y omeprazol en un paciente de 72 años con FA e insuficiencia renal leve?">
+        <button class="ob-prompt" data-prompt="Â¿CuÃ¡les son las interacciones relevantes entre warfarina, amoxicilina y omeprazol en un paciente de 72 aÃ±os con FA e insuficiencia renal leve?">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.8"/></svg>
-          Interacciones farmacológicas — polifarmacia
+          Interacciones farmacolÃ³gicas â€” polifarmacia
         </button>
-        <button class="ob-prompt" data-prompt="Score CURB-65 para neumonía adquirida en la comunidad: ¿qué criterios evalúa y qué decisión clínica implica cada puntuación?">
+        <button class="ob-prompt" data-prompt="Score CURB-65 para neumonÃ­a adquirida en la comunidad: Â¿quÃ© criterios evalÃºa y quÃ© decisiÃ³n clÃ­nica implica cada puntuaciÃ³n?">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Calculadora CURB-65 — neumonía
+          Calculadora CURB-65 â€” neumonÃ­a
         </button>
       </div>
     </div>
@@ -197,7 +197,7 @@ import Layout from '../layouts/Layout.astro';
     const name = localStorage.getItem('mediq.userName');
     if (name) document.getElementById('ob-name').textContent = name;
 
-    // Fecha fin de prueba (14 días desde hoy)
+    // Fecha fin de prueba (14 dÃ­as desde hoy)
     const end = new Date();
     end.setDate(end.getDate() + 14);
     document.getElementById('ob-trial-end').textContent = end.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
@@ -209,11 +209,11 @@ import Layout from '../layouts/Layout.astro';
       stepProfile.classList.remove('done');
       document.getElementById('step-profile-num').textContent = '1';
       const cta = document.getElementById('step-profile-cta');
-      cta.textContent = 'Completar →';
+      cta.textContent = 'Completar â†’';
       cta.href = '/chat';
     }
 
-    // Quick start prompts → abrir chat con el prompt prellenado
+    // Quick start prompts â†’ abrir chat con el prompt prellenado
     document.querySelectorAll('.ob-prompt').forEach(btn => {
       btn.addEventListener('click', () => {
         const prompt = btn.dataset.prompt;

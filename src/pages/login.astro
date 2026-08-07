@@ -6,13 +6,13 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout
-  title="Iniciar sesión — MediQ"
+  title="Iniciar sesiÃ³n â€” MediQ"
   navActive="/login"
   bodyClass="auth-page"
   noindex={true}
 >
 
-  <!-- Slot nav-actions: solo "Volver al inicio" en la página de login -->
+  <!-- Slot nav-actions: solo "Volver al inicio" en la pÃ¡gina de login -->
   <a slot="nav-actions" class="btn btn-ghost" href="/">Volver al inicio</a>
 
   <style is:global>
@@ -32,7 +32,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     body.auth-page main {
       display: grid;
       grid-template-columns: 1fr;
-      min-height: calc(100vh - 64px);
+      min-height: calc(100vh - var(--topbar-h));
     }
     @media (min-width: 920px) {
       body.auth-page main { grid-template-columns: 1.05fr 1fr; }
@@ -279,14 +279,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   </style>
 
   <main>
-    <!-- ────────── FORM ────────── -->
+    <!-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <section class="pane-form">
       <span class="eyebrow">Acceso seguro</span>
       <h1 style="margin-top:14px;">Bienvenido<em>.</em></h1>
-      <p class="sub">Tu sesión está gestionada por Supabase Auth. Las contraseñas se almacenan con bcrypt en el servidor y nunca viajan en texto plano.</p>
+      <p class="sub">Tu sesiÃ³n estÃ¡ gestionada por Supabase Auth. Las contraseÃ±as se almacenan con bcrypt en el servidor y nunca viajan en texto plano.</p>
 
       <div class="tabs" role="tablist">
-        <button id="tab-login" class="on" role="tab" aria-selected="true" aria-controls="auth-form">Iniciar sesión</button>
+        <button id="tab-login" class="on" role="tab" aria-selected="true" aria-controls="auth-form">Iniciar sesiÃ³n</button>
         <button id="tab-signup" role="tab" aria-selected="false" aria-controls="auth-form">Crear cuenta</button>
       </div>
 
@@ -295,24 +295,24 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <form id="auth-form" novalidate>
         <div class="field" id="f-name" hidden>
           <label for="name">Nombre completo</label>
-          <input id="name" name="name" type="text" placeholder="Dra. Ana Pérez" autocomplete="name"/>
+          <input id="name" name="name" type="text" placeholder="Dra. Ana PÃ©rez" autocomplete="name"/>
         </div>
 
         <div class="field" id="f-role" hidden>
           <label for="role">Perfil profesional</label>
           <select id="role" name="role">
-            <option value="">Selecciona tu perfil…</option>
-            <option value="medico">Médico en ejercicio</option>
+            <option value="">Selecciona tu perfilâ€¦</option>
+            <option value="medico">MÃ©dico en ejercicio</option>
             <option value="residente">Residente / MIR</option>
             <option value="estudiante">Estudiante de medicina</option>
-            <option value="enfermeria">Enfermería</option>
+            <option value="enfermeria">EnfermerÃ­a</option>
             <option value="otro">Otro profesional sanitario</option>
           </select>
         </div>
 
         <div class="field" id="f-specialty" hidden>
           <label for="specialty">Especialidad <span style="color:var(--ink-mute); font-weight:400;">(opcional)</span></label>
-          <input id="specialty" name="specialty" type="text" placeholder="Cardiología, Urgencias, Medicina interna…" autocomplete="off"/>
+          <input id="specialty" name="specialty" type="text" placeholder="CardiologÃ­a, Urgencias, Medicina internaâ€¦" autocomplete="off"/>
         </div>
 
         <div class="field">
@@ -321,15 +321,15 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         </div>
 
         <div class="field">
-          <label for="password">Contraseña</label>
+          <label for="password">ContraseÃ±a</label>
           <div class="input-wrap">
-            <input id="password" name="password" type="password" placeholder="Mínimo 8 caracteres" required minlength="8" autocomplete="current-password"/>
-            <button type="button" class="toggle-pw" id="toggle-pw" aria-label="Mostrar contraseña">Mostrar</button>
+            <input id="password" name="password" type="password" placeholder="MÃ­nimo 8 caracteres" required minlength="8" autocomplete="current-password"/>
+            <button type="button" class="toggle-pw" id="toggle-pw" aria-label="Mostrar contraseÃ±a">Mostrar</button>
           </div>
           <div class="strength" id="strength" data-s="0" hidden>
             <i></i><i></i><i></i><i></i>
           </div>
-          <div class="strength-label" id="strength-label" hidden aria-live="polite">Fortaleza: —</div>
+          <div class="strength-label" id="strength-label" hidden aria-live="polite">Fortaleza: â€”</div>
         </div>
 
         <div class="row-flex" id="row-extras">
@@ -337,53 +337,53 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <input type="checkbox" id="remember" checked/>
             Recordar este dispositivo
           </label>
-          <a href="#" id="link-forgot">¿Olvidaste tu contraseña?</a>
+          <a href="#" id="link-forgot">Â¿Olvidaste tu contraseÃ±a?</a>
         </div>
 
         <button class="submit" type="submit" id="submit-btn">
-          <span id="submit-label">Iniciar sesión</span>
-          <span aria-hidden="true">→</span>
+          <span id="submit-label">Iniciar sesiÃ³n</span>
+          <span aria-hidden="true">â†’</span>
         </button>
       </form>
 
-      <div class="divider">o continúa con</div>
+      <div class="divider">o continÃºa con</div>
       <div class="sso">
-        <button type="button" disabled title="Próximamente">
+        <button type="button" disabled title="PrÃ³ximamente">
           <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Cumed (colegios médicos)
+          Cumed (colegios mÃ©dicos)
         </button>
-        <button type="button" disabled title="Próximamente">
+        <button type="button" disabled title="PrÃ³ximamente">
           <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v2.92h5.59c-.24 1.4-1.65 4.1-5.59 4.1-3.36 0-6.1-2.78-6.1-6.21S8.64 5.7 12 5.7c1.91 0 3.19.81 3.92 1.51l2.67-2.57C16.96 3.07 14.69 2 12 2 6.48 2 2 6.48 2 12s4.48 10 10 10c5.77 0 9.6-4.05 9.6-9.76 0-.66-.07-1.16-.25-1.74z"/></svg>
           Continuar con SSO institucional
         </button>
       </div>
 
       <p class="legal">
-        Al continuar aceptas nuestros <a href="#" style="text-decoration:underline;">Términos</a> y <a href="#" style="text-decoration:underline;">Política de privacidad</a>. Cumplimos con el RGPD · Datos alojados en la UE.
+        Al continuar aceptas nuestros <a href="#" style="text-decoration:underline;">TÃ©rminos</a> y <a href="#" style="text-decoration:underline;">PolÃ­tica de privacidad</a>. Cumplimos con el RGPD Â· Datos alojados en la UE.
       </p>
     </section>
 
-    <!-- ────────── VISUAL / CRYPTO ────────── -->
+    <!-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ VISUAL / CRYPTO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
     <aside class="pane-visual">
       <div>
         <span class="pv-eyebrow">Beta cerrada en curso</span>
-        <p class="pv-quote">Un asistente clínico pensado <em>por y para</em> médicos hispanohablantes. Diferenciales fundamentados en evidencia, verificación de interacciones y razonamiento sobre tus documentos.</p>
+        <p class="pv-quote">Un asistente clÃ­nico pensado <em>por y para</em> mÃ©dicos hispanohablantes. Diferenciales fundamentados en evidencia, verificaciÃ³n de interacciones y razonamiento sobre tus documentos.</p>
         <div class="pv-attr">
           <div class="ava" style="background:linear-gradient(135deg,oklch(75% 0.1 195),oklch(55% 0.12 25));">Q</div>
           <div class="who">
-            MediQ · Equipo médico + ingeniería
-            <small>Madrid · en desarrollo activo · 2026</small>
+            MediQ Â· Equipo mÃ©dico + ingenierÃ­a
+            <small>Madrid Â· en desarrollo activo Â· 2026</small>
           </div>
         </div>
       </div>
 
       <div class="inspector" aria-live="polite">
-        <h5><span class="lock-dot"></span> Seguridad — Supabase Auth</h5>
-        <div class="row-i"><b>Contraseña</b><span class="v">bcrypt · nunca almacenada en texto plano</span></div>
-        <div class="row-i"><b>Sesión</b><span class="v">JWT · renovación automática</span></div>
-        <div class="row-i"><b>Transmisión</b><span class="v">TLS 1.3 · HTTPS cifrado</span></div>
-        <div class="row-i"><b>Almacén</b><span class="v">PostgreSQL · infraestructura Supabase</span></div>
-        <div class="row-i"><b>Cumplimiento</b><span class="v">RGPD · datos en la UE</span></div>
+        <h5><span class="lock-dot"></span> Seguridad â€” Supabase Auth</h5>
+        <div class="row-i"><b>ContraseÃ±a</b><span class="v">bcrypt Â· nunca almacenada en texto plano</span></div>
+        <div class="row-i"><b>SesiÃ³n</b><span class="v">JWT Â· renovaciÃ³n automÃ¡tica</span></div>
+        <div class="row-i"><b>TransmisiÃ³n</b><span class="v">TLS 1.3 Â· HTTPS cifrado</span></div>
+        <div class="row-i"><b>AlmacÃ©n</b><span class="v">PostgreSQL Â· infraestructura Supabase</span></div>
+        <div class="row-i"><b>Cumplimiento</b><span class="v">RGPD Â· datos en la UE</span></div>
       </div>
     </aside>
   </main>
@@ -426,15 +426,15 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         strengthLbl.hidden = false;
         rowExtras.style.display = 'none';
         passwordEl.setAttribute('autocomplete', 'new-password');
-        passwordEl.placeholder = 'Mínimo 8, mezcla mayúsculas, números y símbolos';
+        passwordEl.placeholder = 'MÃ­nimo 8, mezcla mayÃºsculas, nÃºmeros y sÃ­mbolos';
       } else {
         nameEl.required = false;
-        submitLabel.textContent = 'Iniciar sesión';
+        submitLabel.textContent = 'Iniciar sesiÃ³n';
         strengthBar.hidden = true;
         strengthLbl.hidden = true;
         rowExtras.style.display = 'flex';
         passwordEl.setAttribute('autocomplete', 'current-password');
-        passwordEl.placeholder = 'Mínimo 8 caracteres';
+        passwordEl.placeholder = 'MÃ­nimo 8 caracteres';
       }
       alertsEl.innerHTML = '';
     }
@@ -446,7 +446,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const isPw = passwordEl.type === 'password';
       passwordEl.type = isPw ? 'text' : 'password';
       togglePw.textContent = isPw ? 'Ocultar' : 'Mostrar';
-      togglePw.setAttribute('aria-label', isPw ? 'Ocultar contraseña' : 'Mostrar contraseña');
+      togglePw.setAttribute('aria-label', isPw ? 'Ocultar contraseÃ±a' : 'Mostrar contraseÃ±a');
     });
 
     function scorePassword(pw) {
@@ -457,7 +457,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       if (/[^A-Za-z0-9]/.test(pw) && pw.length >= 12) s++;
       return Math.min(s, 4);
     }
-    const strengthLabels = ['—', 'Débil', 'Aceptable', 'Buena', 'Excelente'];
+    const strengthLabels = ['â€”', 'DÃ©bil', 'Aceptable', 'Buena', 'Excelente'];
 
     passwordEl.addEventListener('input', () => {
       if (mode !== 'signup') return;
@@ -471,10 +471,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     }
 
     const ERROR_MESSAGES = {
-      'Invalid login credentials':                'Correo o contraseña incorrectos.',
-      'User already registered':                  'Ya existe una cuenta con ese correo. Inicia sesión.',
+      'Invalid login credentials':                'Correo o contraseÃ±a incorrectos.',
+      'User already registered':                  'Ya existe una cuenta con ese correo. Inicia sesiÃ³n.',
       'Email not confirmed':                      'Confirma tu correo antes de continuar.',
-      'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres.',
+      'Password should be at least 6 characters': 'La contraseÃ±a debe tener al menos 6 caracteres.',
     };
 
     form.addEventListener('submit', async (e) => {
@@ -487,12 +487,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const specialty = document.getElementById('specialty')?.value.trim() || '';
 
       if (!email || !password) { alertMsg('err', 'Rellena todos los campos.'); return; }
-      if (password.length < 8)  { alertMsg('err', 'La contraseña debe tener al menos 8 caracteres.'); return; }
+      if (password.length < 8)  { alertMsg('err', 'La contraseÃ±a debe tener al menos 8 caracteres.'); return; }
       if (mode === 'signup' && !name) { alertMsg('err', 'Indica tu nombre.'); return; }
 
       submitBtn.disabled = true;
       const oldLabel = submitLabel.textContent;
-      submitLabel.textContent = 'Un momento…';
+      submitLabel.textContent = 'Un momentoâ€¦';
 
       try {
         if (mode === 'signup') {
@@ -507,17 +507,17 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
               if (specialty) localStorage.setItem('mediq.specialty', specialty);
               if (role) localStorage.setItem('mediq.role', role);
             } catch (_) {}
-            alertMsg('ok', '✓ Cuenta creada. Redirigiendo…');
+            alertMsg('ok', 'âœ“ Cuenta creada. Redirigiendoâ€¦');
             setTimeout(() => location.href = '/checkout-success', 900);
           } else {
-            alertMsg('ok', '✓ Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesión.');
+            alertMsg('ok', 'âœ“ Cuenta creada. Revisa tu correo y confirma tu cuenta antes de iniciar sesiÃ³n.');
             submitBtn.disabled = false;
             submitLabel.textContent = oldLabel;
           }
         } else {
           const { error } = await sb.auth.signInWithPassword({ email, password });
           if (error) throw error;
-          alertMsg('ok', '✓ Sesión iniciada. Redirigiendo al chat…');
+          alertMsg('ok', 'âœ“ SesiÃ³n iniciada. Redirigiendo al chatâ€¦');
           setTimeout(() => location.href = '/chat', 700);
         }
       } catch (err) {
@@ -532,17 +532,17 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       e.preventDefault();
       const email = emailEl.value.trim().toLowerCase();
       if (!email) {
-        alertMsg('info', 'Escribe tu correo arriba y pulsa este enlace para recuperar la contraseña.');
+        alertMsg('info', 'Escribe tu correo arriba y pulsa este enlace para recuperar la contraseÃ±a.');
         return;
       }
       const { error } = await sb.auth.resetPasswordForEmail(email);
       if (error) { alertMsg('err', error.message); return; }
-      alertMsg('ok', '✓ Revisa tu correo — te hemos enviado el enlace de recuperación.');
+      alertMsg('ok', 'âœ“ Revisa tu correo â€” te hemos enviado el enlace de recuperaciÃ³n.');
     });
 
     sb.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        alertMsg('info', `Sesión activa de ${session.user.email}. <a href="/chat" style="text-decoration:underline; margin-left:6px;">Ir al chat →</a>`);
+        alertMsg('info', `SesiÃ³n activa de ${session.user.email}. <a href="/chat" style="text-decoration:underline; margin-left:6px;">Ir al chat â†’</a>`);
       }
     });
   </script>
