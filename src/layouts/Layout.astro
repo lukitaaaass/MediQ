@@ -131,6 +131,11 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     html[data-auth="out"] .nav-links .nav-only-out { display: inline !important; }
     html[data-auth="in"]  #nav-mobile .nav-only-in  { display: block !important; }
     html[data-auth="out"] #nav-mobile .nav-only-out { display: block !important; }
+    /* Elementos de CONTENIDO condicionales segun sesion (CTAs de registro, etc.).
+       A diferencia de .nav-only-*, estos OCULTAN en vez de mostrar: asi el
+       elemento conserva su display natural (inline-flex en los .btn) cuando
+       debe verse, sin que haya que declararlo aqui para cada caso. */
+    html[data-auth="in"]  .auth-hide-in { display: none !important; }
   </style>
 
   <!-- Plausible Analytics (solo si PUBLIC_PLAUSIBLE_DOMAIN está definido) -->
