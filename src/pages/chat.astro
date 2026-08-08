@@ -51,150 +51,27 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       overflow: hidden;
     }
 
-    /* En chat-page la sidebar integra el nav del sitio + el historial. */
-    /* Ocultamos el rail lateral global y quitamos su padding reservado. */
-    body.chat-page #nav-rail { display: none !important; }
-    @media (min-width: 721px) {
-      body.chat-page { padding-left: 0 !important; }
-    }
+    /* El panel lateral (nav + "Recientes") lo pinta Layout.astro y es global.
+       Esta página solo rellena #sb-list con sus chats. */
 
     /* ─── Layout ─── */
     .app {
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 1fr;
       height: calc(100vh - var(--topbar-h));
       overflow: hidden;
     }
-    @media (max-width: 820px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { display: none !important; }
-    }
 
-    /* ─── Sidebar ─── */
-    .sidebar {
-      background: var(--bg-2);
-      border-right: 1px solid var(--rule);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* ─── Sidebar: brand + nav del sitio (arriba) ─── */
-    .sb-brand {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 18px 8px;
-      color: var(--ink); text-decoration: none;
-      font-family: var(--f-display); font-size: 18px;
-      letter-spacing: -0.02em;
-    }
-    .sb-brand .brand-mark {
-      width: 20px; height: 20px; flex-shrink: 0;
-      background: var(--accent); border-radius: 5px;
-    }
-    .sb-nav {
-      display: flex; flex-direction: column;
-      padding: 2px 10px 4px;
-      gap: 0;
-    }
-    .sb-nav-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 5px 10px;
-      border-radius: 6px;
-      color: var(--ink-soft);
-      text-decoration: none;
-      font-size: 13px;
-      line-height: 1.2;
-      transition: background .15s ease, color .15s ease;
-    }
-    .sb-nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-    .sb-nav-item:hover { background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); }
-    .sb-nav-item.active {
-      background: var(--surface);
-      color: var(--ink);
-      box-shadow: inset 2px 0 0 var(--accent);
-    }
-    .sb-nav-sep {
-      height: 1px;
-      background: var(--rule);
-      margin: 4px 18px;
-    }
-
-    /* Chip usuario al pie */
-    .sb-user {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 14px;
-      margin: 0 8px 10px;
-      width: calc(100% - 16px);
-      border-radius: 10px;
-      color: var(--ink);
-      text-decoration: none;
-      text-align: left;
-      font-family: inherit;
-      font-size: 13.5px;
-      background: transparent;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: background .15s ease, border-color .15s ease;
-    }
-    .sb-user-caret { margin-left: auto; color: var(--ink-mute); flex-shrink: 0; }
-    .sb-user:hover {
-      background: color-mix(in oklab, var(--ink) 5%, transparent);
-      border-color: var(--rule-2);
-    }
-    .sb-user-ava {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--accent); color: var(--accent-ink);
-      display: grid; place-items: center;
-      font-size: 12px; font-weight: 600;
-      flex-shrink: 0;
-    }
-    .sb-user-body {
-      display: flex; flex-direction: column;
-      min-width: 0;
-    }
-    .sb-user-name {
-      font-weight: 500;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .sb-user-hint {
-      font-size: 11px;
-      color: var(--ink-mute);
-    }
-
-    .sb-head {
-      padding: 8px 18px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .new-chat {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 14px;
-      background: var(--ink);
-      color: var(--bg);
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: transform .2s ease;
-    }
-    .new-chat:hover { transform: translateY(-1px); }
+    /* El panel lateral, su nav, el buscador, "Recientes" y el chip de perfil
+       viven en Layout.astro + global.css. Aquí solo quedan los estilos de las
+       filas de chat que esta página inyecta en #sb-list. */
     .sb-section {
       font-family: var(--f-mono);
       font-size: 10.5px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--ink-mute);
-      padding: 14px 18px 8px;
-    }
-    .sb-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 8px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
+      padding: 10px 10px 6px;
     }
     .sb-item {
       padding: 11px 12px;
@@ -244,38 +121,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       font-family: inherit;
     }
 
-    /* Search */
-    .sb-search { position: relative; margin: 0; }
-    .sb-search input {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--rule-2);
-      border-radius: 8px;
-      padding: 9px 12px 9px 34px;
-      font-size: 13px;
-      color: var(--ink);
-      font-family: inherit;
-    }
-    .sb-search input::placeholder { color: var(--ink-mute); }
-    .sb-search input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent);
-    }
-    .sb-search .ic-search { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-mute); pointer-events: none; }
-    .sb-search .clear-x {
-      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-      width: 20px; height: 20px;
-      display: none; place-items: center;
-      border-radius: 50%;
-      color: var(--ink-mute);
-      background: var(--bg-2);
-      cursor: pointer;
-      border: 0;
-    }
-    .sb-search.has-value .clear-x { display: grid; }
-    .sb-search .clear-x:hover { color: var(--ink); }
-    .sb-search-info { font-family: var(--f-mono); font-size: 10.5px; color: var(--ink-mute); padding: 0 18px 8px; letter-spacing: 0.04em; }
+    /* El buscador (#sb-search) lo pinta Layout.astro; sus estilos están en
+       global.css. Aquí solo el resaltado de coincidencias en las filas. */
     .sb-item .snippet {
       font-size: 11.5px; color: var(--ink-mute); line-height: 1.45; margin-top: 4px;
       overflow: hidden; text-overflow: ellipsis;
@@ -480,89 +327,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <div class="app">
 
-    <!-- ─── Sidebar (integrada: brand + nav sitio + historial + user) ─── -->
-    <aside class="sidebar">
-      <a class="sb-brand" href="/" aria-label="MediQ — inicio">
-        <span class="brand-mark"></span>
-        <span data-brand>MediQ</span>
-      </a>
-
-      <nav class="sb-nav" aria-label="Navegación del sitio">
-        <a href="/" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3.5l8.5 7v9a1 1 0 01-1 1h-4.5v-6h-6v6H4.5a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Inicio
-        </a>
-        <a href="/informes" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2.5H6.5a1 1 0 00-1 1v17a1 1 0 001 1h11a1 1 0 001-1V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 2.5V7h4.5M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Informes
-        </a>
-        <a href="/analiticas" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2s5.8 6.2 5.8 10a5.8 5.8 0 11-11.6 0c0-3.8 5.8-10 5.8-10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 13.6h5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Analíticas
-        </a>
-        <a href="/blog" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 5A2.5 2.5 0 017 2.5h12.5v19H7A2.5 2.5 0 004.5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 19A2.5 2.5 0 017 16.5h12.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          Biblioteca
-        </a>
-        <a href="/pricing" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Plan
-        </a>
-        <div class="sb-nav-sep"></div>
-        <a href="/chat" class="sb-nav-item active">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M20.5 12.5a7 7 0 01-7 7H9l-5 3v-5.2a7 7 0 013-12.8h4.5a7 7 0 017 7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          Chat
-        </a>
-        <a href="/train" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-          Entrenar IA
-        </a>
-        <a href="/triadas" class="sb-nav-item">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="18.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.8 7.1l-4.1 8.3M13.2 7.1l4.1 8.3M8 17.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Tríadas
-        </a>
-      </nav>
-
-      <div class="sb-nav-sep"></div>
-
-      <div class="sb-head">
-        <button class="new-chat" id="new-chat">
-          <span>Nueva consulta</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </button>
-        <div class="sb-search" id="sb-search-wrap">
-          <svg class="ic-search" width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6" />
-            <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-          </svg>
-          <input type="search" id="sb-search" placeholder="Buscar en tus chats…" autocomplete="off" />
-          <button type="button" class="clear-x" id="sb-clear" aria-label="Limpiar">
-            <svg width="10" height="10" viewBox="0 0 12 12">
-              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="sb-search-info" id="sb-search-info" style="display:none;"></div>
-      <div class="sb-section" id="sb-section">Conversaciones recientes</div>
-      <div class="sb-list" id="sb-list"></div>
-
-      {/* Abre el mismo menú de perfil que el chip del nav superior (openUserMenu).
-          En escritorio nav.top está oculto, así que este es el ÚNICO acceso a
-          "Configuración" / "Cerrar sesión". No convertir en <a> otra vez. */}
-      <button type="button" class="sb-user" id="sb-user-btn" aria-haspopup="menu" aria-label="Perfil y ajustes">
-        <span class="sb-user-ava" id="sb-user-ava">·</span>
-        <span class="sb-user-body">
-          <span class="sb-user-name" id="sb-user-name">Mi cuenta</span>
-          <span class="sb-user-hint">Perfil y ajustes</span>
-        </span>
-        <svg class="sb-user-caret" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" />
-        </svg>
-      </button>
-    </aside>
+    {/* El panel lateral (nav del sitio + Recientes + chip de perfil) lo pinta
+        Layout.astro y es global. Esta pagina solo rellena #sb-list. */}
 
     <!-- ─── Chat ─── -->
     <section class="chat">
@@ -1178,14 +944,13 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
 
     function renderSidebar() {
       sbList.innerHTML = '';
-      const sectionEl = document.getElementById('sb-section');
-      const infoEl    = document.getElementById('sb-search-info');
+      /* El rótulo "Recientes" ya lo pinta el panel (Layout.astro); aquí solo
+         se rellena la lista y, si hay chats fijados, sus sub-cabeceras. */
+      const infoEl = document.getElementById('sb-search-info');
 
       if (chats.length === 0) {
-        sectionEl.style.display = '';
-        sectionEl.textContent = 'Conversaciones recientes';
-        infoEl.style.display = 'none';
-        sbList.innerHTML = '<div style="padding:12px 14px; font-size:12.5px; color:var(--ink-mute); line-height:1.5;">Aún no hay conversaciones. Inicia una nueva consulta arriba.</div>';
+        if (infoEl) infoEl.style.display = 'none';
+        sbList.innerHTML = '<div class="sb-empty">Aún no hay conversaciones. Pulsa + para empezar una.</div>';
         return;
       }
 
@@ -1210,14 +975,15 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
           return (titleMatch || snippet) ? { c, snippet } : null;
         }).filter(Boolean);
 
-        sectionEl.style.display = 'none';
-        infoEl.style.display = '';
-        infoEl.textContent = list.length
-          ? `${list.length} resultado${list.length === 1 ? '' : 's'} para "${q}"`
-          : `Sin resultados para "${q}"`;
+        if (infoEl) {
+          infoEl.style.display = '';
+          infoEl.textContent = list.length
+            ? `${list.length} resultado${list.length === 1 ? '' : 's'} para "${q}"`
+            : `Sin resultados para "${q}"`;
+        }
 
         if (list.length === 0) {
-          sbList.innerHTML = '<div style="padding:12px 14px; font-size:12.5px; color:var(--ink-mute); line-height:1.5;">Prueba con otras palabras.</div>';
+          sbList.innerHTML = '<div class="sb-empty">Prueba con otras palabras.</div>';
           return;
         }
         list.forEach(({ c, snippet }) => sbList.appendChild(buildChatRow(c, snippet, q)));
@@ -1226,7 +992,7 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
 
       const pinned = list.filter(c => c.pinned).sort((a, b) => b.updatedAt - a.updatedAt);
       const recent = list.filter(c => !c.pinned).sort((a, b) => b.updatedAt - a.updatedAt);
-      infoEl.style.display = 'none';
+      if (infoEl) infoEl.style.display = 'none';
 
       if (pinned.length) {
         const pinHead = document.createElement('div');
@@ -1240,10 +1006,6 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
         recHead.style.padding = '14px 10px 6px';
         recHead.textContent = 'Recientes';
         sbList.appendChild(recHead);
-        sectionEl.style.display = 'none';
-      } else {
-        sectionEl.style.display = '';
-        sectionEl.textContent = 'Conversaciones recientes';
       }
       recent.forEach(c => sbList.appendChild(buildChatRow(c)));
     }
@@ -1644,18 +1406,13 @@ ${msgsHtml}
     /* ═══════════════════════════════════════════════════════════
        SEARCH
        ═══════════════════════════════════════════════════════════ */
+    /* El input, su botón de limpiar y el estado abierto/cerrado los gestiona
+       Layout.astro (el buscador es del panel, no del chat). Aquí solo se
+       escucha el evento `input` para filtrar la lista de chats. */
     const searchInput = document.getElementById('sb-search');
-    const searchWrap  = document.getElementById('sb-search-wrap');
-    const searchClear = document.getElementById('sb-clear');
-    searchInput.addEventListener('input', () => {
+    if (searchInput) searchInput.addEventListener('input', () => {
       searchQuery = searchInput.value;
-      searchWrap.classList.toggle('has-value', searchQuery.length > 0);
       renderSidebar();
-    });
-    searchClear.addEventListener('click', () => {
-      searchInput.value = ''; searchQuery = '';
-      searchWrap.classList.remove('has-value');
-      renderSidebar(); searchInput.focus();
     });
 
     /* ═══════════════════════════════════════════════════════════
@@ -2201,7 +1958,8 @@ ${msgsHtml}
 
     // renderSuggestions y startSuggestionRotation se llaman desde renderMessages(null) en el init
 
-    document.getElementById('new-chat').addEventListener('click', newChat);
+    /* El "+" de "Recientes" vive en el panel global (Layout.astro). */
+    document.getElementById('sb-new')?.addEventListener('click', newChat);
 
     const spBtn   = document.getElementById('specialty-btn');
     const spMenu  = document.getElementById('specialty-menu');
