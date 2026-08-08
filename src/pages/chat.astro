@@ -124,13 +124,19 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       display: flex; align-items: center; gap: 10px;
       padding: 12px 14px;
       margin: 0 8px 10px;
+      width: calc(100% - 16px);
       border-radius: 10px;
       color: var(--ink);
       text-decoration: none;
+      text-align: left;
+      font-family: inherit;
       font-size: 13.5px;
+      background: transparent;
       border: 1px solid transparent;
+      cursor: pointer;
       transition: background .15s ease, border-color .15s ease;
     }
+    .sb-user-caret { margin-left: auto; color: var(--ink-mute); flex-shrink: 0; }
     .sb-user:hover {
       background: color-mix(in oklab, var(--ink) 5%, transparent);
       border-color: var(--rule-2);
@@ -500,7 +506,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         </a>
         <a href="/pricing" class="sb-nav-item">
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          Precios
+          Plan
         </a>
         <div class="sb-nav-sep"></div>
         <a href="/chat" class="sb-nav-item active">
@@ -543,13 +549,19 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div class="sb-section" id="sb-section">Conversaciones recientes</div>
       <div class="sb-list" id="sb-list"></div>
 
-      <a class="sb-user" href="/account" aria-label="Mi cuenta">
+      {/* Abre el mismo menú de perfil que el chip del nav superior (openUserMenu).
+          En escritorio nav.top está oculto, así que este es el ÚNICO acceso a
+          "Configuración" / "Cerrar sesión". No convertir en <a> otra vez. */}
+      <button type="button" class="sb-user" id="sb-user-btn" aria-haspopup="menu" aria-label="Perfil y ajustes">
         <span class="sb-user-ava" id="sb-user-ava">·</span>
         <span class="sb-user-body">
           <span class="sb-user-name" id="sb-user-name">Mi cuenta</span>
           <span class="sb-user-hint">Perfil y ajustes</span>
         </span>
-      </a>
+        <svg class="sb-user-caret" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" />
+        </svg>
+      </button>
     </aside>
 
     <!-- ─── Chat ─── -->
@@ -942,6 +954,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         e.preventDefault();
         e.stopPropagation();
         openUserMenu(accountBtn);
+      });
+      // El chip del pie de la sidebar abre el mismo menú, desplegado hacia
+      // arriba (preferUp) porque está pegado al borde inferior de la ventana.
+      const sbUserBtn = document.getElementById('sb-user-btn');
+      if (sbUserBtn) sbUserBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openUserMenu(sbUserBtn, true);
       });
     }
 
@@ -1361,6 +1381,10 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/></svg>
           <span>Mi cuenta</span>
         </button>
+        <button data-act="plan">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span>Plan</span>
+        </button>
         <button data-act="settings">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019 9c0 .67.39 1.27 1 1.51H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>Configuración</span>
@@ -1376,6 +1400,7 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
           const act = b.dataset.act;
           closeCtxMenu();
           if (act === 'account') location.href = '/account';
+          else if (act === 'plan') location.href = '/pricing';
           else if (act === 'settings') openModal('modal-settings');
           else if (act === 'logout') { await sb.auth.signOut(); location.href = '/login'; }
         });
