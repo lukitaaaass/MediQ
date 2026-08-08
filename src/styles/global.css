@@ -417,6 +417,60 @@ nav.top .row {
 .sb-user-hint { font-size: 11px; color: var(--ink-mute); }
 .sb-user-caret { margin-left: auto; color: var(--ink-mute); flex-shrink: 0; }
 
+/* ─── Menu del chip de perfil ───
+   Se posiciona por JS (Layout.astro) sobre el chip, desplegado hacia arriba
+   porque el chip esta pegado al borde inferior de la ventana. */
+.user-menu {
+  position: fixed;
+  z-index: 80;
+  min-width: 214px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--rule-2);
+  border-radius: 10px;
+  box-shadow: 0 18px 44px -20px rgba(0, 0, 0, .45);
+  flex-direction: column;
+  font-family: var(--f-body);
+}
+.user-menu button {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--ink);
+  text-align: left;
+  background: transparent; border: 0; cursor: pointer;
+}
+.user-menu button:hover { background: var(--bg-2); }
+.user-menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.user-menu button.danger { color: var(--danger); }
+.user-menu button.danger:hover { background: color-mix(in oklab, var(--danger) 10%, var(--bg-2)); }
+.user-menu svg { flex-shrink: 0; opacity: .8; }
+.user-menu .sep { height: 1px; background: var(--rule); margin: 4px 0; }
+.user-menu .head {
+  padding: 10px 12px 8px;
+  font-family: var(--f-mono); font-size: 10.5px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 4px;
+}
+.user-menu .head b {
+  display: block;
+  font-family: var(--f-body); font-size: 13px; font-weight: 500;
+  color: var(--ink);
+  margin-top: 2px;
+  text-transform: none; letter-spacing: 0;
+}
+.user-menu .head .mail {
+  display: block;
+  font-family: var(--f-mono); font-size: 10.5px;
+  color: var(--ink-mute);
+  margin-top: 2px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
 @media (prefers-reduced-motion: reduce) {
   #app-sidebar, body { transition: none; }
 }
