@@ -51,6 +51,13 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       overflow: hidden;
     }
 
+    /* En chat-page la sidebar integra el nav del sitio + el historial. */
+    /* Ocultamos el rail lateral global y quitamos su padding reservado. */
+    body.chat-page #nav-rail { display: none !important; }
+    @media (min-width: 721px) {
+      body.chat-page { padding-left: 0 !important; }
+    }
+
     /* ─── Layout ─── */
     .app {
       display: grid;
@@ -71,8 +78,84 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       flex-direction: column;
       overflow: hidden;
     }
+
+    /* ─── Sidebar: brand + nav del sitio (arriba) ─── */
+    .sb-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 18px 12px;
+      color: var(--ink); text-decoration: none;
+      font-family: var(--f-display); font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+    .sb-brand .brand-mark {
+      width: 22px; height: 22px; flex-shrink: 0;
+      background: var(--accent); border-radius: 6px;
+    }
+    .sb-nav {
+      display: flex; flex-direction: column;
+      padding: 4px 10px 8px;
+      gap: 1px;
+    }
+    .sb-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: background .15s ease, color .15s ease;
+    }
+    .sb-nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sb-nav-item:hover { background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); }
+    .sb-nav-item.active {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: inset 2px 0 0 var(--accent);
+    }
+    .sb-nav-sep {
+      height: 1px;
+      background: var(--rule);
+      margin: 8px 18px;
+    }
+
+    /* Chip usuario al pie */
+    .sb-user {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      margin: 0 8px 10px;
+      border-radius: 10px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13.5px;
+      border: 1px solid transparent;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .sb-user:hover {
+      background: color-mix(in oklab, var(--ink) 5%, transparent);
+      border-color: var(--rule-2);
+    }
+    .sb-user-ava {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-ink);
+      display: grid; place-items: center;
+      font-size: 12px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .sb-user-body {
+      display: flex; flex-direction: column;
+      min-width: 0;
+    }
+    .sb-user-name {
+      font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .sb-user-hint {
+      font-size: 11px;
+      color: var(--ink-mute);
+    }
+
     .sb-head {
-      padding: 18px 18px 12px;
+      padding: 12px 18px 12px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -390,8 +473,51 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
   <div class="app">
 
-    <!-- ─── Sidebar ─── -->
+    <!-- ─── Sidebar (integrada: brand + nav sitio + historial + user) ─── -->
     <aside class="sidebar">
+      <a class="sb-brand" href="/" aria-label="MediQ — inicio">
+        <span class="brand-mark"></span>
+        <span data-brand>MediQ</span>
+      </a>
+
+      <nav class="sb-nav" aria-label="Navegación del sitio">
+        <a href="/" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 10.5L12 3.5l8.5 7v9a1 1 0 01-1 1h-4.5v-6h-6v6H4.5a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Inicio
+        </a>
+        <a href="/informes" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14 2.5H6.5a1 1 0 00-1 1v17a1 1 0 001 1h11a1 1 0 001-1V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 2.5V7h4.5M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Informes
+        </a>
+        <a href="/analiticas" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2s5.8 6.2 5.8 10a5.8 5.8 0 11-11.6 0c0-3.8 5.8-10 5.8-10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 13.6h5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Analíticas
+        </a>
+        <a href="/blog" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 5A2.5 2.5 0 017 2.5h12.5v19H7A2.5 2.5 0 004.5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 19A2.5 2.5 0 017 16.5h12.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Biblioteca
+        </a>
+        <a href="/pricing" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Precios
+        </a>
+        <div class="sb-nav-sep"></div>
+        <a href="/chat" class="sb-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20.5 12.5a7 7 0 01-7 7H9l-5 3v-5.2a7 7 0 013-12.8h4.5a7 7 0 017 7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Chat
+        </a>
+        <a href="/train" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          Entrenar IA
+        </a>
+        <a href="/triadas" class="sb-nav-item">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="18.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.8 7.1l-4.1 8.3M13.2 7.1l4.1 8.3M8 17.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Tríadas
+        </a>
+      </nav>
+
+      <div class="sb-nav-sep"></div>
+
       <div class="sb-head">
         <button class="new-chat" id="new-chat">
           <span>Nueva consulta</span>
@@ -415,6 +541,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       <div class="sb-search-info" id="sb-search-info" style="display:none;"></div>
       <div class="sb-section" id="sb-section">Conversaciones recientes</div>
       <div class="sb-list" id="sb-list"></div>
+
+      <a class="sb-user" href="/account" aria-label="Mi cuenta">
+        <span class="sb-user-ava" id="sb-user-ava">·</span>
+        <span class="sb-user-body">
+          <span class="sb-user-name" id="sb-user-name">Mi cuenta</span>
+          <span class="sb-user-hint">Perfil y ajustes</span>
+        </span>
+      </a>
     </aside>
 
     <!-- ─── Chat ─── -->
@@ -792,6 +926,11 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       loginLink.style.display = 'none';
       avaNav.textContent = avaInitial();
       accountLabel.textContent = displayName().split(' ')[0];
+      // Chip de usuario en la sidebar integrada
+      const sbAva = document.getElementById('sb-user-ava');
+      const sbName = document.getElementById('sb-user-name');
+      if (sbAva) sbAva.textContent = avaInitial();
+      if (sbName) sbName.textContent = displayName().split(' ')[0];
       updateWelcomeGreeting();
       loadChatsFromSupabase();
       setTimeout(maybeStartOnboarding, 900);
