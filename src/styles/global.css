@@ -345,6 +345,40 @@ nav.top .row {
   font-size: 12.5px; line-height: 1.5;
   color: var(--ink-mute);
 }
+
+/* Fila del historial. Base compartida por informes y analiticas; /chat la
+   extiende en su propio <style> con snippet de busqueda, fijados y menu. */
+.sb-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 6px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.sb-item:hover { background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); }
+.sb-item.active { background: var(--surface); color: var(--ink); }
+.sb-item .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-item .meta {
+  grid-column: 1 / -1;
+  font-family: var(--f-mono); font-size: 10px;
+  color: var(--ink-mute);
+}
+.sb-item-x {
+  display: grid; place-items: center;
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  color: var(--ink-mute);
+  background: transparent; border: 0; cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s ease, color .15s ease, background-color .15s ease;
+}
+.sb-item:hover .sb-item-x, .sb-item-x:focus-visible { opacity: 1; }
+.sb-item-x:hover { color: var(--danger); background: color-mix(in oklab, var(--danger) 12%, transparent); }
 /* Empuja el chip de usuario al fondo cuando no hay bloque "Recientes". */
 .sb-spacer { flex: 1 1 auto; min-height: 8px; }
 

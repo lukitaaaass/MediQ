@@ -1,0 +1,245 @@
+---
+/**
+ * Historial de una sección en el bloque "Recientes" del panel lateral.
+ *
+ * El panel (Layout.astro) solo pinta el contenedor #sb-list, el botón "+"
+ * (#sb-new) y el buscador (#sb-search). Este componente los rellena para una
+ * sección concreta: carga los elementos guardados, los lista, los filtra y
+ * gestiona abrir / renombrar / borrar.
+ *
+ * La página que lo usa se limita a declarar qué hacer al abrir un elemento y
+ * al pulsar "+", y a llamar a `save()` cuando produce un resultado nuevo:
+ *
+ *   <SectionHistory table="informes" storageKey="mediq.informes.v1"
+ *                   emptyText="Aún no has analizado ningún informe." />
+ *
+ *   window.mediqHistory.onOpen = (entry) => renderResult(entry.data);
+ *   window.mediqHistory.onNew  = () => resetAll();
+ *   window.mediqHistory.save({ title: '…', data: resultado });
+ *
+ * Persistencia doble, igual que los chats: localStorage para que la lista
+ * aparezca al instante, y Supabase como fuente de verdad entre dispositivos.
+ * Si la tabla no existe todavía, el fallo se registra y se sigue con
+ * localStorage — la página nunca se rompe por esto.
+ *
+ * Props:
+ *   table      — tabla de Supabase ('informes' | 'analiticas')
+ *   storageKey — clave de localStorage
+ *   emptyText  — texto cuando no hay nada guardado
+ */
+interface Props {
+  table: string;
+  storageKey: string;
+  emptyText: string;
+}
+const { table, storageKey, emptyText } = Astro.props;
+---
+
+<script is:inline define:vars={{ table, storageKey, emptyText }}>
+  (function () {
+    const sbList  = document.getElementById('sb-list');
+    const newBtn  = document.getElementById('sb-new');
+    const searchIn= document.getElementById('sb-search');
+    const infoEl  = document.getElementById('sb-search-info');
+    // Sin panel (móvil, o sesión cerrada) no hay nada que montar.
+    if (!sbList) return;
+
+    let items = [];
+    let query = '';
+    let user  = null;
+
+    const api = (window.mediqHistory = {
+      onOpen: null,
+      onNew:  null,
+      save:   save,
+      reload: loadRemote,
+      items:  () => items.slice(),
+    });
+
+    try { items = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch (e) { items = []; }
+    render();
+
+    /* El cliente de Supabase (window.__mediqSb) lo crea Layout.astro en un
+       script al final del <body>, o sea DESPUES de este componente. Por eso
+       no se puede capturar aqui: hay que resolverlo tarde y reintentando.
+       Mientras no esté, la lista funciona igual contra localStorage. */
+    function getSb() { return window.__mediqSb || null; }
+
+    async function ensureUser() {
+      if (user) return user;
+      const sb = getSb();
+      if (!sb) return null;
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        user = session ? session.user : null;
+      } catch (e) { user = null; }
+      return user;
+    }
+
+    (function initRemote(tries) {
+      if (!getSb()) {
+        if (tries > 0) setTimeout(() => initRemote(tries - 1), 120);
+        return;
+      }
+      ensureUser().then(u => { if (u) loadRemote(); });
+    })(25);
+
+    /* ─── Persistencia ─── */
+
+    function persistLocal() {
+      try { localStorage.setItem(storageKey, JSON.stringify(items)); } catch (e) {}
+    }
+
+    async function loadRemote() {
+      const sb = getSb();
+      if (!sb || !user) return;
+      try {
+        const { data, error } = await sb.from(table)
+          .select('*').eq('user_id', user.id)
+          .order('updated_at', { ascending: false });
+        if (error) { console.warn('[' + table + '] load:', error.message); return; }
+        if (!data) return;
+        items = data.map(row => ({
+          id: row.id,
+          title: row.title,
+          data: row.data,
+          createdAt: new Date(row.created_at).getTime(),
+          updatedAt: new Date(row.updated_at).getTime(),
+        }));
+        persistLocal();
+        render();
+      } catch (err) { console.warn('[' + table + '] load:', err); }
+    }
+
+    async function upsertRemote(entry) {
+      const sb = getSb();
+      if (!sb) return;
+      // Guardar puede ocurrir antes de que la sesion este resuelta.
+      if (!(await ensureUser())) return;
+      try {
+        const { error } = await sb.from(table).upsert({
+          id: entry.id,
+          user_id: user.id,
+          title: entry.title,
+          data: entry.data,
+          created_at: new Date(entry.createdAt).toISOString(),
+          updated_at: new Date(entry.updatedAt).toISOString(),
+        });
+        if (error) console.warn('[' + table + '] upsert:', error.message);
+      } catch (err) { console.warn('[' + table + '] upsert:', err); }
+    }
+
+    async function deleteRemote(id) {
+      const sb = getSb();
+      if (!sb || !(await ensureUser())) return;
+      try { await sb.from(table).delete().eq('id', id).eq('user_id', user.id); }
+      catch (err) { console.warn('[' + table + '] delete:', err); }
+    }
+
+    /* ─── API para la página ─── */
+
+    function save(entry) {
+      const now = Date.now();
+      const rec = {
+        id: entry.id || (crypto.randomUUID ? crypto.randomUUID() : String(now)),
+        title: (entry.title || 'Sin título').slice(0, 120),
+        data: entry.data,
+        createdAt: entry.createdAt || now,
+        updatedAt: now,
+      };
+      const i = items.findIndex(x => x.id === rec.id);
+      if (i >= 0) items[i] = rec; else items.unshift(rec);
+      persistLocal();
+      render();
+      upsertRemote(rec);
+      return rec;
+    }
+
+    function remove(id) {
+      items = items.filter(x => x.id !== id);
+      persistLocal();
+      render();
+      deleteRemote(id);
+    }
+
+    /* ─── Pintado ─── */
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function fechaCorta(ts) {
+      const d = new Date(ts);
+      const hoy = new Date();
+      const mismoDia = d.toDateString() === hoy.toDateString();
+      if (mismoDia) return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    }
+
+    function render() {
+      sbList.innerHTML = '';
+      const q = query.trim().toLowerCase();
+      const list = q ? items.filter(x => (x.title || '').toLowerCase().includes(q)) : items;
+
+      if (infoEl) {
+        if (q) {
+          infoEl.style.display = '';
+          infoEl.textContent = list.length
+            ? list.length + ' resultado' + (list.length === 1 ? '' : 's') + ' para "' + q + '"'
+            : 'Sin resultados para "' + q + '"';
+        } else {
+          infoEl.style.display = 'none';
+        }
+      }
+
+      if (list.length === 0) {
+        sbList.innerHTML = '<div class="sb-empty">' + esc(q ? 'Prueba con otras palabras.' : emptyText) + '</div>';
+        return;
+      }
+
+      list.forEach(it => sbList.appendChild(buildRow(it)));
+    }
+
+    function buildRow(it) {
+      const row = document.createElement('div');
+      row.className = 'sb-item';
+      row.dataset.id = it.id;
+      row.innerHTML =
+        '<div class="t">' + esc(it.title) + '</div>' +
+        '<button class="sb-item-x" aria-label="Eliminar" title="Eliminar">' +
+          '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' +
+            '<path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+          '</svg>' +
+        '</button>' +
+        '<div class="meta">' + esc(fechaCorta(it.updatedAt)) + '</div>';
+
+      row.addEventListener('click', (e) => {
+        if (e.target.closest('.sb-item-x')) return;
+        sbList.querySelectorAll('.sb-item.active').forEach(el => el.classList.remove('active'));
+        row.classList.add('active');
+        if (typeof api.onOpen === 'function') api.onOpen(it);
+      });
+
+      row.querySelector('.sb-item-x').addEventListener('click', (e) => {
+        e.stopPropagation();
+        remove(it.id);
+      });
+
+      return row;
+    }
+
+    /* ─── Cableado del panel ─── */
+
+    if (newBtn) newBtn.addEventListener('click', () => {
+      sbList.querySelectorAll('.sb-item.active').forEach(el => el.classList.remove('active'));
+      if (typeof api.onNew === 'function') api.onNew();
+    });
+
+    if (searchIn) searchIn.addEventListener('input', () => {
+      query = searchIn.value;
+      render();
+    });
+  })();
+</script>

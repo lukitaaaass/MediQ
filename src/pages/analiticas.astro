@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SectionHistory from '../components/SectionHistory.astro';
 ---
 
 <Layout
@@ -9,6 +10,15 @@ import Layout from '../layouts/Layout.astro';
   bodyClass="analiticas-page"
   includePdfJs={true}
 >
+
+  {/* Rellena el bloque "Recientes" del panel. Va aquí arriba a propósito:
+      su script debe correr antes que el de la página, que le asigna
+      onOpen/onNew. */}
+  <SectionHistory
+    table="analiticas"
+    storageKey="mediq.analiticas.v1"
+    emptyText="Aún no has interpretado ninguna analítica."
+  />
 
   <style is:global>
     body.analiticas-page { background: var(--bg); }
@@ -883,6 +893,33 @@ import Layout from '../layouts/Layout.astro';
         showState('result');
       }
 
+      /* ─── Historial en el panel lateral ─── */
+      const ESTADO_TXT = {
+        normal: 'Todo normal',
+        mild: 'Alteraciones leves',
+        altered: 'Parámetros alterados',
+        severe: 'Alteraciones importantes',
+      };
+
+      function tituloDe(data) {
+        const params = (data.parameters || []).length;
+        const estado = ESTADO_TXT[data.overall_status] || 'Analítica';
+        return estado + ' · ' + params + ' parámetro' + (params === 1 ? '' : 's');
+      }
+
+      function guardarEnHistorial(data) {
+        if (!window.mediqHistory) return;
+        window.mediqHistory.save({ title: tituloDe(data), data: data });
+      }
+
+      if (window.mediqHistory) {
+        window.mediqHistory.onOpen = (entry) => {
+          renderResult(entry.data);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.mediqHistory.onNew = () => resetAll();
+      }
+
       // ─── Flow ───
       async function runAnalysis() {
         try { window.track && window.track('Analitica analyze start', { source: currentTab }); } catch (_) {}
@@ -936,6 +973,7 @@ import Layout from '../layouts/Layout.astro';
           setProgress('Listo', 100);
           await new Promise(r => setTimeout(r, 200));
           renderResult(data);
+          guardarEnHistorial(data);
           try { window.track && window.track('Analitica analyze success', { overall: data.overall_status || 'unknown', params: (data.parameters || []).length }); } catch (_) {}
         } catch (err) {
           console.error('[analiticas]', err);
