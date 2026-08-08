@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import SectionHistory from '../components/SectionHistory.astro';
 ---
 
 <Layout
@@ -10,6 +11,15 @@ import Layout from '../layouts/Layout.astro';
   includePdfJs={true}
   ogImage="https://medi-q-bice.vercel.app/og.svg"
 >
+
+  {/* Rellena el bloque "Recientes" del panel. Va aquí arriba a propósito:
+      su script debe correr antes que el de la página, que le asigna
+      onOpen/onNew. */}
+  <SectionHistory
+    table="informes"
+    storageKey="mediq.informes.v1"
+    emptyText="Aún no has analizado ningún informe."
+  />
 
   <style is:global>
     body.informes-page { background: var(--bg); }
@@ -874,6 +884,30 @@ import Layout from '../layouts/Layout.astro';
         showState('result');
       }
 
+      /* ─── Historial en el panel lateral ───
+         Los informes "no médicos" no se guardan: no hay resultado que
+         reabrir y solo ensuciarian la lista. */
+      function tituloDe(data) {
+        const tipo = (data.report_type || 'Informe').trim();
+        const res  = (data.summary || '').trim();
+        if (!res) return tipo;
+        const corte = res.length > 60 ? res.slice(0, 60).replace(/\s+\S*$/, '') + '…' : res;
+        return tipo + ' · ' + corte;
+      }
+
+      function guardarEnHistorial(data) {
+        if (!window.mediqHistory || data.report_type === 'no_medical') return;
+        window.mediqHistory.save({ title: tituloDe(data), data: data });
+      }
+
+      if (window.mediqHistory) {
+        window.mediqHistory.onOpen = (entry) => {
+          renderResult(entry.data);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.mediqHistory.onNew = () => resetAll();
+      }
+
       // ─── Flujo principal ───
       async function runAnalysis() {
         try { window.track && window.track('Report analyze start', { source: currentTab }); } catch (_) {}
@@ -919,6 +953,7 @@ import Layout from '../layouts/Layout.astro';
           await new Promise(r => setTimeout(r, 200));
 
           renderResult(data);
+          guardarEnHistorial(data);
           try { window.track && window.track('Report analyze success', { report_type: data.report_type || 'unknown' }); } catch (_) {}
         } catch (err) {
           console.error('[informes]', err);

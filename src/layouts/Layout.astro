@@ -39,6 +39,17 @@ const {
 
 const canonicalURL = new URL(Astro.url.pathname, 'https://medi-q-bice.vercel.app').href;
 
+/* Secciones que tienen historial propio en el bloque "Recientes" del panel
+   lateral. El Layout solo pinta el contenedor (#sb-list) y el boton de nuevo;
+   cada pagina lo rellena con sus elementos y decide que hace el "+". Las
+   secciones que no estan aqui no muestran el bloque. */
+const RECENT_SECTIONS: Record<string, string> = {
+  '/chat':       'Nueva consulta',
+  '/informes':   'Nuevo informe',
+  '/analiticas': 'Nueva analítica',
+};
+const recentNewLabel = RECENT_SECTIONS[navActive] ?? null;
+
 const SUPABASE_URL        = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY   = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
@@ -131,11 +142,13 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     html[data-auth="out"] .nav-links .nav-only-out { display: inline !important; }
     html[data-auth="in"]  #nav-mobile .nav-only-in  { display: block !important; }
     html[data-auth="out"] #nav-mobile .nav-only-out { display: block !important; }
-    /* Rail lateral: sus filas son flex (icono + etiqueta), no inline ni block. */
-    html[data-auth="in"]  #nav-rail .nav-only-in  { display: flex !important; }
-    html[data-auth="out"] #nav-rail .nav-only-out { display: flex !important; }
+    /* Panel lateral: sus filas son flex (icono + etiqueta), no inline ni block. */
+    html[data-auth="in"]  #app-sidebar .nav-only-in  { display: flex !important; }
+    html[data-auth="out"] #app-sidebar .nav-only-out { display: flex !important; }
     html[data-auth="out"] #rail-auth-out { display: flex !important; flex-direction: column; }
     html[data-auth="in"]  #rail-auth-in  { display: flex !important; flex-direction: column; }
+    /* "Recientes" solo tiene sentido con sesion: sin ella no hay nada que listar. */
+    html[data-auth="in"]  #sb-recent { display: flex !important; flex-direction: column; }
     /* Elementos de CONTENIDO condicionales segun sesion (CTAs de registro, etc.).
        A diferencia de .nav-only-*, estos OCULTAN en vez de mostrar: asi el
        elemento conserva su display natural (inline-flex en los .btn) cuando
@@ -156,7 +169,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
        da igual cual de las dos hojas gane la cascada, que es justo lo que hace
        que esto sea seguro.
 
-       NO añadir aqui reglas de #nav-rail. Se probo `#nav-rail{display:none}` y
+       NO añadir aqui reglas de #app-sidebar. Se probo `#nav-rail{display:none}` y
        rompio la navegacion: los <link> del sitio van DESPUES de este <style>,
        asi que en carga normal ganaba global.css y el rail se veia, pero al
        navegar con ViewTransitions Astro reordena el head, pasaba a ganar esta
@@ -227,6 +240,13 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         r.setAttribute('data-auth',
           localStorage.getItem('mediq.authHint') === 'in' ? 'in' : 'out');
       } catch (e) { r.setAttribute('data-auth', 'out'); }
+
+      // Estado plegado/desplegado del panel lateral. Va aquí y no en el
+      // script del final del body para que la primera pintura ya reserve
+      // (o no) el hueco del panel y no haya salto de layout.
+      try {
+        if (localStorage.getItem('mediq.sidebar') === 'off') r.setAttribute('data-sb', 'off');
+      } catch (e) {}
     })();
   </script>
 </head>
@@ -236,74 +256,111 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <a href="#main-content" class="skip-link">Ir al contenido principal</a>
 
   {/*
-    Rail lateral — solo visible en escritorio (>720px), donde sustituye a
+    Panel lateral — solo visible en escritorio (>720px), donde sustituye a
     la barra superior. En movil se oculta por CSS y manda nav.top + #nav-mobile.
     Los enlaces replican los de nav.top; si añades uno, añadelo en los tres
-    sitios (rail, nav.top y #nav-mobile).
+    sitios (panel, nav.top y #nav-mobile).
+
+    "Plan" NO va aqui a proposito: se llega solo desde el menu de perfil.
   */}
-  <aside id="nav-rail" aria-label="Navegación principal">
-    <a class="rail-item rail-brand" href="/" aria-label="MediQ — inicio">
-      <span class="brand-mark"></span>
-      <span class="rail-label" data-brand>MediQ</span>
-    </a>
+  <button id="sb-reopen" aria-label="Mostrar panel" title="Mostrar panel">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 4v16" stroke="currentColor" stroke-width="1.7"/></svg>
+  </button>
 
-    <nav class="rail-nav">
-      <a href="/" class:list={['rail-item', { active: navActive === '/' }]}>
+  <aside id="app-sidebar" aria-label="Navegación principal">
+    <div class="sb-top">
+      <a class="sb-logo" href="/" aria-label="MediQ — inicio">
+        <span class="brand-mark"></span>
+      </a>
+      <button id="sb-search-btn" class="sb-icon-btn" aria-label="Buscar" aria-expanded="false" title="Buscar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.7"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <button id="sb-toggle" class="sb-icon-btn" aria-label="Ocultar panel" title="Ocultar panel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M9.5 4v16" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+    </div>
+
+    <div class="sb-search" id="sb-search-wrap" hidden>
+      <div class="sb-search-box" id="sb-search-box">
+        <svg class="ic-search" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input type="search" id="sb-search" placeholder="Buscar…" autocomplete="off" />
+        <button type="button" class="clear-x" id="sb-clear" aria-label="Limpiar">
+          <svg width="9" height="9" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="sb-search-info" id="sb-search-info" style="display:none;"></div>
+
+    <nav class="sb-nav">
+      <a href="/" class:list={['sb-nav-item', { active: navActive === '/' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 10.5L12 3.5l8.5 7v9a1 1 0 01-1 1h-4.5v-6h-6v6H4.5a1 1 0 01-1-1z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Inicio</span>
+        Inicio
       </a>
-      <a href="/demo" class:list={['rail-item', 'nav-only-out', { active: navActive === '/demo' }]}>
+      <a href="/demo" class:list={['sb-nav-item', 'nav-only-out', { active: navActive === '/demo' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M10 8.5l6 3.5-6 3.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Demo</span>
+        Demo
       </a>
-      <a href="/informes" class:list={['rail-item', { active: navActive === '/informes' }]}>
+      <a href="/informes" class:list={['sb-nav-item', { active: navActive === '/informes' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 2.5H6.5a1 1 0 00-1 1v17a1 1 0 001 1h11a1 1 0 001-1V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 2.5V7h4.5M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Informes</span>
+        Informes
       </a>
-      <a href="/analiticas" class:list={['rail-item', { active: navActive === '/analiticas' }]}>
+      <a href="/analiticas" class:list={['sb-nav-item', { active: navActive === '/analiticas' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2s5.8 6.2 5.8 10a5.8 5.8 0 11-11.6 0c0-3.8 5.8-10 5.8-10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 13.6h5.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span class="rail-label">Analíticas</span>
+        Analíticas
       </a>
-      <a href="/blog" class:list={['rail-item', { active: navActive === '/blog' }]}>
+      <a href="/blog" class:list={['sb-nav-item', { active: navActive === '/blog' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 5A2.5 2.5 0 017 2.5h12.5v19H7A2.5 2.5 0 004.5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 19A2.5 2.5 0 017 16.5h12.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Biblioteca</span>
+        Biblioteca
       </a>
-      <a href="/pricing" class:list={['rail-item', { active: navActive === '/pricing' }]}>
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 8.8a4 4 0 100 6.4M7.8 11h5.4M7.8 13.4h5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span class="rail-label">Plan</span>
-      </a>
-
-      <div class="rail-sep nav-only-in"></div>
-
-      <a href="/chat" class:list={['rail-item', 'nav-only-in', { active: navActive === '/chat' }]}>
+      <a href="/chat" class:list={['sb-nav-item', 'nav-only-in', { active: navActive === '/chat' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.5 12.5a7 7 0 01-7 7H9l-5 3v-5.2a7 7 0 013-12.8h4.5a7 7 0 017 7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Chat</span>
+        Chat
       </a>
-      <a href="/train" class:list={['rail-item', 'nav-only-in', { active: navActive === '/train' }]}>
+      <a href="/train" class:list={['sb-nav-item', 'nav-only-in', { active: navActive === '/train' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Entrenar IA</span>
+        Entrenar IA
       </a>
-      <a href="/triadas" class:list={['rail-item', 'nav-only-in', { active: navActive === '/triadas' }]}>
+      <a href="/triadas" class:list={['sb-nav-item', 'nav-only-in', { active: navActive === '/triadas' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="5.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><circle cx="18.5" cy="17.5" r="2.4" stroke="currentColor" stroke-width="1.6"/><path d="M10.8 7.1l-4.1 8.3M13.2 7.1l4.1 8.3M8 17.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span class="rail-label">Tríadas</span>
+        Tríadas
       </a>
     </nav>
 
-    <div class="rail-spacer"></div>
-    <div class="rail-sep"></div>
+    <div class="sb-sep"></div>
+
+    {recentNewLabel && (
+      <div class="sb-recent nav-auth-state" id="sb-recent" data-auth-only>
+        <div class="sb-recent-head">
+          <span>Recientes</span>
+          <button class="sb-icon-btn" id="sb-new" aria-label={recentNewLabel} title={recentNewLabel}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="sb-list" id="sb-list"></div>
+      </div>
+    )}
+    {!recentNewLabel && <div class="sb-spacer"></div>}
 
     <div id="rail-auth-out" class="nav-auth-state">
-      <a class="rail-item" href="/login">
+      <a class="sb-nav-item" href="/login" style="margin:0 8px 10px;">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 3.5H4.5a1 1 0 00-1 1v15a1 1 0 001 1H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 16l5-4-5-4M19 12H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span class="rail-label">Entrar</span>
+        Entrar
       </a>
     </div>
 
+    {/* Chip de perfil: abre el menu con Mi cuenta / Plan / Configuración /
+        Cerrar sesión. Es la unica via a "Plan" y a "Configuración". */}
     <div id="rail-auth-in" class="nav-auth-state">
-      <a href="/account" class:list={['rail-item', { active: navActive === '/account' }]}>
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.6"/><path d="M4.8 20.2a7.4 7.4 0 0114.4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        <span class="rail-label">Mi cuenta</span>
-      </a>
+      <button type="button" class="sb-user" id="sb-user-btn" aria-haspopup="menu" aria-label="Perfil y ajustes">
+        <span class="sb-user-ava" id="sb-user-ava">·</span>
+        <span class="sb-user-body">
+          <span class="sb-user-name" id="sb-user-name">Mi cuenta</span>
+          <span class="sb-user-hint">Perfil y ajustes</span>
+        </span>
+        <svg class="sb-user-caret" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true">
+          <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
   </aside>
 
@@ -321,7 +378,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         <a href="/informes"   class:list={[{ active: navActive === '/informes'   }]}>Informes</a>
         <a href="/analiticas" class:list={[{ active: navActive === '/analiticas' }]}>Analíticas</a>
         <a href="/blog"       class:list={[{ active: navActive === '/blog'       }]}>Biblioteca</a>
-        <a href="/pricing"    class:list={[{ active: navActive === '/pricing'    }]}>Plan</a>
+        {/* "Plan" (/pricing) no va en la nav: se llega desde el menu de perfil. */}
 
         {/* Enlaces de la app — solo con sesion iniciada */}
         <a href="/chat"      class="nav-only-in"  class:list={[{ active: navActive === '/chat'    }]}>Chat</a>
@@ -392,7 +449,6 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       <a href="/informes">Informes</a>
       <a href="/analiticas">Analíticas</a>
       <a href="/blog">Biblioteca</a>
-      <a href="/pricing">Plan</a>
       <a href="/chat" class="nav-only-in">Chat</a>
       <a href="/train" class="nav-only-in">Entrenar IA</a>
       <a href="/triadas" class="nav-only-in">Tríadas</a>
@@ -561,6 +617,65 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           if (a.search !== location.search) location.assign(a.href);
         }, true);
       }
+    })();
+  </script>
+
+  <!--
+    Panel lateral: plegar/desplegar y buscador.
+
+    Este <script is:inline> se re-ejecuta en cada navegación con
+    ViewTransitions, así que los listeners se registran sobre elementos
+    frescos cada vez (no hace falta guard) pero el estado se lee siempre
+    de localStorage, que es la única fuente de verdad.
+
+    El filtrado en sí NO vive aquí: cada página escucha el `input` de
+    #sb-search y filtra su propia lista (chats, informes, analíticas).
+  -->
+  <script is:inline>
+    (function () {
+      const root      = document.documentElement;
+      const toggle    = document.getElementById('sb-toggle');
+      const reopen    = document.getElementById('sb-reopen');
+      const searchBtn = document.getElementById('sb-search-btn');
+      const searchWrap= document.getElementById('sb-search-wrap');
+      const searchBox = document.getElementById('sb-search-box');
+      const searchIn  = document.getElementById('sb-search');
+      const clearBtn  = document.getElementById('sb-clear');
+
+      function setSidebar(open) {
+        if (open) root.removeAttribute('data-sb');
+        else root.setAttribute('data-sb', 'off');
+        try { localStorage.setItem('mediq.sidebar', open ? 'on' : 'off'); } catch (e) {}
+      }
+      if (toggle) toggle.addEventListener('click', () => setSidebar(false));
+      if (reopen) reopen.addEventListener('click', () => setSidebar(true));
+
+      function setSearch(open) {
+        if (!searchWrap || !searchBtn) return;
+        searchWrap.hidden = !open;
+        searchBtn.classList.toggle('on', open);
+        searchBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open && searchIn) searchIn.focus();
+        if (!open && searchIn && searchIn.value) {
+          // Cerrar el buscador debe deshacer el filtro, no dejar la lista
+          // recortada sin que se vea por qué.
+          searchIn.value = '';
+          searchIn.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      if (searchBtn) searchBtn.addEventListener('click', () => setSearch(searchWrap.hidden));
+      if (searchIn) {
+        searchIn.addEventListener('input', () => {
+          if (searchBox) searchBox.classList.toggle('has-value', searchIn.value.length > 0);
+        });
+        searchIn.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSearch(false); });
+      }
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        searchIn.value = '';
+        searchBox.classList.remove('has-value');
+        searchIn.dispatchEvent(new Event('input', { bubbles: true }));
+        searchIn.focus();
+      });
     })();
   </script>
 
