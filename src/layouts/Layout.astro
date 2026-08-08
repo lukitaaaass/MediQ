@@ -312,6 +312,10 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 5A2.5 2.5 0 017 2.5h12.5v19H7A2.5 2.5 0 004.5 19z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4.5 19A2.5 2.5 0 017 16.5h12.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         Biblioteca
       </a>
+      <a href="/chat" class:list={['sb-nav-item', 'nav-only-in', { active: navActive === '/chat' }]}>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.5 12.5a7 7 0 01-7 7H9l-5 3v-5.2a7 7 0 013-12.8h4.5a7 7 0 017 7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        Chat
+      </a>
       <a href="/train" class:list={['sb-nav-item', 'nav-only-in', { active: navActive === '/train' }]}>
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.2l1.9 5.4 5.4 1.9-5.4 1.9L12 17.8l-1.9-5.4-5.4-1.9 5.4-1.9z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
         Entrenar IA
