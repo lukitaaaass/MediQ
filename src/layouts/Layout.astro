@@ -568,30 +568,64 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     })();
   </script>
 
-  <!-- Menú hamburguesa -->
+  <!--
+    Menú hamburguesa (móvil).
+
+    Mismo problema de ciclo de vida que el panel lateral (ver comentario de
+    mas arriba): este script is:inline no se re-ejecuta al navegar con
+    ViewTransitions (Astro lo marca data-astro-exec por ser identico en toda
+    pagina), pero el <body> SI se reemplaza entero, asi que #nav-burger y
+    #nav-mobile son nodos nuevos tras cada navegacion.
+
+    Por eso el cableado va en init(), que corre en cada astro:page-load, y
+    se vincula con asignacion (onclick) en vez de addEventListener: es
+    idempotente, asi que volver a llamar a init() no duplica handlers.
+  -->
   <script is:inline>
     (function () {
-      const burger = document.getElementById('nav-burger');
-      const menu   = document.getElementById('nav-mobile');
-      if (!burger || !menu) return;
+      function init() {
+        const burger = document.getElementById('nav-burger');
+        const menu   = document.getElementById('nav-mobile');
+        if (!burger || !menu) return;
 
-      burger.addEventListener('click', () => {
-        const open = menu.classList.toggle('open');
-        burger.classList.toggle('open', open);
-        burger.setAttribute('aria-expanded', open);
-        menu.setAttribute('aria-hidden', !open);
-        document.body.style.overflow = open ? 'hidden' : '';
-      });
+        // Reset al entrar en cada pagina: si el menu quedo "open" en la
+        // pagina anterior, el overflow del body se quedaria bloqueado en
+        // 'hidden' para siempre porque el DOM que lo abrio ya no existe.
+        menu.classList.remove('open');
+        burger.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+        menu.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
 
-      menu.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => {
-          menu.classList.remove('open');
-          burger.classList.remove('open');
-          burger.setAttribute('aria-expanded', 'false');
-          menu.setAttribute('aria-hidden', 'true');
-          document.body.style.overflow = '';
+        burger.onclick = () => {
+          const open = menu.classList.toggle('open');
+          burger.classList.toggle('open', open);
+          burger.setAttribute('aria-expanded', open);
+          menu.setAttribute('aria-hidden', !open);
+          document.body.style.overflow = open ? 'hidden' : '';
+        };
+
+        menu.querySelectorAll('a').forEach(a => {
+          a.onclick = () => {
+            menu.classList.remove('open');
+            burger.classList.remove('open');
+            burger.setAttribute('aria-expanded', 'false');
+            menu.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+          };
         });
-      });
+      }
+
+      // El listener de astro:page-load se registra una sola vez tras el
+      // guard; init() en cambio corre en cada navegacion.
+      if (!window.__mediqBurgerReg) {
+        window.__mediqBurgerReg = true;
+        document.addEventListener('astro:page-load', init);
+      }
+
+      // Primer render: astro:page-load tambien dispara en la carga inicial,
+      // pero init() es idempotente y asi el menu responde cuanto antes.
+      init();
     })();
   </script>
 
