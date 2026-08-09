@@ -570,7 +570,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   <div class="ctx-menu" id="ctx-menu" style="display:none;"></div>
 
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
-    /* ─── Groq streaming wrapper ─── */
+    /* ─── Wrapper de streaming ───
+       El proveedor lo decide /api/chat (hoy Gemini); aqui solo se parsea el
+       formato de OpenAI, que es comun a los dos. */
     window.claude = {
       async stream({ system, messages, onChunk, onDone, onError }) {
         let res;
