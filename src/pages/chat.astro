@@ -272,6 +272,23 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .suggestion { background: var(--surface); border: 1px solid var(--rule-2); border-radius: 999px; padding: 9px 16px; cursor: pointer; font-size: 13.5px; color: var(--ink-soft); transition: border-color .2s ease, background .2s ease, color .2s ease, transform .15s ease; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .suggestion:hover { border-color: var(--ink-soft); background: color-mix(in oklab, var(--ink) 5%, transparent); color: var(--ink); transform: translateY(-1px); }
 
+    /* ─── Preguntas de seguimiento ───
+       Alineadas con el cuerpo del mensaje (columna avatar 36px + gap 14px) para
+       que se lean como continuacion de la respuesta y no como un bloque suelto. */
+    .followups { display: flex; flex-direction: column; gap: 8px; margin-left: 50px; margin-top: -10px; animation: fu-in .28s ease both; }
+    .followups-label { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+    .followups-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .followup {
+      background: transparent; border: 1px solid var(--rule-2); border-radius: 999px;
+      padding: 7px 14px; cursor: pointer; font-size: 13px; color: var(--ink-soft);
+      text-align: left; max-width: 100%;
+      transition: border-color .2s ease, background .2s ease, color .2s ease;
+    }
+    .followup:hover { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 8%, transparent); color: var(--ink); }
+    .followup:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @keyframes fu-in { from { opacity: 0; transform: translateY(4px); } }
+    @media (prefers-reduced-motion: reduce) { .followups { animation: none; } }
+
     /* ─── Paywall ─── */
     #paywall-bar { border-top: 1px solid var(--rule); padding: 16px 24px; background: color-mix(in oklab, var(--bg) 85%, transparent); backdrop-filter: blur(8px); }
     .paywall-card { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid color-mix(in oklab, var(--warn) 35%, transparent); border-radius: 14px; padding: 16px 18px; }
@@ -354,6 +371,20 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
           <h2 id="chat-title">Nueva consulta</h2>
           <span id="corpus-badge" style="display:none; font-family:var(--f-mono); font-size:10px; letter-spacing:0.06em; background:color-mix(in oklab,var(--accent) 15%,transparent); color:var(--accent-text); padding:2px 8px; border-radius:999px;"></span>
         </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+        <div style="position:relative;">
+          <button class="specialty" id="ambito-btn" title="Ámbito asistencial">
+            <span id="ambito-label">Sin especificar</span>
+            <svg width="10" height="10" viewBox="0 0 12 12">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div class="menu" id="ambito-menu" style="right:0; top: calc(100% + 6px);">
+            <button data-am="Sin especificar" class="on">Sin especificar</button>
+            <button data-am="Hospitalaria">Hospitalaria</button>
+            <button data-am="Atención primaria">Atención primaria</button>
+          </div>
+        </div>
         <div style="position:relative;">
           <button class="specialty" id="specialty-btn">
             <span id="specialty-label">General</span>
@@ -371,6 +402,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <button data-sp="Ginecología">Ginecología</button>
             <button data-sp="Modo estudiante">Modo estudiante</button>
           </div>
+        </div>
         </div>
       </header>
 
@@ -527,6 +559,14 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
             <option>Modo estudiante</option>
           </select>
         </div>
+        <div class="row-field">
+          <label for="set-default-ambito">Ámbito asistencial por defecto</label>
+          <select id="set-default-ambito">
+            <option>Sin especificar</option>
+            <option>Hospitalaria</option>
+            <option>Atención primaria</option>
+          </select>
+        </div>
         <div class="toggle">
           <div class="label-stack">
             <span class="t">Mostrar advertencia clínica</span>
@@ -624,9 +664,22 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     const PROFILE_KEY = 'mediq.profile.v1';
     const SETTINGS_KEY = 'mediq.settings.v1';
 
+    // ─── Ambito asistencial ───
+    const AMBITO_NONE      = 'Sin especificar';
+    const AMBITO_HOSPITAL  = 'Hospitalaria';
+    const AMBITO_PRIMARIA  = 'Atención primaria';
+
+    // ─── Preguntas de seguimiento ───
+    // Salen siempre, tras cada respuesta, hasta que el caso queda cerrado: es
+    // el propio modelo quien marca resuelto:true y corta el bucle.
+    const FOLLOWUP_COUNT = 3;
+
     let chats = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let activeId = null;
     let specialty = 'General';
+    // Ambito asistencial: cambia QUE se recomienda, no solo el tono. En primaria
+    // no se puede asumir troponina seriada ni TC; la decision real es derivar o no.
+    let ambito = AMBITO_NONE;
     let sending = false;
     let searchQuery = '';
 
@@ -635,10 +688,12 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     let profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
     let settings = Object.assign({
       defaultSpecialty: 'General',
+      defaultAmbito: AMBITO_NONE,
       disclaimer: true, cite: true, concise: false, resumeLast: true
     }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 
     if (settings.defaultSpecialty) specialty = settings.defaultSpecialty;
+    if (settings.defaultAmbito)    ambito    = settings.defaultAmbito;
 
     // Reutiliza el cliente singleton de Layout.astro para evitar refresh-token
     // races entre multiples clientes en ViewTransitions (que cierran la sesion).
@@ -818,12 +873,35 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         ? '- Cita evidencia (guías ESC, AHA, NICE, NEJM, UpToDate) cuando sea relevante. Indica el grado/clase de recomendación si la conoces.'
         : '- No cites guías ni referencias externas salvo que el usuario pregunte específicamente por ellas.';
 
+      // El ambito no cambia el tono: cambia los medios que el modelo puede dar por
+      // disponibles y, por tanto, cual es la decision correcta. Sin ambito definido
+      // no se inyecta nada y el comportamiento es el de siempre.
+      const ambitoBlock = ambito === AMBITO_PRIMARIA
+        ? `
+ÁMBITO ASISTENCIAL: ATENCIÓN PRIMARIA (CRÍTICO — condiciona toda la respuesta):
+- Asume los medios de un centro de salud: anamnesis, exploración, ECG, analítica básica con resultado diferido, y espirometría o ecografía solo si el centro dispone de ellas.
+- NO asumas disponibilidad inmediata de troponina seriada, dímero D, TC, ecocardiografía urgente ni interconsulta presencial en el acto.
+- Organiza la respuesta alrededor de la decisión real en consulta: qué se resuelve aquí, qué justifica derivar, y con qué prioridad (urgente / preferente / ordinaria).
+- Incluye SIEMPRE los criterios explícitos de derivación y los signos que obligan a enviar a Urgencias en ese mismo momento.
+- Indica qué vigilar y cuándo revisar al paciente en las siguientes 48-72 h.
+- Prefiere fármacos y pruebas accesibles desde primaria, con receta y seguimiento ambulatorio.
+`
+        : ambito === AMBITO_HOSPITAL
+        ? `
+ÁMBITO ASISTENCIAL: MEDICINA HOSPITALARIA (CRÍTICO — condiciona toda la respuesta):
+- Asume los medios de un hospital: analítica urgente con troponina y dímero D, imagen (radiografía, TC, ecografía, ecocardiografía), monitorización continua e interconsulta con especialidades.
+- Organiza la respuesta alrededor del manejo intrahospitalario: qué pruebas solicitar y en qué orden, tratamiento inicial con dosis concretas, y criterios de ingreso frente a observación o alta.
+- Cuando proceda, especifica a qué unidad corresponde el paciente (planta, observación, UCI) y qué parámetros monitorizar.
+- Puedes indicar tratamientos de administración parenteral y procedimientos que requieren medio hospitalario.
+`
+        : '';
+
       const disclaimerBlock = wantDisclaimer
         ? '- AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"'
         : '- NO añadas nota de disclaimer al final. El usuario ya sabe que esto es una herramienta de apoyo.';
 
       return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
-
+${ambitoBlock}
 INSTRUCCIONES GENERALES:
 - Responde SIEMPRE en español, en lenguaje natural y profesional médico.
 ${structureBlock}
@@ -857,6 +935,43 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
 - Si el historial muestra un caso clínico en desarrollo, cada mensaje nuevo es una actualización de ese caso, no un caso nuevo.`;
     }
 
+    /**
+     * Llamada auxiliar al modelo, sin streaming hacia la UI: acumula el texto
+     * completo y lo devuelve. La usan el resumen de historial y las preguntas
+     * de seguimiento, que son procesos de fondo y no se pintan token a token.
+     * Devuelve '' si algo falla — ninguno de los dos usos es crítico.
+     */
+    async function completeOnce(system, messages) {
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system, messages }),
+        });
+        if (!res.ok) return '';
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let out = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
+            try {
+              const delta = JSON.parse(line.slice(6))?.choices?.[0]?.delta?.content;
+              if (delta) out += delta;
+            } catch {}
+          }
+        }
+        return out;
+      } catch (err) {
+        console.warn('[completeOnce] error (no crítico):', err);
+        return '';
+      }
+    }
+
     async function summarizeHistory(chat) {
       const msgs = chat.messages.filter(m => !m.pending);
       // Resumir solo los mensajes antiguos (todos menos los últimos 8)
@@ -872,39 +987,81 @@ CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
         content: 'Resume en máximo 120 palabras los puntos clave de esta conversación: datos del paciente, síntomas relevantes, alergias, fármacos mencionados, diagnósticos discutidos y decisiones tomadas. Solo los hechos, sin formato, sin introducción.',
       });
 
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system: `Eres un asistente médico. Tu única tarea es resumir conversaciones clínicas de forma concisa y fáctica.`,
-            messages: summaryMsgs,
-          }),
-        });
-        if (!res.ok) return;
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let summary = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split('\n')) {
-            if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
-            try {
-              const delta = JSON.parse(line.slice(6))?.choices?.[0]?.delta?.content;
-              if (delta) summary += delta;
-            } catch {}
-          }
-        }
-        if (summary.trim()) {
-          chat.historySummary = summary.trim();
-          saveChats(chat);
-        }
-      } catch (err) {
-        console.warn('[summarize] error (non-fatal):', err);
+      const summary = await completeOnce(
+        `Eres un asistente médico. Tu única tarea es resumir conversaciones clínicas de forma concisa y fáctica.`,
+        summaryMsgs,
+      );
+      if (summary.trim()) {
+        chat.historySummary = summary.trim();
+        saveChats(chat);
       }
+    }
+
+    /**
+     * Preguntas de seguimiento — el "bucle finito".
+     *
+     * Tras cada respuesta pedimos al modelo las siguientes preguntas naturales
+     * del caso, incluyendo los datos que le faltan para afinar (funcion renal,
+     * alergias, constantes...), que es lo que convierte la sugerencia en algo
+     * util y no en un adorno.
+     *
+     * Aparecen tras cada respuesta, sin excepcion, hasta que el modelo marca
+     * resuelto:true — ahi el caso esta cerrado y dejan de salir.
+     */
+    async function generateFollowups(chat) {
+      const msgs = chat.messages.filter(m => !m.pending).slice(-6);
+      if (!msgs.length) return;
+
+      const convo = msgs.map(m => ({
+        role: m.role === 'ai' ? 'assistant' : 'user',
+        content: m.text,
+      }));
+      convo.push({
+        role: 'user',
+        content: `A partir de la conversación anterior, devuelve las ${FOLLOWUP_COUNT} preguntas que el profesional haría a continuación para cerrar el caso. Responde SOLO con el JSON, sin texto alrededor.`,
+      });
+
+      const ambitoHint = ambito === AMBITO_NONE ? '' :
+        `\nÁmbito asistencial del profesional: ${ambito}. Las preguntas deben tener sentido en ese ámbito: en atención primaria giran alrededor de derivar, vigilar y tratar de forma ambulatoria; en hospitalaria, alrededor de pruebas, ingreso y manejo intrahospitalario.`;
+
+      const raw = await completeOnce(
+        `Generas las siguientes preguntas de una consulta clínica entre un profesional sanitario y un asistente de IA.${ambitoHint}
+
+FORMATO DE SALIDA (JSON puro, sin markdown ni backticks):
+{"resuelto": true|false, "preguntas": ["...", "...", "..."]}
+
+REGLAS:
+- Escribe las preguntas EN PRIMERA PERSONA DEL PROFESIONAL, tal como él las haría al asistente. Ejemplo: "¿Cuándo derivo a cardiología?", no "¿Quieres saber cuándo derivar?".
+- Prioriza los datos que TE FALTAN para afinar la respuesta y que cambiarían el manejo: función renal, alergias, fármacos actuales, constantes, antecedentes. Ejemplo: "¿Cómo tiene la función renal?".
+- Máximo 60 caracteres por pregunta. Concretas y del caso, nunca genéricas tipo "cuéntame más".
+- No repitas preguntas ya respondidas en la conversación.
+- "resuelto": true cuando el caso ya está razonablemente cerrado y seguir preguntando solo añadiría ruido. En ese caso devuelve "preguntas": [].
+- Si no hay nada útil que preguntar, devuelve "resuelto": true y lista vacía.`,
+        convo,
+      );
+
+      if (!raw.trim()) return;
+
+      let parsed;
+      try {
+        // El modelo a veces envuelve el JSON en backticks pese a las instrucciones.
+        const json = raw.replace(/```json|```/g, '').trim();
+        parsed = JSON.parse(json.slice(json.indexOf('{'), json.lastIndexOf('}') + 1));
+      } catch {
+        console.warn('[followups] respuesta no parseable, se omite');
+        return;
+      }
+
+      const preguntas = Array.isArray(parsed?.preguntas)
+        ? parsed.preguntas
+            .filter(p => typeof p === 'string' && p.trim())
+            .slice(0, FOLLOWUP_COUNT)
+            .map(p => p.trim())
+        : [];
+
+      chat.followups = parsed?.resuelto === true ? [] : preguntas;
+      saveChats(chat);
+      if (chat.id === activeId) renderFollowups(chat);
     }
 
     function corpusCount() {
@@ -1454,6 +1611,7 @@ ${msgsHtml}
 
     function hydrateSettingsModal() {
       document.getElementById('set-default-specialty').value = settings.defaultSpecialty || 'General';
+      document.getElementById('set-default-ambito').value = settings.defaultAmbito || AMBITO_NONE;
       document.querySelectorAll('#modal-settings .switch').forEach(sw => {
         const k = sw.dataset.setting;
         sw.classList.toggle('on', !!settings[k]);
@@ -1542,7 +1700,39 @@ ${msgsHtml}
       welcomeEl.style.display = 'none';
       titleEl.textContent = chat.title || 'Conversación';
       chat.messages.forEach(m => msgsInner.appendChild(buildMsgEl(m)));
+      renderFollowups(chat);
       requestAnimationFrame(() => { messagesEl.scrollTop = messagesEl.scrollHeight; });
+    }
+
+    /**
+     * Pinta las preguntas de seguimiento bajo el último mensaje. Se redibuja
+     * entero en cada llamada: es un bloque pequeño y así no hay que sincronizar
+     * estado entre renderMessages y la generación asíncrona.
+     */
+    function renderFollowups(chat) {
+      const prev = msgsInner.querySelector('.followups');
+      if (prev) prev.remove();
+
+      const items = chat?.followups || [];
+      if (!items.length || sending) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'followups';
+      wrap.innerHTML =
+        '<span class="followups-label">Continuar con</span>' +
+        '<div class="followups-chips">' +
+        items.map(q => `<button type="button" class="followup">${escapeHtml(q)}</button>`).join('') +
+        '</div>';
+
+      wrap.querySelectorAll('.followup').forEach((btn, i) => {
+        btn.addEventListener('click', () => {
+          input.value = items[i];
+          autoresize();
+          composer.requestSubmit();
+        });
+      });
+
+      msgsInner.appendChild(wrap);
     }
 
     function buildMsgEl(m) {
@@ -1595,6 +1785,9 @@ ${msgsHtml}
       specialty = c.specialty || 'General';
       document.getElementById('specialty-label').textContent = specialty;
       document.querySelectorAll('#specialty-menu button').forEach(b => b.classList.toggle('on', b.dataset.sp === specialty));
+      // Sin ambito guardado, cae al de Configuracion (chats previos al cambio).
+      ambito = c.ambito || settings.defaultAmbito || AMBITO_NONE;
+      syncAmbitoUI();
       renderMessages(c);
       renderSidebar();
     }
@@ -1605,6 +1798,7 @@ ${msgsHtml}
         id: 'c_' + Date.now().toString(36),
         title: 'Nueva consulta',
         specialty,
+        ambito,
         messages: [],
         createdAt: Date.now(),
         updatedAt: Date.now()
@@ -1624,6 +1818,10 @@ ${msgsHtml}
       sendBtn.disabled = true;
 
       const chat = ensureChat();
+      // Las sugerencias pertenecen al ultimo turno: en cuanto se envia algo
+      // dejan de tener sentido y se regeneran al terminar la nueva respuesta.
+      chat.followups = [];
+      renderFollowups(chat);
       const attachments = pendingAttachments
         .filter(a => a.status === 'ready')
         .map(a => ({ name: a.name, size: a.size, pages: a.pages, chars: a.text.length, text: a.text }));
@@ -1723,6 +1921,9 @@ ${msgsHtml}
           pending.pending = false;
           pending.at = Date.now();
           finishSend();
+          // Ambas tareas van en segundo plano: la respuesta ya se ha mostrado
+          // entera, así que no añaden latencia percibida.
+          generateFollowups(chat);
           // Generar resumen en background cuando se supera el umbral
           const completedMsgs = chat.messages.filter(m => !m.pending);
           if (completedMsgs.length >= HISTORY_THRESHOLD && !chat.historySummary) {
@@ -1990,6 +2191,34 @@ ${msgsHtml}
         }
       });
     });
+
+    const amBtn   = document.getElementById('ambito-btn');
+    const amMenu  = document.getElementById('ambito-menu');
+    const amLabel = document.getElementById('ambito-label');
+    amBtn.addEventListener('click', (e) => { e.stopPropagation(); amMenu.classList.toggle('open'); });
+
+    if (window.__chatAmClickHandler) document.removeEventListener('click', window.__chatAmClickHandler);
+    window.__chatAmClickHandler = () => amMenu.classList.remove('open');
+    document.addEventListener('click', window.__chatAmClickHandler);
+
+    amMenu.addEventListener('click', (e) => e.stopPropagation());
+    document.querySelectorAll('#ambito-menu button').forEach(b => {
+      b.addEventListener('click', () => {
+        ambito = b.dataset.am;
+        syncAmbitoUI();
+        amMenu.classList.remove('open');
+        if (activeId) {
+          const c = chats.find(x => x.id === activeId);
+          if (c) { c.ambito = ambito; saveChats(c); }
+        }
+      });
+    });
+
+    function syncAmbitoUI() {
+      amLabel.textContent = ambito;
+      document.querySelectorAll('#ambito-menu button').forEach(x => x.classList.toggle('on', x.dataset.am === ambito));
+    }
+    syncAmbitoUI();
 
     /* corpus badge */
     (function() {
