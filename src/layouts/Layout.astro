@@ -532,7 +532,12 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         document.addEventListener('astro:before-swap', function (e) {
           var src = document.documentElement;
           var dst = e.newDocument.documentElement;
-          ['data-dark', 'data-theme', 'data-type', 'data-style', 'data-auth'].forEach(function (attr) {
+          /* swapRootAttributes() de Astro borra TODOS los atributos de <html>
+             y solo restaura los del documento servido, que no trae ninguno de
+             estos (los pone el script de pre-pintado). Sin esta copia se
+             pierden al navegar: data-sb faltaba y el panel plegado se volvia
+             a desplegar en cada navegacion. */
+          ['data-dark', 'data-theme', 'data-type', 'data-style', 'data-auth', 'data-sb'].forEach(function (attr) {
             var v = src.getAttribute(attr);
             if (v != null) dst.setAttribute(attr, v);
           });
@@ -626,36 +631,37 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   </script>
 
   <!--
-    Panel lateral: plegar/desplegar y buscador.
+    Panel lateral: plegar/desplegar, buscador y menú de perfil.
 
-    Este <script is:inline> se re-ejecuta en cada navegación con
-    ViewTransitions, así que los listeners se registran sobre elementos
-    frescos cada vez (no hace falta guard) pero el estado se lee siempre
-    de localStorage, que es la única fuente de verdad.
+    OJO con el ciclo de vida: este <script is:inline> NO se re-ejecuta al
+    navegar con ViewTransitions. El runtime de Astro marca como ya ejecutado
+    (data-astro-exec) todo script del documento entrante identico a uno del
+    actual, y los del Layout son identicos en todas las paginas. Pero el
+    <body> SI se reemplaza entero, asi que los elementos son nuevos.
+
+    Por eso el cableado va en init(), que corre en cada `astro:page-load`
+    (dispara en la carga inicial y tras cada navegacion), y los listeners de
+    documento se registran una sola vez tras un guard. Mismo patron que el
+    script de tema de mas arriba. Si se vinculan listeners aqui fuera, se
+    quedan colgados del DOM viejo y el control deja de responder al navegar.
 
     El filtrado en sí NO vive aquí: cada página escucha el `input` de
     #sb-search y filtra su propia lista (chats, informes, analíticas).
   -->
   <script is:inline>
     (function () {
-      const root      = document.documentElement;
-      const toggle    = document.getElementById('sb-toggle');
-      const reopen    = document.getElementById('sb-reopen');
-      const searchBtn = document.getElementById('sb-search-btn');
-      const searchWrap= document.getElementById('sb-search-wrap');
-      const searchBox = document.getElementById('sb-search-box');
-      const searchIn  = document.getElementById('sb-search');
-      const clearBtn  = document.getElementById('sb-clear');
+      const root = document.documentElement;
 
       function setSidebar(open) {
         if (open) root.removeAttribute('data-sb');
         else root.setAttribute('data-sb', 'off');
         try { localStorage.setItem('mediq.sidebar', open ? 'on' : 'off'); } catch (e) {}
       }
-      if (toggle) toggle.addEventListener('click', () => setSidebar(false));
-      if (reopen) reopen.addEventListener('click', () => setSidebar(true));
 
       function setSearch(open) {
+        const searchBtn  = document.getElementById('sb-search-btn');
+        const searchWrap = document.getElementById('sb-search-wrap');
+        const searchIn   = document.getElementById('sb-search');
         if (!searchWrap || !searchBtn) return;
         searchWrap.hidden = !open;
         searchBtn.classList.toggle('on', open);
@@ -668,30 +674,15 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           searchIn.dispatchEvent(new Event('input', { bubbles: true }));
         }
       }
-      if (searchBtn) searchBtn.addEventListener('click', () => setSearch(searchWrap.hidden));
-      if (searchIn) {
-        searchIn.addEventListener('input', () => {
-          if (searchBox) searchBox.classList.toggle('has-value', searchIn.value.length > 0);
-        });
-        searchIn.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSearch(false); });
-      }
-      if (clearBtn) clearBtn.addEventListener('click', () => {
-        searchIn.value = '';
-        searchBox.classList.remove('has-value');
-        searchIn.dispatchEvent(new Event('input', { bubbles: true }));
-        searchIn.focus();
-      });
 
       /* ─── Chip de perfil y su menú ───
          El chip está en todas las páginas, así que su menú tiene que vivir
          aquí. Antes la lógica estaba solo en chat.astro y pulsarlo en
          /informes o /analiticas no hacía nada. */
-      const chip = document.getElementById('sb-user-btn');
-      const menu = document.getElementById('user-menu');
 
       // Nombre e inicial: de localStorage, que es lo que ya hay pintado en la
       // primera carga. applySession lo refresca cuando Supabase responde.
-      (function pintarChip() {
+      function pintarChip() {
         const nameEl = document.getElementById('sb-user-name');
         const avaEl  = document.getElementById('sb-user-ava');
         let n = '';
@@ -699,7 +690,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         if (!n) return;
         if (nameEl) nameEl.textContent = n;
         if (avaEl)  avaEl.textContent  = n[0].toUpperCase();
-      })();
+      }
 
       function esc(s) {
         return String(s == null ? '' : s)
@@ -707,9 +698,18 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
 
-      function cerrarMenu() { if (menu) { menu.style.display = 'none'; menu.innerHTML = ''; } }
+      // El contenedor se busca en cada uso: el <body> se reemplaza al navegar,
+      // asi que una referencia guardada apuntaria a un nodo muerto.
+      function getMenu() { return document.getElementById('user-menu'); }
+      function menuAbierto() { const m = getMenu(); return !!m && m.style.display !== 'none'; }
+
+      function cerrarMenu() {
+        const menu = getMenu();
+        if (menu) { menu.style.display = 'none'; menu.innerHTML = ''; }
+      }
 
       function abrirMenu(anchor) {
+        const menu = getMenu();
         if (!menu || !anchor) return;
         const nombre = (document.getElementById('sb-user-name') || {}).textContent || 'Mi cuenta';
         let mail = '';
@@ -771,23 +771,74 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         });
       }
 
-      /* Dos disparadores del mismo menú: el chip del panel (escritorio) y
-         #account-btn, el chip de la barra superior que monta chat.astro y que
-         es el único visible en móvil, donde el panel no existe. */
-      [chip, document.getElementById('account-btn')].forEach((el) => {
-        if (!el) return;
-        el.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (menu && menu.style.display !== 'none') cerrarMenu();
-          else abrirMenu(el);
-        });
-      });
+      /* ─── Cableado ───
+         Corre en cada astro:page-load sobre el DOM recien insertado. Se usa
+         asignacion (onclick) en vez de addEventListener a proposito: es
+         idempotente, asi que volver a llamar a init() no duplica handlers. */
+      function init() {
+        const toggle = document.getElementById('sb-toggle');
+        const reopen = document.getElementById('sb-reopen');
+        if (toggle) toggle.onclick = () => setSidebar(false);
+        if (reopen) reopen.onclick = () => setSidebar(true);
 
-      document.addEventListener('click', (e) => {
-        if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) cerrarMenu();
-      });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarMenu(); });
+        const searchBtn = document.getElementById('sb-search-btn');
+        const searchWrap= document.getElementById('sb-search-wrap');
+        const searchBox = document.getElementById('sb-search-box');
+        const searchIn  = document.getElementById('sb-search');
+        const clearBtn  = document.getElementById('sb-clear');
+
+        if (searchBtn) searchBtn.onclick = () => setSearch(searchWrap ? searchWrap.hidden : true);
+        if (searchIn) {
+          // El filtrado lo hace cada pagina con su propio listener de `input`;
+          // aqui solo se refleja el estado visual de la caja.
+          searchIn.oninput = () => {
+            if (searchBox) searchBox.classList.toggle('has-value', searchIn.value.length > 0);
+          };
+          searchIn.onkeydown = (e) => { if (e.key === 'Escape') setSearch(false); };
+        }
+        if (clearBtn) clearBtn.onclick = () => {
+          if (!searchIn) return;
+          searchIn.value = '';
+          if (searchBox) searchBox.classList.remove('has-value');
+          searchIn.dispatchEvent(new Event('input', { bubbles: true }));
+          searchIn.focus();
+        };
+
+        pintarChip();
+
+        /* Dos disparadores del mismo menú: el chip del panel (escritorio) y
+           #account-btn, el chip de la barra superior que monta chat.astro y
+           que es el único visible en móvil, donde el panel no existe. */
+        ['sb-user-btn', 'account-btn'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (menuAbierto()) cerrarMenu();
+            else abrirMenu(el);
+          };
+        });
+
+        // Al cambiar de pagina el menu no debe quedarse abierto flotando.
+        cerrarMenu();
+      }
+
+      /* Los listeners de documento sobreviven al swap del <body>, asi que se
+         registran una sola vez; init() en cambio corre en cada navegacion. */
+      if (!window.__mediqSidebarReg) {
+        window.__mediqSidebarReg = true;
+        document.addEventListener('astro:page-load', init);
+        document.addEventListener('click', (e) => {
+          const menu = getMenu();
+          if (menuAbierto() && !menu.contains(e.target)) cerrarMenu();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarMenu(); });
+      }
+
+      // Primer render: astro:page-load tambien dispara en la carga inicial,
+      // pero init() es idempotente y asi el panel responde cuanto antes.
+      init();
     })();
   </script>
 
@@ -873,30 +924,10 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         sb.auth.onAuthStateChange((_event, session) => applySession(session));
       }
 
-      // ─── Cerrar sesion ───
-      // Los botones "Salir" del nav estan en el DOM que ViewTransition
-      // swap-ea — hay que re-atacharse en cada carga. Guard por elemento
-      // (dataset.mediqLogoutBound) para evitar doble listener si el mismo
-      // DOM persiste entre navegaciones.
-      const sb = window.__mediqSb;
-      if (sb) {
-        async function doLogout(e) {
-          if (e) e.preventDefault();
-          try { await sb.auth.signOut(); } catch (_) {}
-          try {
-            localStorage.removeItem('mediq.authHint');
-            localStorage.removeItem('mediq.userName');
-          } catch (_) {}
-          location.href = '/';
-        }
-        ['nav-logout', 'nav-mobile-logout', 'nav-rail-logout'].forEach(function (id) {
-          const el = document.getElementById(id);
-          if (el && !el.dataset.mediqLogoutBound) {
-            el.dataset.mediqLogoutBound = '1';
-            el.addEventListener('click', doLogout);
-          }
-        });
-      }
+      // El cierre de sesion vive en el menu del chip de perfil (script del
+      // panel). Aqui habia un bloque que vinculaba #nav-logout,
+      // #nav-mobile-logout y #nav-rail-logout: los tres desaparecieron del
+      // markup hace varios commits, asi que era codigo muerto.
     })();
   </script>
 
