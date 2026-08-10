@@ -235,9 +235,11 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     .msg.ai .content ul, .msg.ai .content ol { margin: 8px 0; padding-left: 22px; }
     .msg.ai .content li { margin: 4px 0; }
     .msg.ai .content h3 { font-size: 16px; margin: 12px 0 4px; font-weight: 600; font-family: var(--f-body); color: var(--ink); }
-    /* Citas. La variante -warn la usan las advertencias de interacciones
+    /* Citas. Semaforo de gravedad para las advertencias de interacciones
        farmacologicas: un aviso de seguridad tiene que verse de un vistazo,
-       no leerse entre lineas. */
+       no leerse entre lineas. Tres variantes sobre los tokens clinicos ya
+       definidos en global.css (--danger/--warn/--ok), para que el color
+       funcione igual en claro y oscuro sin duplicar paleta aqui. */
     .msg.ai .content blockquote.callout {
       margin: 10px 0;
       padding: 10px 14px;
@@ -246,12 +248,24 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       border-radius: 0 8px 8px 0;
       color: var(--ink);
     }
-    .msg.ai .content blockquote.callout-warn {
+    .msg.ai .content blockquote.callout-red {
       border-left-color: var(--danger);
       background: color-mix(in oklab, var(--danger) 9%, var(--bg-2));
     }
-    .msg.ai .content blockquote.callout-warn b,
-    .msg.ai .content blockquote.callout-warn strong { color: var(--danger); }
+    .msg.ai .content blockquote.callout-red b,
+    .msg.ai .content blockquote.callout-red strong { color: var(--danger); }
+    .msg.ai .content blockquote.callout-amber {
+      border-left-color: var(--warn);
+      background: color-mix(in oklab, var(--warn) 9%, var(--bg-2));
+    }
+    .msg.ai .content blockquote.callout-amber b,
+    .msg.ai .content blockquote.callout-amber strong { color: var(--warn); }
+    .msg.ai .content blockquote.callout-green {
+      border-left-color: var(--ok);
+      background: color-mix(in oklab, var(--ok) 9%, var(--bg-2));
+    }
+    .msg.ai .content blockquote.callout-green b,
+    .msg.ai .content blockquote.callout-green strong { color: var(--ok); }
 
     /* typing dots */
     .typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
@@ -916,15 +930,19 @@ ${disclaimerBlock}
 SEGURIDAD FARMACOLÓGICA — INTERACCIONES (PRIORITARIO):
 - Siempre que en el caso haya DOS O MÁS fármacos, revisa DE OFICIO si interaccionan entre sí. No esperes a que te lo pregunten: el profesional puede no sospechar la interacción, y ahí es donde más falta hace el aviso.
 - Cuenta como fármacos del caso TODOS los que aparezcan: los que se plantea prescribir ahora, los que el paciente ya toma, y los mencionados en mensajes anteriores, en el resumen de la conversación o en documentos adjuntos. La medicación crónica del paciente cuenta aunque se citara hace varios mensajes.
-- Si detectas una interacción clínicamente relevante, adviértela ANTES de dar posología, en una línea que empiece por "> ⚠️ **Interacción — " y contenga:
+- Cada aviso debe empezar por una línea de cita ("> ") con UN emoji de semáforo al principio que codifica la gravedad — de este emoji depende el color con el que se pinta el aviso en pantalla, así que usa SIEMPRE el que corresponde según esta tabla, sin excepciones:
+  · 🔴 (rojo)  → gravedad CONTRAINDICADA o GRAVE
+  · 🟠 (ámbar) → gravedad MODERADA
+  · 🟢 (verde) → gravedad LEVE, y también el caso "sin interacciones relevantes"
+- Si detectas una interacción clínicamente relevante, adviértela ANTES de dar posología, en una línea que empiece por "> 🔴 **Interacción — ", "> 🟠 **Interacción — " o "> 🟢 **Interacción — " (según la tabla anterior) y contenga:
   · los fármacos implicados y la gravedad (contraindicada / grave / moderada / leve),
   · el MECANISMO en una frase — el porqué (inhibición de CYP3A4, sinergia serotoninérgica, aditividad sobre el QT, desplazamiento de la unión a proteínas, efecto sobre la flora productora de vitamina K…),
   · la consecuencia clínica esperable (sangrado, síndrome serotoninérgico, torsade de pointes, fallo terapéutico, toxicidad…),
   · y la conducta concreta: alternativa recomendada, ajuste de dosis, separación horaria o parámetro a vigilar (INR, ECG/QTc, potasio, niveles plasmáticos…).
-- Usa una línea "> ⚠️ **Interacción — " independiente por cada interacción detectada; no las agrupes en un párrafo único.
-- Avisa con ese mismo formato de las contraindicaciones por alergia declarada, comorbilidad, embarazo o lactancia, y por insuficiencia renal o hepática, cuando el caso aporte esos datos.
-- Si la consulta implica prescribir o combinar fármacos y NO hay interacciones relevantes, dilo explícitamente en una línea ("Sin interacciones relevantes entre X e Y"). El silencio es ambiguo: el profesional no puede distinguir si lo has comprobado o si se te ha pasado.
-- Si sospechas una interacción pero no tienes seguridad sobre su magnitud o su relevancia clínica, DILO y recomienda verificarla en una fuente de interacciones antes de prescribir. Nunca calles una duda de seguridad.
+- Usa una línea "> [emoji] **Interacción — " independiente por cada interacción detectada; no las agrupes en un párrafo único.
+- Avisa con ese mismo formato (emoji de semáforo según gravedad) de las contraindicaciones por alergia declarada, comorbilidad, embarazo o lactancia, y por insuficiencia renal o hepática, cuando el caso aporte esos datos.
+- Si la consulta implica prescribir o combinar fármacos y NO hay interacciones relevantes, dilo explícitamente en una línea de cita que empiece por "> 🟢 Sin interacciones relevantes entre X e Y". Usa siempre el formato de cita con 🟢 para este caso, no lo escribas como texto suelto: el silencio (o un aviso que no resalta) es ambiguo, y el profesional no puede distinguir si lo has comprobado o si se te ha pasado.
+- Si sospechas una interacción pero no tienes seguridad sobre su magnitud o su relevancia clínica, DILO (con 🟠 si la duda es relevante) y recomienda verificarla en una fuente de interacciones antes de prescribir. Nunca calles una duda de seguridad.
 - Esta sección es OBLIGATORIA aunque el modo conciso esté activo. La brevedad puede recortar explicaciones, nunca una advertencia de seguridad.
 
 CONTINUIDAD Y COHERENCIA CONVERSACIONAL (CRÍTICO):
@@ -1666,13 +1684,21 @@ ${msgsHtml}
       /* Citas markdown. Se usan para las advertencias de interacciones
          farmacologicas, que deben saltar a la vista y no diluirse en el
          parrafo. OJO: escapeHtml() ya convirtio '>' en '&gt;', asi que el
-         patron busca la entidad, no el caracter. */
+         patron busca la entidad, no el caracter.
+         Semaforo de gravedad: el emoji con el que el modelo abre la linea
+         (🔴/🟠/🟢, ver system prompt) decide la clase de color. Las
+         conversaciones guardadas antes de este cambio usan ⚠️ en vez de
+         emoji de semaforo — se mantienen en rojo para no perder el aviso
+         visual del historial antiguo. Sin emoji reconocido, cita neutra. */
       s = s.replace(/(?:^|\n)((?:&gt;[ ]?.*(?:\n|$))+)/g, (m, block) => {
         const inner = block.trimEnd().split(/\n/)
           .map(l => l.replace(/^&gt;[ ]?/, ''))
           .join('<br>');
-        const warn = /^\s*(⚠|&#9888)/.test(inner) ? ' callout-warn' : '';
-        return '\n<blockquote class="callout' + warn + '">' + inner + '</blockquote>';
+        let level = '';
+        if (/^\s*(🔴|⚠|&#9888)/.test(inner)) level = ' callout-red';
+        else if (/^\s*🟠/.test(inner)) level = ' callout-amber';
+        else if (/^\s*🟢/.test(inner)) level = ' callout-green';
+        return '\n<blockquote class="callout' + level + '">' + inner + '</blockquote>';
       });
       s = s.replace(/(?:^|\n)((?:- .+\n?)+)/g, (m, block) => {
         const items = block.trim().split(/\n/).map(l => '<li>' + l.replace(/^- /, '') + '</li>').join('');
