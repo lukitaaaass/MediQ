@@ -32,6 +32,17 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat
    retirada. Si hiciera falta uno concreto, ponerlo en GEMINI_MODEL. */
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 
+/* Techo de tokens de la respuesta. Heredamos 2048 de la epoca de Llama y con
+   Gemini se quedo corto: estos modelos razonan internamente antes de
+   contestar y ESOS tokens cuentan contra el mismo presupuesto, asi que el
+   razonamiento se comia casi todo y la respuesta se cortaba a media frase
+   (finish_reason: "length" con apenas 300 caracteres visibles).
+
+   Se sube el techo en vez de recortar el razonamiento a proposito: en una
+   herramienta de apoyo clinico, el razonamiento es justo lo que aporta
+   valor en un diferencial. Configurable por si hiciera falta ajustarlo. */
+const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 8192;
+
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
@@ -100,7 +111,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: GEMINI_MODEL,
         messages: aiMessages,
-        max_tokens: 2048,
+        max_tokens: MAX_TOKENS,
         stream: true,
       }),
     });
