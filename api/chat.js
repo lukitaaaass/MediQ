@@ -19,9 +19,18 @@
  * responde 500 con un mensaje explicito: no hay fallback a otro proveedor,
  * para que siempre se sepa que modelo contesto.
  */
-const GEMINI_URL   = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-// Cambiar a 'gemini-2.5-pro' si se quiere mas profundidad a costa de latencia.
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+
+/* El modelo se puede fijar con la variable GEMINI_MODEL sin tocar codigo.
+   No es un lujo: Google retira modelos para cuentas nuevas sin previo aviso
+   —'gemini-2.5-flash' dejo de servirse asi, con un 404 en produccion— y
+   cuando pasa conviene poder cambiarlo desde Vercel en un minuto en vez de
+   esperar a un deploy.
+
+   Por defecto se usa el alias 'latest', que Google mantiene apuntando al
+   Flash vigente, precisamente para no quedarse anclado a una version
+   retirada. Si hiciera falta uno concreto, ponerlo en GEMINI_MODEL. */
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();
