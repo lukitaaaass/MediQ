@@ -19,9 +19,12 @@
  * chat responde 500 con un mensaje explicito: no hay fallback a otro
  * proveedor, para que siempre se sepa que modelo contesto.
  */
-const GEMINI_URL   = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-// Cambiar a 'gemini-2.5-pro' si se quiere mas profundidad a costa de latencia.
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+
+/* Mismo criterio que en api/chat.js: el modelo se puede fijar con la
+   variable GEMINI_MODEL, porque Google retira modelos para cuentas nuevas
+   sin previo aviso. Por defecto, el alias que apunta al Flash vigente. */
+const GEMINI_MODEL = import.meta.env.GEMINI_MODEL || 'gemini-flash-latest';
 
 // Sliding-window rate limiter: 20 req/min per IP
 const rateMap = new Map();
