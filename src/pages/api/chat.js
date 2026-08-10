@@ -1,3 +1,20 @@
+/**
+ * Proxy del chat hacia Gemini.
+ *
+ * Se usa la capa compatible con OpenAI de Gemini en vez de su API nativa a
+ * proposito: mantiene identico el formato de streaming (data: {...} con
+ * choices[0].delta.content), que es justo lo que parsea el cliente en
+ * chat.astro. Con la API nativa habria que reescribir tambien ese parseo y
+ * la forma de los mensajes, a cambio de nada que aqui necesitemos.
+ *
+ * Requiere GEMINI_API_KEY en las variables de entorno de Vercel. Sin ella el
+ * chat responde 500 con un mensaje explicito: no hay fallback a otro
+ * proveedor, para que siempre se sepa que modelo contesto.
+ */
+const GEMINI_URL   = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+// Cambiar a 'gemini-2.5-pro' si se quiere mas profundidad a costa de latencia.
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
 // Sliding-window rate limiter: 20 req/min per IP
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
@@ -38,27 +55,27 @@ export async function POST({ request }) {
     return jsonErr('Parámetros inválidos: messages vacío', 400);
   }
 
-  const apiKey = import.meta.env.GROQ_API_KEY;
+  const apiKey = import.meta.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return jsonErr('GROQ_API_KEY no está en el .env', 500);
+    return jsonErr('El servidor no está configurado: falta GEMINI_API_KEY.', 500);
   }
 
-  const groqMessages = [
+  const aiMessages = [
     { role: 'system', content: system },
     ...messages,
   ];
 
-  let groqRes;
+  let aiRes;
   try {
-    groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    aiRes = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: groqMessages,
+        model: GEMINI_MODEL,
+        messages: aiMessages,
         max_tokens: 2048,
         stream: true,
       }),
@@ -68,14 +85,18 @@ export async function POST({ request }) {
     return jsonErr(String(err.message || err), 500);
   }
 
-  if (!groqRes.ok) {
-    const data = await groqRes.json();
-    const msg = data?.error?.message || JSON.stringify(data);
-    console.error('[/api/chat] Groq error', groqRes.status, msg);
-    return jsonErr(`Groq ${groqRes.status}: ${msg}`, groqRes.status);
+  if (!aiRes.ok) {
+    // El cuerpo de error puede no ser JSON (502/504 de un proxy, HTML de
+    // error). Leerlo como texto primero evita que un fallo del proveedor se
+    // convierta aqui en un throw sin mensaje util.
+    const raw = await aiRes.text();
+    let msg = raw;
+    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
+    console.error('[/api/chat] Gemini error', aiRes.status, msg);
+    return jsonErr(`Gemini ${aiRes.status}: ${msg}`, aiRes.status);
   }
 
-  return new Response(groqRes.body, {
+  return new Response(aiRes.body, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
