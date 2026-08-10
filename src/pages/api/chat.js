@@ -26,6 +26,11 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat
    sin previo aviso. Por defecto, el alias que apunta al Flash vigente. */
 const GEMINI_MODEL = import.meta.env.GEMINI_MODEL || 'gemini-flash-latest';
 
+/* Mismo criterio que en api/chat.js: 2048 venia de la epoca de Llama y con
+   Gemini se queda corto, porque el razonamiento interno consume del mismo
+   presupuesto y cortaba la respuesta a media frase. */
+const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 8192;
+
 // Sliding-window rate limiter: 20 req/min per IP
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
@@ -87,7 +92,7 @@ export async function POST({ request }) {
       body: JSON.stringify({
         model: GEMINI_MODEL,
         messages: aiMessages,
-        max_tokens: 2048,
+        max_tokens: MAX_TOKENS,
         stream: true,
       }),
     });
