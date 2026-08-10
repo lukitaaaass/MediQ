@@ -1,3 +1,28 @@
+/**
+ * Proxy del chat hacia Gemini. ESTE es el endpoint que sirve /api/chat en
+ * produccion.
+ *
+ * OJO — hay DOS ficheros para la misma ruta y no son intercambiables:
+ *   · este, api/chat.js, funcion serverless de Vercel, es el que responde
+ *     en produccion (Vercel enruta /api/* a esta carpeta antes que a Astro);
+ *   · src/pages/api/chat.js, ruta de Astro, es el que responde en local con
+ *     `npm run dev`, donde las funciones de esta carpeta no se ejecutan.
+ * Si cambias el proveedor o el modelo, cambialo en LOS DOS o produccion y
+ * local dejaran de comportarse igual.
+ *
+ * Se usa la capa compatible con OpenAI de Gemini en vez de su API nativa a
+ * proposito: mantiene identico el formato de streaming (data: {...} con
+ * choices[0].delta.content), que es justo lo que parsea el cliente en
+ * chat.astro. Con la API nativa habria que reescribir tambien ese parseo.
+ *
+ * Requiere GEMINI_API_KEY en las variables de entorno de Vercel. Sin ella
+ * responde 500 con un mensaje explicito: no hay fallback a otro proveedor,
+ * para que siempre se sepa que modelo contesto.
+ */
+const GEMINI_URL   = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+// Cambiar a 'gemini-2.5-pro' si se quiere mas profundidad a costa de latencia.
+const GEMINI_MODEL = 'gemini-2.5-flash';
+
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
@@ -45,27 +70,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Parámetros inválidos: messages vacío' });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'GROQ_API_KEY no está configurada' });
+    return res.status(500).json({ error: 'El servidor no está configurado: falta GEMINI_API_KEY.' });
   }
 
-  const groqMessages = [
+  const aiMessages = [
     { role: 'system', content: system },
     ...messages,
   ];
 
-  let groqRes;
+  let aiRes;
   try {
-    groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    aiRes = await fetch(GEMINI_URL, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: groqMessages,
+        model: GEMINI_MODEL,
+        messages: aiMessages,
         max_tokens: 2048,
         stream: true,
       }),
@@ -75,18 +100,22 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: String(err.message || err) });
   }
 
-  if (!groqRes.ok) {
-    const data = await groqRes.json();
-    const msg = data?.error?.message || JSON.stringify(data);
-    console.error('[/api/chat] Groq error', groqRes.status, msg);
-    return res.status(groqRes.status).json({ error: `Groq ${groqRes.status}: ${msg}` });
+  if (!aiRes.ok) {
+    // El cuerpo de error puede no ser JSON (502/504 de un proxy, HTML de
+    // error). Leerlo como texto primero evita que un fallo del proveedor se
+    // convierta aqui en un throw sin mensaje util.
+    const raw = await aiRes.text();
+    let msg = raw;
+    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
+    console.error('[/api/chat] Gemini error', aiRes.status, msg);
+    return res.status(aiRes.status).json({ error: `Gemini ${aiRes.status}: ${msg}` });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  const reader = groqRes.body.getReader();
+  const reader = aiRes.body.getReader();
   const decoder = new TextDecoder();
 
   try {

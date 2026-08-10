@@ -1,5 +1,13 @@
 /**
- * Proxy del chat hacia Gemini.
+ * Proxy del chat hacia Gemini — version de DESARROLLO.
+ *
+ * OJO — hay DOS ficheros para la misma ruta y no son intercambiables:
+ *   · este, ruta de Astro, es el que responde en local con `npm run dev`;
+ *   · api/chat.js, en la raiz, funcion serverless de Vercel, es el que
+ *     responde EN PRODUCCION (Vercel enruta /api/* a esa carpeta antes que
+ *     a Astro).
+ * Si cambias el proveedor o el modelo, cambialo en LOS DOS. Tocar solo este
+ * no cambia nada de lo que ven los usuarios.
  *
  * Se usa la capa compatible con OpenAI de Gemini en vez de su API nativa a
  * proposito: mantiene identico el formato de streaming (data: {...} con
