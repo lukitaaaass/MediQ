@@ -40,8 +40,17 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 
    Se sube el techo en vez de recortar el razonamiento a proposito: en una
    herramienta de apoyo clinico, el razonamiento es justo lo que aporta
-   valor en un diferencial. Configurable por si hiciera falta ajustarlo. */
-const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 8192;
+   valor en un diferencial. Configurable por si hiciera falta ajustarlo.
+
+   El limite NO lo pone el modelo: Flash admite ~65k tokens de salida. Lo
+   pone el tiempo de ejecucion de la funcion, porque la respuesta va en
+   streaming y la funcion sigue viva hasta que termina de generar. Si se
+   agota el maxDuration de vercel.json la respuesta se corta a media frase
+   igual que antes, pero sin finish_reason que lo explique — mismo sintoma,
+   causa distinta y mas dificil de diagnosticar. Por eso este valor y el
+   maxDuration de vercel.json se suben juntos: pasar de aqui sin tocar
+   aquel solo cambia por que se rompe. */
+const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 16384;
 
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();

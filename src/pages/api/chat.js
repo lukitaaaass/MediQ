@@ -28,8 +28,10 @@ const GEMINI_MODEL = import.meta.env.GEMINI_MODEL || 'gemini-flash-latest';
 
 /* Mismo criterio que en api/chat.js: 2048 venia de la epoca de Llama y con
    Gemini se queda corto, porque el razonamiento interno consume del mismo
-   presupuesto y cortaba la respuesta a media frase. */
-const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 8192;
+   presupuesto y cortaba la respuesta a media frase. El techo real no lo pone
+   el modelo (Flash admite ~65k de salida) sino el maxDuration de la funcion
+   en produccion; ver el comentario largo en api/chat.js. */
+const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 16384;
 
 // Sliding-window rate limiter: 20 req/min per IP
 const rateMap = new Map();
