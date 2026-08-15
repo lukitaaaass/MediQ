@@ -28,8 +28,58 @@ const GEMINI_MODEL = import.meta.env.GEMINI_MODEL || 'gemini-flash-latest';
 
 /* Mismo criterio que en api/chat.js: 2048 venia de la epoca de Llama y con
    Gemini se queda corto, porque el razonamiento interno consume del mismo
-   presupuesto y cortaba la respuesta a media frase. */
-const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 8192;
+   presupuesto y cortaba la respuesta a media frase. El techo real no lo pone
+   el modelo (Flash admite ~65k de salida) sino el maxDuration de la funcion
+   en produccion; ver el comentario largo en api/chat.js. */
+const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 16384;
+
+/* Mismo criterio que en api/chat.js: un 503 UNAVAILABLE de Gemini es un pico
+   de demanda temporal, no un error del prompt, y sin reintento llega crudo
+   al usuario. Se reintenta solo 429 y 5xx, y solo antes de empezar a emitir
+   el stream. Ver el comentario largo en api/chat.js. */
+const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS   = 3;
+const BACKOFF_MS     = 600;
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+async function requestWithRetry(payload, apiKey) {
+  let last = { upstream: null, status: 0, msg: 'sin respuesta del proveedor' };
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      await sleep(BACKOFF_MS * 2 ** (attempt - 2) + Math.random() * 200);
+    }
+
+    let res;
+    try {
+      res = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      last = { upstream: null, status: 502, msg: String(err.message || err) };
+      console.error(`[/api/chat] fetch error (intento ${attempt}/${MAX_ATTEMPTS}):`, err);
+      continue;
+    }
+
+    if (res.ok) return { upstream: res, status: res.status, msg: '' };
+
+    const raw = await res.text();
+    let msg = raw;
+    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
+    last = { upstream: null, status: res.status, msg };
+
+    console.error(`[/api/chat] Gemini ${res.status} (intento ${attempt}/${MAX_ATTEMPTS}):`, msg);
+    if (!RETRY_STATUSES.has(res.status)) break;
+  }
+
+  return last;
+}
 
 // Sliding-window rate limiter: 20 req/min per IP
 const rateMap = new Map();
@@ -81,35 +131,19 @@ export async function POST({ request }) {
     ...messages,
   ];
 
-  let aiRes;
-  try {
-    aiRes = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: GEMINI_MODEL,
-        messages: aiMessages,
-        max_tokens: MAX_TOKENS,
-        stream: true,
-      }),
-    });
-  } catch (err) {
-    console.error('[/api/chat] fetch error:', err);
-    return jsonErr(String(err.message || err), 500);
-  }
+  const { upstream: aiRes, status } = await requestWithRetry({
+    model: GEMINI_MODEL,
+    messages: aiMessages,
+    max_tokens: MAX_TOKENS,
+    stream: true,
+  }, apiKey);
 
-  if (!aiRes.ok) {
-    // El cuerpo de error puede no ser JSON (502/504 de un proxy, HTML de
-    // error). Leerlo como texto primero evita que un fallo del proveedor se
-    // convierta aqui en un throw sin mensaje util.
-    const raw = await aiRes.text();
-    let msg = raw;
-    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
-    console.error('[/api/chat] Gemini error', aiRes.status, msg);
-    return jsonErr(`Gemini ${aiRes.status}: ${msg}`, aiRes.status);
+  if (!aiRes) {
+    // El detalle del proveedor queda en la consola; al usuario, el motivo.
+    const isTransient = RETRY_STATUSES.has(status);
+    return isTransient
+      ? jsonErr('El modelo está saturado ahora mismo. Ya lo he reintentado un par de veces; espera unos segundos y vuelve a enviar el mensaje.', 503)
+      : jsonErr(`El modelo ha rechazado la petición (${status}). Revisa la consola del servidor.`, status || 502);
   }
 
   return new Response(aiRes.body, {

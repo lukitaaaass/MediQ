@@ -40,8 +40,87 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 
    Se sube el techo en vez de recortar el razonamiento a proposito: en una
    herramienta de apoyo clinico, el razonamiento es justo lo que aporta
-   valor en un diferencial. Configurable por si hiciera falta ajustarlo. */
-const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 8192;
+   valor en un diferencial. Configurable por si hiciera falta ajustarlo.
+
+   El limite NO lo pone el modelo: Flash admite ~65k tokens de salida. Lo
+   pone el tiempo de ejecucion de la funcion, porque la respuesta va en
+   streaming y la funcion sigue viva hasta que termina de generar. Si se
+   agota el maxDuration de vercel.json la respuesta se corta a media frase
+   igual que antes, pero sin finish_reason que lo explique — mismo sintoma,
+   causa distinta y mas dificil de diagnosticar. Por eso este valor y el
+   maxDuration de vercel.json se suben juntos: pasar de aqui sin tocar
+   aquel solo cambia por que se rompe. */
+const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 16384;
+
+/* Reintentos ante fallos transitorios del proveedor.
+
+   Un 503 UNAVAILABLE ("This model is currently experiencing high demand")
+   no es un error del prompt ni de la configuracion: es capacidad de Google,
+   y ellos mismos dicen que los picos suelen ser temporales. Sin reintento
+   ese pico llega al usuario como un error crudo en mitad de una consulta
+   clinica, cuando lo que hacia falta era esperar dos segundos.
+
+   Se reintenta solo lo que tiene sentido reintentar: 429 y 5xx. Un 400 o un
+   401 volverian a fallar igual, asi que reintentarlos solo gastaria tiempo
+   de funcion y retrasaria el mensaje de error.
+
+   Importante: solo se reintenta ANTES de empezar a emitir el stream. Una
+   vez enviado el primer byte al cliente, reintentar duplicaria texto a
+   media respuesta.
+
+   El presupuesto se mantiene corto a proposito (3 intentos, ~1,8s de espera
+   acumulada en el peor caso) porque los reintentos consumen del mismo
+   maxDuration que la generacion. */
+const RETRY_STATUSES = new Set([429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS   = 3;
+const BACKOFF_MS     = 600;
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/* Devuelve { upstream, status, msg }: upstream es la respuesta lista para
+   hacer streaming, o null si se agotaron los intentos. */
+async function requestWithRetry(payload, apiKey) {
+  let last = { upstream: null, status: 0, msg: 'sin respuesta del proveedor' };
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      // Backoff exponencial con algo de jitter, para no reintentar todas las
+      // peticiones a la vez y volver a saturar lo que ya estaba saturado.
+      await sleep(BACKOFF_MS * 2 ** (attempt - 2) + Math.random() * 200);
+    }
+
+    let res;
+    try {
+      res = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      last = { upstream: null, status: 502, msg: String(err.message || err) };
+      console.error(`[/api/chat] fetch error (intento ${attempt}/${MAX_ATTEMPTS}):`, err);
+      continue;
+    }
+
+    if (res.ok) return { upstream: res, status: res.status, msg: '' };
+
+    // El cuerpo de error puede no ser JSON (502/504 de un proxy, HTML de
+    // error). Leerlo como texto primero evita que un fallo del proveedor se
+    // convierta aqui en un throw sin mensaje util.
+    const raw = await res.text();
+    let msg = raw;
+    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
+    last = { upstream: null, status: res.status, msg };
+
+    console.error(`[/api/chat] Gemini ${res.status} (intento ${attempt}/${MAX_ATTEMPTS}):`, msg);
+    if (!RETRY_STATUSES.has(res.status)) break;
+  }
+
+  return last;
+}
 
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();
@@ -100,35 +179,22 @@ export default async function handler(req, res) {
     ...messages,
   ];
 
-  let aiRes;
-  try {
-    aiRes = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: GEMINI_MODEL,
-        messages: aiMessages,
-        max_tokens: MAX_TOKENS,
-        stream: true,
-      }),
-    });
-  } catch (err) {
-    console.error('[/api/chat] fetch error:', err);
-    return res.status(500).json({ error: String(err.message || err) });
-  }
+  const { upstream: aiRes, status, msg } = await requestWithRetry({
+    model: GEMINI_MODEL,
+    messages: aiMessages,
+    max_tokens: MAX_TOKENS,
+    stream: true,
+  }, apiKey);
 
-  if (!aiRes.ok) {
-    // El cuerpo de error puede no ser JSON (502/504 de un proxy, HTML de
-    // error). Leerlo como texto primero evita que un fallo del proveedor se
-    // convierta aqui en un throw sin mensaje util.
-    const raw = await aiRes.text();
-    let msg = raw;
-    try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
-    console.error('[/api/chat] Gemini error', aiRes.status, msg);
-    return res.status(aiRes.status).json({ error: `Gemini ${aiRes.status}: ${msg}` });
+  if (!aiRes) {
+    /* Al usuario se le da el motivo, no el volcado del proveedor: un JSON de
+       Google con su stack no le dice si tiene que reintentar o avisar a
+       alguien. El detalle completo queda en la consola del servidor. */
+    const isTransient = RETRY_STATUSES.has(status);
+    const userMsg = isTransient
+      ? 'El modelo está saturado ahora mismo. Ya lo he reintentado un par de veces; espera unos segundos y vuelve a enviar el mensaje.'
+      : `El modelo ha rechazado la petición (${status}). Revisa la consola del servidor.`;
+    return res.status(isTransient ? 503 : status || 502).json({ error: userMsg });
   }
 
   res.setHeader('Content-Type', 'text/event-stream');
