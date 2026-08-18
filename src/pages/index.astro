@@ -95,8 +95,20 @@ import Layout from '../layouts/Layout.astro';
 
   /* Steps */
   .steps { display: grid; gap: 0; border-top: 1px solid var(--rule); }
-  .step { display: grid; grid-template-columns: 64px 1fr; gap: 32px; padding: 36px 0; border-bottom: 1px solid var(--rule); align-items: start; }
-  @media (min-width: 820px) { .step { grid-template-columns: 96px 1.6fr 2fr 1fr; gap: 48px; align-items: center; } }
+  /* Debajo de 820px el paso son dos columnas: el numero a la izquierda y el
+     resto apilado a la derecha. La colocacion explicita es obligatoria: con
+     autocolocacion los cuatro hijos llenan dos filas y el <p> cae en la columna
+     estrecha del numero, quedando a 40px de ancho (una letra por linea). */
+  .step { display: grid; grid-template-columns: 64px 1fr; column-gap: 32px; row-gap: 10px; padding: 36px 0; border-bottom: 1px solid var(--rule); align-items: start; }
+  .step .num { grid-column: 1; grid-row: 1; }
+  .step h3   { grid-column: 2; grid-row: 1; }
+  .step p    { grid-column: 2; grid-row: 2; }
+  .step .tag { grid-column: 2; grid-row: 3; }
+  @media (min-width: 820px) {
+    .step { grid-template-columns: 96px 1.6fr 2fr 1fr; gap: 48px; align-items: center; }
+    /* Una sola fila: se devuelve la autocolocacion a los cuatro hijos. */
+    .step .num, .step h3, .step p, .step .tag { grid-column: auto; grid-row: auto; }
+  }
   .step .num { font-family: var(--f-mono); font-size: 12px; color: var(--ink-mute); letter-spacing: 0.1em; }
   .step h3 { font-family: var(--f-display); font-weight: 400; }
   .step p { color: var(--ink-soft); max-width: 48ch; }
@@ -271,7 +283,7 @@ import Layout from '../layouts/Layout.astro';
     .hero-cta .btn { justify-content: center; }
     .hero-card { padding: 16px; }
     .hero-card .msg p { font-size: 13px; }
-    .step { grid-template-columns: 40px 1fr; gap: 16px; }
+    .step { grid-template-columns: 40px 1fr; column-gap: 16px; }
   }
   @media (max-width: 820px) {
     .tweaks-panel { width: min(300px, calc(100vw - 32px)); right: 16px; bottom: 16px; }
@@ -418,7 +430,7 @@ import Layout from '../layouts/Layout.astro';
         <div><h3>Modo estudiante</h3><p>Explica cada razonamiento paso a paso, con preguntas tipo OSCE. Ideal para internado y preparación de exámenes.</p></div>
       </div>
       <div class="feat reveal" style="--d:300ms;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">◌</div><span class="num">06</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;"><div class="glyph">§</div><span class="num">06</span></div>
         <div><h3>Privacidad por diseño</h3><p>Datos anonimizados antes del procesamiento. Nunca se entrenan modelos con tus casos. Cumplimiento RGPD y residencia de datos en la UE.</p></div>
       </div>
     </div>
