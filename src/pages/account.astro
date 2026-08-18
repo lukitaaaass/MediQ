@@ -27,6 +27,9 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       gap: 40px;
       align-items: start;
     }
+    /* Con min-width:auto la columna 1fr crece hasta el ancho intrinseco de las
+       tarjetas y saca la pagina 22px fuera del viewport a 768px. */
+    .account-wrap > * { min-width: 0; }
     @media (max-width: 720px) {
       .account-wrap { grid-template-columns: 1fr; }
       .acct-nav      { display: none; }

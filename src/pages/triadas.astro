@@ -420,6 +420,9 @@ const colorMap: Record<string, string> = {
       border-color: color-mix(in oklab, var(--ink) 15%, transparent);
     }
     .triada-card.hidden { display: none; }
+    /* min-width:auto deja que el contenido mas ancho de la tarjeta estire su
+       pista 1fr; a 768px eso sacaba el grid 2px fuera del viewport. */
+    .triada-card { min-width: 0; }
 
     .card-top {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;

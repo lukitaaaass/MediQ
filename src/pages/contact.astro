@@ -25,6 +25,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
   @media (min-width: 760px) {
     .contact-grid { grid-template-columns: 1fr 1.3fr; gap: 80px; align-items: start; }
   }
+  /* Los items de grid arrancan con min-width:auto, asi que el ancho intrinseco
+     de los campos del formulario ensanchaba la pista 1.3fr por encima de su
+     reparto y sacaba la pagina 53px fuera del viewport a 768px. */
+  .contact-grid > * { min-width: 0; }
 
   /* Left column */
   .contact-info { display: flex; flex-direction: column; gap: 32px; }
