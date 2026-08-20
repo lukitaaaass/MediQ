@@ -6,6 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "test:chat": "node scripts/test-chat-validation.mjs",
     "postinstall": "node scripts/patch-vercel-adapter.js"
   },
   "dependencies": {

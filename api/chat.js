@@ -43,6 +43,16 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
    valor en un diferencial. Configurable por si hiciera falta ajustarlo. */
 const MAX_TOKENS = Number(process.env.GEMINI_MAX_TOKENS) || 8192;
 
+/* Techo del system prompt. Ojo: este endpoint NO construye el system prompt, lo
+   recibe del cliente (systemPrompt() en src/pages/chat.astro) y ahi dentro va la
+   base de conocimiento entera. train.astro capa cada documento a 8000 caracteres
+   pero no limita CUANTOS documentos hay, y el corpus completo se reenvia en cada
+   mensaje. Sin este techo, un corpus grande desborda el contexto del modelo y
+   dispara el coste, y el usuario solo ve un error opaco de Gemini.
+   256 KB ~ 32 documentos: holgado para uso real, suficiente para frenar el caso
+   patologico. */
+const MAX_SYSTEM_CHARS = 256_000;
+
 // Sliding-window rate limiter: 20 req/min per IP (persists across warm invocations)
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
@@ -84,10 +94,31 @@ export default async function handler(req, res) {
     });
   }
 
-  const { system, messages } = req.body;
+  /* `|| {}` no es decorativo: sin el, una peticion sin cuerpo JSON (o con un
+     content-type que Vercel no parsea) deja req.body undefined y este destructuring
+     lanza un TypeError que sale como un 500 sin mensaje util. */
+  const { system, messages } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'Parámetros inválidos: messages vacío' });
+  }
+
+  // Nos quedamos solo con turnos bien formados; un elemento corrupto no debe
+  // llegar al proveedor ni tumbar la peticion entera.
+  const safeMessages = messages.filter(
+    m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'
+  );
+
+  if (safeMessages.length === 0) {
+    return res.status(400).json({ error: 'Parámetros inválidos: ningún mensaje utilizable' });
+  }
+
+  const systemText = typeof system === 'string' ? system : '';
+
+  if (systemText.length > MAX_SYSTEM_CHARS) {
+    return res.status(413).json({
+      error: 'Tu base de conocimiento es demasiado grande para enviarla en cada consulta. Quita algún documento en Entrenar y vuelve a intentarlo.',
+    });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -96,8 +127,8 @@ export default async function handler(req, res) {
   }
 
   const aiMessages = [
-    { role: 'system', content: system },
-    ...messages,
+    { role: 'system', content: systemText },
+    ...safeMessages,
   ];
 
   let aiRes;

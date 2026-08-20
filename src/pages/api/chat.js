@@ -32,6 +32,11 @@ const GEMINI_MODEL = import.meta.env.GEMINI_MODEL || 'gemini-flash-latest';
 const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 8192;
 
 // Sliding-window rate limiter: 20 req/min per IP
+/* Mismo techo que en api/chat.js — ver alli el razonamiento completo. En resumen:
+   el system prompt llega del cliente con la base de conocimiento entera dentro, y
+   el numero de documentos no esta limitado en train.astro. */
+const MAX_SYSTEM_CHARS = 256_000;
+
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
 const RATE_WINDOW = 60_000;
@@ -65,10 +70,37 @@ export async function POST({ request }) {
     );
   }
 
-  const { system, messages } = await request.json();
+  /* request.json() lanza si el cuerpo no es JSON valido. Sin este try la
+     excepcion sale como un 500 sin mensaje util; con el, el cliente recibe un
+     400 que explica que pasa. */
+  let body;
+  try {
+    body = await request.json();
+  } catch (_) {
+    return jsonErr('Cuerpo de la petición inválido: se esperaba JSON.', 400);
+  }
+
+  const { system, messages } = body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return jsonErr('Parámetros inválidos: messages vacío', 400);
+  }
+
+  const safeMessages = messages.filter(
+    m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'
+  );
+
+  if (safeMessages.length === 0) {
+    return jsonErr('Parámetros inválidos: ningún mensaje utilizable', 400);
+  }
+
+  const systemText = typeof system === 'string' ? system : '';
+
+  if (systemText.length > MAX_SYSTEM_CHARS) {
+    return jsonErr(
+      'Tu base de conocimiento es demasiado grande para enviarla en cada consulta. Quita algún documento en Entrenar y vuelve a intentarlo.',
+      413
+    );
   }
 
   const apiKey = import.meta.env.GEMINI_API_KEY;
@@ -77,8 +109,8 @@ export async function POST({ request }) {
   }
 
   const aiMessages = [
-    { role: 'system', content: system },
-    ...messages,
+    { role: 'system', content: systemText },
+    ...safeMessages,
   ];
 
   let aiRes;
