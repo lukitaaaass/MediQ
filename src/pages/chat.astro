@@ -941,6 +941,7 @@ ${ambitoBlock}
 INSTRUCCIONES GENERALES:
 - Responde SIEMPRE en español, en lenguaje natural y profesional médico.
 ${structureBlock}
+- NUNCA uses notación LaTeX ni delimitadores matemáticos ($...$, $$...$$, \\text{}, \\frac{}, _{}, ^{}). La interfaz no renderiza matemáticas: el usuario vería el código fuente en crudo. Escribe la notación clínica en texto plano Unicode — CHA₂DS₂-VASc, HAS-BLED, SpO₂, PaO₂/FiO₂, Na⁺, K⁺, HCO₃⁻ — y las fórmulas como texto corriente (por ejemplo: "aclaramiento = (140 - edad) × peso / (72 × creatinina)").
 ${citeBlock}
 - Si la consulta es de farmacología, incluye dosis estándar y ajuste por función renal/hepática y embarazo cuando aplique, y aplica SIEMPRE la sección de seguridad farmacológica de más abajo.
 - Si la pregunta es educativa (modo estudiante), explica paso a paso con razonamiento fisiopatológico.
@@ -1693,8 +1694,44 @@ ${msgsHtml}
       return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    /* Los modelos devuelven notacion clinica como LaTeX ("$\text{CHA}2\text{DS}2$")
+       porque escalas como CHA₂DS₂-VASc llevan subindices. Aqui no hay renderizador
+       de matematicas, asi que el usuario veria el codigo fuente en crudo. La
+       prohibicion va en el system prompt, pero los modelos la ignoran cada tanto:
+       esto es la red de seguridad. */
+    function stripLatex(text) {
+      const SUB = { '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','+':'₊','-':'₋' };
+      const SUP = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','+':'⁺','-':'⁻' };
+      const map = (s, t) => [...s].map(c => t[c] || c).join('');
+
+      return text
+        /* Los delimitadores solo caen si dentro hay una barra o una llave, o sea
+           LaTeX de verdad. Sin esa condicion, "cuesta $10 y el otro $20" perderia
+           el tramo del medio. */
+        .replace(/\$\$([^$]*[\\{][^$]*)\$\$/g, '$1')
+        .replace(/\$([^$\n]*[\\{][^$\n]*)\$/g, '$1')
+        .replace(/\\(?:text|mathrm|mathit|operatorname)\{([^}]*)\}/g, '$1')
+        .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '$1/$2')
+        .replace(/_\{([0-9+-]+)\}|_([0-9+-])/g, (_m, a, b) => map(a || b, SUB))
+        .replace(/\^\{([0-9+-]+)\}|\^([0-9+-])/g, (_m, a, b) => map(a || b, SUP))
+        .replace(/\\times/g, '×').replace(/\\pm/g, '±')
+        .replace(/\\leq?\b/g, '≤').replace(/\\geq?\b/g, '≥')
+        .replace(/\\,|\\;|\\!|\\ /g, ' ')
+        .replace(/\\\\/g, '\n');
+    }
+
     function md(text) {
-      let s = escapeHtml(text);
+      /* stripLatex va ANTES del markdown por dos razones: la conversion de
+         cursivas (_x_) se comeria los subindices de "CHA_2DS_2" y los dejaria
+         como <em>, y escapeHtml no toca ni '$' ni '\' ni las llaves.
+         Y va solo sobre los tramos que NO son codigo: si el usuario pega codigo
+         con '$' o '\', el bloque debe quedar literal. La tercera alternativa
+         (```...$ sin cerrar) cubre el fence a medio abrir mientras se streamea. */
+      const raw = String(text)
+        .split(/(```[\s\S]*?```|```[\s\S]*$|`[^`]+`)/g)
+        .map((seg, i) => (i % 2 === 0 ? stripLatex(seg) : seg))
+        .join('');
+      let s = escapeHtml(raw);
       s = s.replace(/```([\s\S]*?)```/g, (_, c) => `<pre style="background:var(--bg-2); padding:10px 12px; border-radius:8px; overflow-x:auto; font-family:var(--f-mono); font-size:13px;">${c}</pre>`);
       s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
       s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
