@@ -135,8 +135,8 @@ Todo informe de alta debería incluirlos. Si no los ves, **pídelos explícitame
 
 ## ¿Quieres que te lo traduzcamos a lenguaje sencillo?
 
-Si te sientes perdido con tu informe, puedes subirlo (en PDF, DOCX o pegando el texto) a **[MediQ Informes](/informes)** y te lo explicamos en 6 secciones claras: resumen, términos médicos, hallazgos importantes, qué significa para ti, preguntas para tu médico, próximos pasos y signos de alarma. No sustituye a tu médico — pero te llega a la consulta ya sabiendo qué preguntar.
+Si te sientes perdido con tu informe, puedes subirlo (en PDF, DOCX o pegando el texto) a **[Hygia Informes](/informes)** y te lo explicamos en 6 secciones claras: resumen, términos médicos, hallazgos importantes, qué significa para ti, preguntas para tu médico, próximos pasos y signos de alarma. No sustituye a tu médico — pero te llega a la consulta ya sabiendo qué preguntar.
 
-Si tienes una analítica de sangre, **[MediQ Analíticas](/analiticas)** te interpreta cada parámetro con un semáforo visual de gravedad.
+Si tienes una analítica de sangre, **[Hygia Analíticas](/analiticas)** te interpreta cada parámetro con un semáforo visual de gravedad.
 
 > Este artículo es informativo. Ante cualquier duda sobre tu tratamiento o síntomas, contacta con tu médico o acude a Urgencias si es urgente.

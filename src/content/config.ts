@@ -5,9 +5,9 @@ const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    // Autoría por defecto es "Equipo médico MediQ" — cuando entren especialistas
+    // Autoría por defecto es "Equipo médico Hygia" — cuando entren especialistas
     // revisores, se pone su nombre + especialidad.
-    author: z.string().default('Equipo médico MediQ'),
+    author: z.string().default('Equipo médico Hygia'),
     // Especialidad médica del artículo, para filtrado futuro y schema.org
     specialty: z.enum([
       'urgencias',
@@ -40,9 +40,9 @@ const blog = defineCollection({
     colegiado: z.string().optional(),
   }).superRefine((data, ctx) => {
     if (data.tipo === 'caso') {
-      // El default de 'author' es 'Equipo médico MediQ' — un caso clínico exige
+      // El default de 'author' es 'Equipo médico Hygia' — un caso clínico exige
       // atribución real, no la genérica.
-      if (!data.author || data.author === 'Equipo médico MediQ') {
+      if (!data.author || data.author === 'Equipo médico Hygia') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['author'],

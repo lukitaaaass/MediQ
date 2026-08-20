@@ -1,4 +1,4 @@
-/* Design system compartido — MediQ */
+/* Design system compartido — Hygia */
 :root {
   --bg: #f6f5f1;
   --bg-2: #efede6;
@@ -7,7 +7,7 @@
   --ink-mute: #595f64;
   --rule: #1e23270d;
   --rule-2: #1e232714;
-  /* Acento teal MediQ — misma marca en light/dark, cambia solo la luminosidad */
+  /* Acento teal Hygia — misma marca en light/dark, cambia solo la luminosidad */
   --accent: oklch(54% 0.09 195);
   --accent-ink: #ffffff;         /* texto sobre bloques con background: var(--accent) */
   --accent-text: oklch(42% 0.11 195); /* acento como tinta pequeña sobre bg claro — WCAG AA */

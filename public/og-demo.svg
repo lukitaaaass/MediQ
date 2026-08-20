@@ -27,13 +27,13 @@
   <circle cx="136" cy="180" r="22" fill="#2dd4bf" opacity="0.9"/>
 
   <!-- Brand name -->
-  <text x="196" y="197" font-family="Georgia, serif" font-size="56" font-weight="400" fill="#f2f0ea" letter-spacing="-1.5">MediQ</text>
+  <text x="196" y="197" font-family="Georgia, serif" font-size="56" font-weight="400" fill="#f2f0ea" letter-spacing="-1.5">Hygia</text>
 
   <!-- Eyebrow -->
   <text x="136" y="270" font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#2dd4bf" letter-spacing="0.14em">DEMO PÚBLICA</text>
 
   <!-- Big headline -->
-  <text x="136" y="332" font-family="Georgia, serif" font-size="52" font-weight="400" fill="#f2f0ea" letter-spacing="-1">Prueba MediQ en</text>
+  <text x="136" y="332" font-family="Georgia, serif" font-size="52" font-weight="400" fill="#f2f0ea" letter-spacing="-1">Prueba Hygia en</text>
   <text x="136" y="392" font-family="Georgia, serif" font-size="52" font-weight="300" fill="#2dd4bf" font-style="italic" letter-spacing="-1">3 consultas gratis.</text>
 
   <!-- Subline -->
@@ -46,9 +46,9 @@
   <!-- Right side: mockup de un caso clínico -->
   <rect x="760" y="150" width="380" height="330" rx="16" fill="#191d20" stroke="#f2f0ea14" stroke-width="1"/>
 
-  <!-- Header del mockup: MediQ · demo pública -->
+  <!-- Header del mockup: Hygia · demo pública -->
   <circle cx="784" cy="184" r="5" fill="#2dd4bf" opacity="0.9"/>
-  <text x="800" y="189" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#7f837f" letter-spacing="0.12em">MEDIQ · DEMO PÚBLICA</text>
+  <text x="800" y="189" font-family="-apple-system, system-ui, sans-serif" font-size="12" fill="#7f837f" letter-spacing="0.12em">HYGIA · DEMO PÚBLICA</text>
 
   <!-- Pregunta del usuario (burbuja alineada derecha) -->
   <rect x="820" y="220" width="296" height="72" rx="12" fill="#f2f0ea" stroke="none"/>
@@ -56,8 +56,8 @@
   <text x="834" y="266" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#0e1113">opresivo, sudoración, T neg en</text>
   <text x="834" y="284" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#0e1113">V4-V6. ¿Diferencial?</text>
 
-  <!-- Respuesta MediQ (burbuja alineada izquierda) -->
-  <text x="784" y="326" font-family="-apple-system, system-ui, sans-serif" font-size="10" fill="#7f837f" letter-spacing="0.06em">MEDIQ</text>
+  <!-- Respuesta Hygia (burbuja alineada izquierda) -->
+  <text x="784" y="326" font-family="-apple-system, system-ui, sans-serif" font-size="10" fill="#7f837f" letter-spacing="0.06em">HYGIA</text>
   <rect x="784" y="336" width="332" height="120" rx="12" fill="#f2f0ea0d" stroke="#f2f0ea14" stroke-width="1"/>
   <text x="798" y="360" font-family="-apple-system, system-ui, sans-serif" font-size="13" fill="#c6c3ba" font-weight="600">1. SCA sin elevación del ST</text>
   <text x="798" y="380" font-family="-apple-system, system-ui, sans-serif" font-size="12.5" fill="#c6c3ba">   T negativas V4-V6 → isquemia</text>

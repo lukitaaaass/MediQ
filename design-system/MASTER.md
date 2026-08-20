@@ -1,4 +1,4 @@
-# MediQ — Design System MASTER
+# Hygia — Design System MASTER
 > Source of truth. Page-specific overrides live in `design-system/pages/`.
 
 ---
@@ -107,7 +107,7 @@ body  { font-size: 16px; line-height: 1.6; }  /* mínimo obligatorio */
 - Máximo **72 caracteres** por línea en cuerpo
 - Line-height **1.5–1.7** en párrafos
 - Mono para: números de versión, scores, IDs, labels técnicos (e.g. "IAM cara inferior")
-- Serif + italic en acento = firma visual de MediQ (`<em>`)
+- Serif + italic en acento = firma visual de Hygia (`<em>`)
 - **Nunca** usar font-weight < 300 en mobile
 
 ---
@@ -277,7 +277,7 @@ transition: 150ms–300ms ease;
 
 ---
 
-## 10. Anti-patrones (NO hacer en MediQ)
+## 10. Anti-patrones (NO hacer en Hygia)
 
 | Anti-patrón | Por qué |
 |-------------|---------|

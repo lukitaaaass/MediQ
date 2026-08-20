@@ -3,8 +3,8 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout
-  title="Prueba MediQ · Demo pública — MediQ"
-  description="Prueba MediQ sin registro: 3 consultas gratis con casos clínicos reales (dolor torácico, meningitis, disnea EPOC) o los tuyos. Respuestas fundamentadas en guías clínicas."
+  title="Prueba Hygia · Demo pública — Hygia"
+  description="Prueba Hygia sin registro: 3 consultas gratis con casos clínicos reales (dolor torácico, meningitis, disnea EPOC) o los tuyos. Respuestas fundamentadas en guías clínicas."
   navActive="/demo"
   bodyClass="demo-page"
   ogImage="https://medi-q-bice.vercel.app/og-demo.svg"
@@ -315,7 +315,7 @@ import Layout from '../layouts/Layout.astro';
 
     <div class="demo-hero reveal">
       <span class="eyebrow">Demo pública</span>
-      <h1>Prueba MediQ con un <em>caso real</em>.</h1>
+      <h1>Prueba Hygia con un <em>caso real</em>.</h1>
       <p class="sub">
         Tres consultas gratis, sin registro. Elige un caso clínico precargado o escribe el tuyo.
         Herramienta de apoyo — la decisión final siempre es del profesional.
@@ -352,7 +352,7 @@ import Layout from '../layouts/Layout.astro';
     <div class="demo-chat">
       <div class="demo-chat-head">
         <span class="pulse" aria-hidden="true"></span>
-        <span>MediQ · demo pública</span>
+        <span>Hygia · demo pública</span>
       </div>
       <div class="messages" id="messages">
         <div class="empty-state" id="empty">
@@ -388,7 +388,7 @@ import Layout from '../layouts/Layout.astro';
     <div class="demo-modal">
       <span class="eyebrow">Fin de la demo</span>
       <h2 id="limit-title">Has usado las 3 consultas.</h2>
-      <p>Crea tu cuenta gratis para seguir usando MediQ sin límite — 14 días de prueba, sin tarjeta de crédito.</p>
+      <p>Crea tu cuenta gratis para seguir usando Hygia sin límite — 14 días de prueba, sin tarjeta de crédito.</p>
       <div class="actions">
         <a class="btn btn-primary" href="/login?signup=1" onclick="try{window.track&&window.track('Demo signup click',{source:'modal'})}catch(_){}">Crear cuenta gratis →</a>
         <a class="btn btn-ghost" href="/pricing" onclick="try{window.track&&window.track('Demo pricing click',{source:'modal'})}catch(_){}">Ver planes</a>
@@ -474,7 +474,7 @@ import Layout from '../layouts/Layout.astro';
       function appendAiPlaceholder() {
         const el = document.createElement('div');
         el.className = 'msg ai';
-        el.innerHTML = '<span class="meta">MediQ</span><div class="content"><span class="typing-dots"><i></i><i></i><i></i></span></div>';
+        el.innerHTML = '<span class="meta">Hygia</span><div class="content"><span class="typing-dots"><i></i><i></i><i></i></span></div>';
         messagesEl.appendChild(el);
         scrollBottom();
         return el.querySelector('.content');

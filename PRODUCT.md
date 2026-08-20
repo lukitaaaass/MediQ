@@ -6,7 +6,7 @@ product
 
 ## Users
 
-Spanish-speaking medical professionals: practicing physicians (all specialties), residents (MIR), and medical students. They use MediQ under time pressure — between patients, during rounds, before signing a prescription. Context: clinical environment, often mobile, always high stakes. They are domain experts who don't want to be taught; they want a fast, reliable peer.
+Spanish-speaking medical professionals: practicing physicians (all specialties), residents (MIR), and medical students. They use Hygia under time pressure — between patients, during rounds, before signing a prescription. Context: clinical environment, often mobile, always high stakes. They are domain experts who don't want to be taught; they want a fast, reliable peer.
 
 Secondary surface: the landing page converts skeptical physicians who need to trust the product before handing over a clinical workflow. Trust is earned in seconds.
 
@@ -14,7 +14,7 @@ Note: both surfaces carry equal design weight. The landing must look like the ap
 
 ## Product Purpose
 
-MediQ is a clinical AI assistant that helps doctors reason faster without replacing their judgment. It summarizes patient histories, generates ranked differential diagnoses with linked evidence, verifies drug interactions, and reasons over uploaded clinical documents (PDFs, DICOM). Success: a physician acts on better information in less time, and feels confident in the source. Failure: the physician second-guesses the AI or abandons the session.
+Hygia is a clinical AI assistant that helps doctors reason faster without replacing their judgment. It summarizes patient histories, generates ranked differential diagnoses with linked evidence, verifies drug interactions, and reasons over uploaded clinical documents (PDFs, DICOM). Success: a physician acts on better information in less time, and feels confident in the source. Failure: the physician second-guesses the AI or abandons the session.
 
 ## Brand Personality
 
@@ -26,7 +26,7 @@ Emotional goal for brand surface: "this is serious software made by people who u
 
 ## Anti-references
 
-- **SaaS-generic startup aesthetic**: purple/violet brand colors, floating gradient cards, Notion/Linear/Loom visual language. MediQ is not a productivity tool for knowledge workers.
+- **SaaS-generic startup aesthetic**: purple/violet brand colors, floating gradient cards, Notion/Linear/Loom visual language. Hygia is not a productivity tool for knowledge workers.
 - **Sterile healthcare white**: hospital-blue + white, stethoscope iconography, stock-photo clinics. Doctors associate this aesthetic with outdated EMR software they hate.
 - **AI hype aesthetics**: neon on dark, particle effects, ChatGPT/Midjourney vibes, gradient text, "powered by AI" badges. The AI is the infrastructure, not the identity.
 - **Consumer wellness softness**: Calm/Headspace pastels, organic shapes, rounded everything. Too relaxed for a tool used in acute care.

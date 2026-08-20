@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout
-  title="Chat — MediQ"
+  title="Chat — Hygia"
   navActive="/chat"
   bodyClass="chat-page"
   includePdfJs={true}
@@ -734,10 +734,10 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
     // Reutiliza el cliente singleton de Layout.astro para evitar refresh-token
     // races entre multiples clientes en ViewTransitions (que cierran la sesion).
     if (!window.__mediqSb) {
-      console.error('[MediQ] chat.astro: singleton __mediqSb NO existe — fallback disparado (bug)');
+      console.error('[Hygia] chat.astro: singleton __mediqSb NO existe — fallback disparado (bug)');
       window.__mediqSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
-      console.log('[MediQ] chat.astro: usa singleton existente');
+      console.log('[Hygia] chat.astro: usa singleton existente');
     }
     const sb = window.__mediqSb;
     let sbUser = null;
@@ -936,7 +936,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         ? '- AÑADE SIEMPRE al final una nota: "_Esta respuesta es una herramienta de apoyo. La decisión clínica final corresponde al profesional sanitario responsable._"'
         : '- NO añadas nota de disclaimer al final. El usuario ya sabe que esto es una herramienta de apoyo.';
 
-      return `Eres MediQ, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
+      return `Eres Hygia, un asistente clínico con IA diseñado para apoyar a médicos y estudiantes de medicina hispanohablantes. Especialidad activa de la sesión: ${specialty}.${topicLine}${summaryLine}${corpusSection}
 ${ambitoBlock}
 INSTRUCCIONES GENERALES:
 - Responde SIEMPRE en español, en lenguaje natural y profesional médico.
@@ -1404,7 +1404,7 @@ REGLAS:
       const c = chats.find(x => x.id === id);
       if (!c) return;
       chats = chats.filter(x => x.id !== id);
-      if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat — MediQ'; }
+      if (activeId === id) { activeId = null; renderMessages(null); document.title = 'Chat — Hygia'; }
       saveChats(); renderSidebar();
       deleteChatFromSupabase(id);
     }
@@ -1413,7 +1413,7 @@ REGLAS:
       if (localStorage.getItem('mediq.onboarding.v1')) return;
 
       const STEPS = [
-        { tag: 'Bienvenido', title: '¡Hola! Soy MediQ', body: 'Tu asistente clínico con IA. En cuatro pasos rápidos te enseñamos lo esencial.', target: null },
+        { tag: 'Bienvenido', title: '¡Hola! Soy Hygia', body: 'Tu asistente clínico con IA. En cuatro pasos rápidos te enseñamos lo esencial.', target: null },
         { tag: 'Chats', title: 'Historial de consultas', body: 'En la barra lateral tienes todas tus conversaciones, sincronizadas entre dispositivos. Créalas, fíjalas, compártelas o expórtalas.', target: '.sidebar' },
         { tag: 'Especialidad', title: 'Adapta la respuesta', body: 'Cambia la especialidad activa para ajustar el enfoque de la IA: urgencias, cardiología, modo estudiante…', target: '#specialty-btn' },
         { tag: 'Empieza aquí', title: 'El compositor', body: 'Describe el caso en lenguaje natural o adjunta PDFs: historias clínicas, guías, artículos. La IA razonará sobre ellos.', target: '#composer' },
@@ -1553,13 +1553,13 @@ REGLAS:
 
     function exportChatAsText(chat) {
       const date = new Date(chat.updatedAt).toLocaleDateString('es', { day: '2-digit', month: 'long', year: 'numeric' });
-      let txt = `MediQ — ${chat.title}\nEspecialidad: ${chat.specialty || 'General'}\nFecha: ${date}\n${'─'.repeat(52)}\n\n`;
+      let txt = `Hygia — ${chat.title}\nEspecialidad: ${chat.specialty || 'General'}\nFecha: ${date}\n${'─'.repeat(52)}\n\n`;
       for (const m of chat.messages) {
         if (m.pending) continue;
         const time = new Date(m.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-        txt += `${m.role === 'ai' ? 'MediQ' : 'Tú'} (${time}):\n${m.text}\n\n`;
+        txt += `${m.role === 'ai' ? 'Hygia' : 'Tú'} (${time}):\n${m.text}\n\n`;
       }
-      txt += `${'─'.repeat(52)}\nExportado desde MediQ · Herramienta de apoyo clínico.`;
+      txt += `${'─'.repeat(52)}\nExportado desde Hygia · Herramienta de apoyo clínico.`;
       const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1573,9 +1573,9 @@ REGLAS:
       const msgsHtml = chat.messages.filter(m => !m.pending).map(m => {
         const time = new Date(m.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
         const content = m.role === 'ai' ? md(m.text) : escapeHtml(m.text).replace(/\n/g, '<br>');
-        return `<div class="msg ${m.role}"><div class="meta">${m.role === 'ai' ? 'MediQ' : 'Tú'} · ${time}</div><div class="content">${content}</div></div>`;
+        return `<div class="msg ${m.role}"><div class="meta">${m.role === 'ai' ? 'Hygia' : 'Tú'} · ${time}</div><div class="content">${content}</div></div>`;
       }).join('');
-      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>MediQ — ${escapeHtml(chat.title)}</title>
+      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Hygia — ${escapeHtml(chat.title)}</title>
 <style>body{font-family:-apple-system,sans-serif;font-size:13px;line-height:1.6;color:#1a1a1a;max-width:720px;margin:0 auto;padding:36px}
 .hdr{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:24px}.hdr h1{font-size:19px;margin:0 0 4px;font-weight:600}
 .hdr .sub{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em}
@@ -1589,7 +1589,7 @@ ul,ol{padding-left:20px;margin:5px 0}
 @media print{body{padding:16px}}</style></head><body>
 <div class="hdr"><h1>${escapeHtml(chat.title)}</h1><div class="sub">Especialidad: ${escapeHtml(chat.specialty||'General')} · ${date}</div></div>
 ${msgsHtml}
-<div class="foot">Exportado desde MediQ · Herramienta de apoyo clínico — las decisiones finales corresponden al profesional sanitario.</div>
+<div class="foot">Exportado desde Hygia · Herramienta de apoyo clínico — las decisiones finales corresponden al profesional sanitario.</div>
 </body></html>`;
       const win = window.open('', '_blank');
       if (!win) { alert('Activa las ventanas emergentes para exportar PDF.'); return; }
@@ -1826,7 +1826,7 @@ ${msgsHtml}
       const av = m.role === 'ai'
         ? `<div class="av"></div>`
         : `<div class="av">${sbUser?.email ? sbUser.email[0].toUpperCase() : 'M'}</div>`;
-      const role = m.role === 'ai' ? 'MediQ' : 'Tú';
+      const role = m.role === 'ai' ? 'Hygia' : 'Tú';
       const time = new Date(m.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
       let attachHtml = '';
       if (m.attachments && m.attachments.length) {

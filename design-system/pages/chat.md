@@ -1,4 +1,4 @@
-# MediQ — Design Override: Chat
+# Hygia — Design Override: Chat
 > Overrides sobre `design-system/MASTER.md`.
 
 ## Patrón de página

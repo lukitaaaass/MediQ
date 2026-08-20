@@ -14,7 +14,7 @@
  *   <CasoCTA
  *     slug="disnea-nocturna-72a"
  *     nivel="fundamentos"
- *     primeraPregunta="Discutir este caso con MediQ"
+ *     primeraPregunta="Discutir este caso con Hygia"
  *     promptInicial="Caso clinico: varon de 72 anos con disnea nocturna..."
  *   />
  */
@@ -28,7 +28,7 @@ interface Props {
 const {
   slug,
   nivel,
-  primeraPregunta = 'Discutir este caso con MediQ',
+  primeraPregunta = 'Discutir este caso con Hygia',
   promptInicial,
 } = Astro.props;
 
@@ -42,7 +42,7 @@ const chatHref = `/chat?${queryParams.toString()}`;
 
 <aside class="caso-cta">
   <div class="caso-cta-texto">
-    <span class="caso-cta-etiqueta">Continúa en MediQ</span>
+    <span class="caso-cta-etiqueta">Continúa en Hygia</span>
     <p>Comenta este caso con nuestro chatbot médico: puedes pedir el diagnóstico diferencial, discutir el manejo o profundizar en cualquier hallazgo.</p>
   </div>
   <a

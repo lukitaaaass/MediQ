@@ -152,12 +152,12 @@ Si notas que te desbordas, hablar con un psicólogo especializado en opositores 
 
 ---
 
-## Herramientas MediQ para el año MIR
+## Herramientas Hygia para el año MIR
 
-- **[Chat MediQ](/chat)** en modo estudiante para resolver dudas puntuales durante el estudio (fisiopatología, mecanismos, diferencias entre patologías parecidas)
+- **[Chat Hygia](/chat)** en modo estudiante para resolver dudas puntuales durante el estudio (fisiopatología, mecanismos, diferencias entre patologías parecidas)
 - **[Tríadas](/triadas)** para practicar reconocimiento sindrómico rápido — muy útil para preguntas clínicas del MIR
 - **[Analíticas](/analiticas)** e **[Informes](/informes)** para practicar interpretación de datos reales
 
-Todo el equipo MediQ vamos a lanzar próximamente un paquete específico para MIR con casos comentados y simulacros — si te interesa, apúntate a la [lista de espera MIR](/mir) para enterarte primero.
+Todo el equipo Hygia vamos a lanzar próximamente un paquete específico para MIR con casos comentados y simulacros — si te interesa, apúntate a la [lista de espera MIR](/mir) para enterarte primero.
 
 > Este artículo es informativo y refleja tendencias generales. Cada opositor es distinto: adapta el plan a tu punto de partida, tus circunstancias y tus objetivos.

@@ -1,4 +1,4 @@
-# MediQ — Design Override: Pricing
+# Hygia — Design Override: Pricing
 > Overrides sobre `design-system/MASTER.md`.
 
 ## Patrón de página

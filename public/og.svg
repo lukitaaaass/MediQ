@@ -27,7 +27,7 @@
   <circle cx="136" cy="215" r="22" fill="#2dd4bf" opacity="0.9"/>
 
   <!-- Brand name -->
-  <text x="196" y="232" font-family="Georgia, serif" font-size="56" font-weight="400" fill="#f2f0ea" letter-spacing="-1.5">MediQ</text>
+  <text x="196" y="232" font-family="Georgia, serif" font-size="56" font-weight="400" fill="#f2f0ea" letter-spacing="-1.5">Hygia</text>
 
   <!-- Tagline -->
   <text x="136" y="310" font-family="-apple-system, system-ui, sans-serif" font-size="22" fill="#c6c3ba" letter-spacing="0">Soporte clínico con IA para médicos hispanohablantes</text>

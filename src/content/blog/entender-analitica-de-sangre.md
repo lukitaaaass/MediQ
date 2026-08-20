@@ -104,8 +104,8 @@ Antes de ir a que te expliquen la analítica:
 
 ## ¿Quieres una explicación personalizada de TU analítica?
 
-Herramientas como **[MediQ Analíticas](/analiticas)** interpretan tu analítica de sangre parámetro por parámetro y te dicen exactamente qué significa cada valor en tu contexto, con un semáforo visual de gravedad. No sustituye a tu médico — pero te llega a la consulta ya sabiendo qué preguntar.
+Herramientas como **[Hygia Analíticas](/analiticas)** interpretan tu analítica de sangre parámetro por parámetro y te dicen exactamente qué significa cada valor en tu contexto, con un semáforo visual de gravedad. No sustituye a tu médico — pero te llega a la consulta ya sabiendo qué preguntar.
 
-Y si lo que tienes es un informe médico completo (alta hospitalaria, resonancia, TAC), puedes usar **[MediQ Informes](/informes)** para que te lo traduzca a lenguaje sencillo antes de la consulta.
+Y si lo que tienes es un informe médico completo (alta hospitalaria, resonancia, TAC), puedes usar **[Hygia Informes](/informes)** para que te lo traduzca a lenguaje sencillo antes de la consulta.
 
 > **Aviso importante**: esta guía es informativa y no sustituye la valoración de un profesional sanitario. Cualquier decisión sobre tratamiento debe consultarse con tu médico.

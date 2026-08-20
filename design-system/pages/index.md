@@ -1,4 +1,4 @@
-# MediQ — Design Override: Landing (index)
+# Hygia — Design Override: Landing (index)
 > Overrides sobre `design-system/MASTER.md`. Solo aplica aquí lo que difiere.
 
 ## Patrón de página

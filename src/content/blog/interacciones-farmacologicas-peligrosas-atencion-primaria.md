@@ -120,10 +120,10 @@ En atención primaria manejamos pacientes con listas de 8-12 medicamentos donde 
 
 ---
 
-## Uso de MediQ para revisar interacciones complejas
+## Uso de Hygia para revisar interacciones complejas
 
-En pacientes con listas de 10+ medicamentos, **[MediQ Chat](/chat)** permite pegar la medicación completa y pedir un análisis de interacciones potenciales, priorizadas por gravedad clínica. Es útil como segunda verificación antes de introducir un nuevo fármaco, sobre todo en ancianos frágiles.
+En pacientes con listas de 10+ medicamentos, **[Hygia Chat](/chat)** permite pegar la medicación completa y pedir un análisis de interacciones potenciales, priorizadas por gravedad clínica. Es útil como segunda verificación antes de introducir un nuevo fármaco, sobre todo en ancianos frágiles.
 
-Recuerda que **cualquier herramienta de apoyo (incluida MediQ) es complementaria** a las bases de datos oficiales y a tu criterio clínico — no las sustituye.
+Recuerda que **cualquier herramienta de apoyo (incluida Hygia) es complementaria** a las bases de datos oficiales y a tu criterio clínico — no las sustituye.
 
 > Este artículo es formativo y no sustituye ficha técnica ni protocolo local. Las dosis y estrategias específicas deben ajustarse a cada paciente.

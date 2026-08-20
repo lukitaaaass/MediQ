@@ -1,6 +1,6 @@
 ---
 /**
- * Layout compartido de MediQ.
+ * Layout compartido de Hygia.
  *
  * Props:
  *   title          — <title> de la página
@@ -28,7 +28,7 @@ interface Props {
 }
 
 const {
-  title        = 'MediQ — Soporte clínico con IA',
+  title        = 'Hygia — Soporte clínico con IA',
   description  = 'Asistente clínico con IA para médicos hispanohablantes. Diagnósticos diferenciales, verificador de interacciones y más.',
   navActive    = '',
   bodyClass    = '',
@@ -76,7 +76,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:locale"      content="es_ES" />
-  <meta property="og:site_name"   content="MediQ" />
+  <meta property="og:site_name"   content="Hygia" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
@@ -103,10 +103,10 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   -->
   <script is:inline define:vars={{ SUPABASE_URL, SUPABASE_ANON_KEY }}>
     if (!window.__mediqSb) {
-      console.log('[MediQ] singleton createClient @ head');
+      console.log('[Hygia] singleton createClient @ head');
       window.__mediqSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     } else {
-      console.log('[MediQ] singleton already exists — skip');
+      console.log('[Hygia] singleton already exists — skip');
     }
   </script>
 
@@ -269,7 +269,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 
   <aside id="app-sidebar" aria-label="Navegación principal">
     <div class="sb-top">
-      <a class="sb-logo" href="/" aria-label="MediQ — inicio">
+      <a class="sb-logo" href="/" aria-label="Hygia — inicio">
         <span class="brand-mark"></span>
       </a>
       <button id="sb-search-btn" class="sb-icon-btn" aria-label="Buscar" aria-expanded="false" title="Buscar">
@@ -373,7 +373,7 @@ const PLAUSIBLE_DOMAIN    = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <div class="container row">
       <a class="brand" href="/">
         <span class="brand-mark"></span>
-        <span data-brand>MediQ</span>
+        <span data-brand>Hygia</span>
       </a>
 
       <div class="nav-links">

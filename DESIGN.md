@@ -1,5 +1,5 @@
 ---
-name: MediQ
+name: Hygia
 description: Asistente clínico con IA para médicos hispanohablantes
 colors:
   warm-parchment: "#f6f5f1"
@@ -88,15 +88,15 @@ components:
     padding: "clamp(20px, 2.6vw, 36px)"
 ---
 
-# Design System: MediQ
+# Design System: Hygia
 
 ## 1. Overview
 
 **Creative North Star: "The Clinical Notebook"**
 
-MediQ's visual system is the typeset equivalent of a well-maintained clinical notebook: warm off-white pages, near-black ink with precise hierarchy, and a single muted teal marking what requires attention. Every design decision is filtered through the question a consultant asks before opening their mouth: "Is this necessary?" If the answer is no, it doesn't appear.
+Hygia's visual system is the typeset equivalent of a well-maintained clinical notebook: warm off-white pages, near-black ink with precise hierarchy, and a single muted teal marking what requires attention. Every design decision is filtered through the question a consultant asks before opening their mouth: "Is this necessary?" If the answer is no, it doesn't appear.
 
-The system is editorial without being decorative. Fraunces (variable optical-size serif) carries the structural weight of headings, reinforcing that MediQ reasons and presents, never sells. Inter handles the body work quietly; IBM Plex Mono serves labels, metadata, and anything that must feel accurate rather than conversational. The three-typeface system is the maximum. Nothing else enters.
+The system is editorial without being decorative. Fraunces (variable optical-size serif) carries the structural weight of headings, reinforcing that Hygia reasons and presents, never sells. Inter handles the body work quietly; IBM Plex Mono serves labels, metadata, and anything that must feel accurate rather than conversational. The three-typeface system is the maximum. Nothing else enters.
 
 Color is restrained to near-monochrome with one accent: Evidence Teal, a muted cyan-green that appears where clinical attention is warranted — active states, CTA buttons, confirmations, the live-session indicator. In dark mode, the accent shifts from teal (hue 195) to a warmer green (hue 155), reflecting the shift from daytime precision to night-shift terminal energy. This is intentional and should never be "fixed."
 
@@ -165,7 +165,7 @@ A near-monochromatic ink-and-parchment system with one active voice.
 
 ## 4. Elevation
 
-MediQ is flat-by-default. Depth is communicated through tonal surface layering: parchment base (`#f6f5f1`) below, parchment deep (`#efede6`) for secondary areas, surface white (`#ffffff`) for cards and modals. Shadows exist but are architectural, not decorative.
+Hygia is flat-by-default. Depth is communicated through tonal surface layering: parchment base (`#f6f5f1`) below, parchment deep (`#efede6`) for secondary areas, surface white (`#ffffff`) for cards and modals. Shadows exist but are architectural, not decorative.
 
 ### Shadow Vocabulary
 - **Ambient card shadow** (`0 1px 0 rgba(30,35,39,0.05), 0 20px 60px -40px rgba(0,0,0,0.10)`): The hero card and a small number of elevated surfaces use this. The first layer is a 1px hairline border of the rule color; the second is a soft large-radius ambient glow. Together they read as "lifted slightly off the page" without theatrics.
@@ -178,7 +178,7 @@ MediQ is flat-by-default. Depth is communicated through tonal surface layering: 
 
 ## 5. Components
 
-Components in MediQ follow "Measured restraint": occupy the space the content requires, signal state through color and border changes, never through scale transforms at rest. The pill radius on buttons contrasts deliberately with the rectilinear grid of the page.
+Components in Hygia follow "Measured restraint": occupy the space the content requires, signal state through color and border changes, never through scale transforms at rest. The pill radius on buttons contrasts deliberately with the rectilinear grid of the page.
 
 ### Buttons
 - **Shape:** Pill (999px radius) for all button variants; 10px radius for form-context submit buttons.
@@ -232,12 +232,12 @@ Inline mono-font badges (10-11px, uppercase, tracking 0.06em) carry plan tiers, 
 - **Do** use `prefers-reduced-motion: no-preference` guards for all decorative animations (pulse, blink, entrance reveals). State-change transitions (150-200ms) are exempt.
 
 ### Don't:
-- **Don't** use purple, violet, or blue-purple anywhere in the system. MediQ is not a SaaS productivity tool for knowledge workers. Purple is the fastest way to make MediQ look like a Notion template or a Loom marketing page.
+- **Don't** use purple, violet, or blue-purple anywhere in the system. Hygia is not a SaaS productivity tool for knowledge workers. Purple is the fastest way to make Hygia look like a Notion template or a Loom marketing page.
 - **Don't** use hospital blue (`#0078D4`, `#1890FF`, steel blues) or white-dominant clinical layouts with stethoscope/heart iconography. Doctors associate this aesthetic with the outdated EMR software they despise. It signals "we don't understand medicine, we just Googled it."
 - **Don't** use gradient text (`background-clip: text` with a gradient). It is always decorative, never meaningful. Use a single solid color; use weight or size for emphasis.
 - **Don't** use `border-left` or `border-right` greater than 1px as a colored stripe accent on cards, callouts, or alerts. This is the side-stripe anti-pattern. Rewrite with a full border, a background tint, or a leading icon.
-- **Don't** use AI-hype aesthetics: neon on dark, particle effects, animated gradient backgrounds, "Powered by AI" badges, the purple-to-pink gradient palette associated with ChatGPT / Midjourney / Perplexity. The AI is MediQ's infrastructure, not its identity.
-- **Don't** use consumer-wellness softness: pastel palettes, rounded-everything layouts, Calm/Headspace-adjacent softness. MediQ is used during acute care. "Relaxing" is the wrong register.
+- **Don't** use AI-hype aesthetics: neon on dark, particle effects, animated gradient backgrounds, "Powered by AI" badges, the purple-to-pink gradient palette associated with ChatGPT / Midjourney / Perplexity. The AI is Hygia's infrastructure, not its identity.
+- **Don't** use consumer-wellness softness: pastel palettes, rounded-everything layouts, Calm/Headspace-adjacent softness. Hygia is used during acute care. "Relaxing" is the wrong register.
 - **Don't** add nested cards. A card inside a card collapses the elevation system and makes the interface feel cluttered. If content needs grouping inside a card, use a section divider or a background fill, never another card.
 - **Don't** add glassmorphism (blur + semi-transparent cards) as decoration. The top navigation uses `backdrop-filter` structurally to maintain readable contrast while sticky. That is the only sanctioned use of blur in the system.
 - **Don't** use `#000000` or `#ffffff` as the base page or body text color. Near-black `#161a1d` and warm parchment `#f6f5f1` are the floor and ceiling. Pure black/white signals generic and destroys the notebook warmth.

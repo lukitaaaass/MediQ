@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-05-19T00:00:00.000Z",
-  "title": "Design System: MediQ",
+  "title": "Design System: Hygia",
   "extensions": {
     "colorMeta": {
       "warm-parchment":    { "role": "neutral",   "displayName": "Warm Parchment",     "canonical": "oklch(97% 0.007 88)",  "tonalRamp": ["oklch(15% 0.004 88)", "oklch(28% 0.005 88)", "oklch(42% 0.006 88)", "oklch(56% 0.006 88)", "oklch(70% 0.006 88)", "oklch(82% 0.006 88)", "oklch(91% 0.007 88)", "oklch(97% 0.007 88)"] },
@@ -90,7 +90,7 @@
       "kind": "nav",
       "refersTo": null,
       "description": "Sticky top nav with blur backdrop. The brand mark is the only logo element. Nav links are minimal.",
-      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-inner\"><a href=\"/\" class=\"ds-brand\"><span class=\"ds-brand-mark\" aria-hidden=\"true\"></span>MediQ</a><div class=\"ds-nav-links\"><a href=\"/chat\" class=\"ds-nav-link\">Chat</a><a href=\"/pricing\" class=\"ds-nav-link\">Precios</a><a href=\"/login\" class=\"ds-nav-link ds-nav-link--active\">Mi cuenta</a></div></div></nav>",
+      "html": "<nav class=\"ds-nav\"><div class=\"ds-nav-inner\"><a href=\"/\" class=\"ds-brand\"><span class=\"ds-brand-mark\" aria-hidden=\"true\"></span>Hygia</a><div class=\"ds-nav-links\"><a href=\"/chat\" class=\"ds-nav-link\">Chat</a><a href=\"/pricing\" class=\"ds-nav-link\">Precios</a><a href=\"/login\" class=\"ds-nav-link ds-nav-link--active\">Mi cuenta</a></div></div></nav>",
       "css": ".ds-nav { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(1.1) blur(10px); background: color-mix(in oklab, #f6f5f1 82%, transparent); border-bottom: 1px solid rgba(30,35,39,0.05); } .ds-nav-inner { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); display: flex; align-items: center; justify-content: space-between; height: 64px; } .ds-brand { display: flex; align-items: center; gap: 10px; font-family: Fraunces, Georgia, serif; font-size: 22px; letter-spacing: -0.02em; color: #161a1d; text-decoration: none; } .ds-brand-mark { width: 26px; height: 26px; border-radius: 50%; background: #161a1d; position: relative; flex-shrink: 0; } .ds-brand-mark::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: oklch(54% 0.09 195); } .ds-nav-links { display: flex; gap: 28px; align-items: center; } .ds-nav-link { font-family: Inter, system-ui, sans-serif; font-size: 14px; color: #3c4246; text-decoration: none; transition: color 0.15s ease; } .ds-nav-link:hover, .ds-nav-link--active { color: #161a1d; } .ds-nav-link:focus-visible { outline: 2.5px solid oklch(54% 0.09 195); outline-offset: 3px; border-radius: 4px; }"
     },
     {
@@ -112,7 +112,7 @@
   ],
   "narrative": {
     "northStar": "The Clinical Notebook",
-    "overview": "MediQ's visual system is the typeset equivalent of a well-maintained clinical notebook: warm off-white pages, near-black ink with precise hierarchy, and a single muted teal marking what requires attention. Every design decision is filtered through the question a consultant asks before opening their mouth: 'Is this necessary?' If the answer is no, it doesn't appear.\n\nThe system is editorial without being decorative. Fraunces (variable optical-size serif) carries the structural weight of headings, reinforcing that MediQ reasons and presents, never sells. Inter handles the body work quietly; IBM Plex Mono serves labels, metadata, and anything that must feel accurate rather than conversational.\n\nColor is restrained to near-monochrome with one accent: Evidence Teal, a muted cyan-green that appears where clinical attention is warranted. In dark mode, the accent shifts from teal (hue 195) to green (hue 155) — terminal energy replacing daytime precision. This is intentional and should never be corrected.",
+    "overview": "Hygia's visual system is the typeset equivalent of a well-maintained clinical notebook: warm off-white pages, near-black ink with precise hierarchy, and a single muted teal marking what requires attention. Every design decision is filtered through the question a consultant asks before opening their mouth: 'Is this necessary?' If the answer is no, it doesn't appear.\n\nThe system is editorial without being decorative. Fraunces (variable optical-size serif) carries the structural weight of headings, reinforcing that Hygia reasons and presents, never sells. Inter handles the body work quietly; IBM Plex Mono serves labels, metadata, and anything that must feel accurate rather than conversational.\n\nColor is restrained to near-monochrome with one accent: Evidence Teal, a muted cyan-green that appears where clinical attention is warranted. In dark mode, the accent shifts from teal (hue 195) to green (hue 155) — terminal energy replacing daytime precision. This is intentional and should never be corrected.",
     "keyCharacteristics": [
       "Three-typeface hierarchy: Fraunces (serif display) + Inter (sans body) + IBM Plex Mono (label/code)",
       "Near-monochrome palette with one restrained accent (Evidence Teal)",
@@ -139,7 +139,7 @@
       "Do use prefers-reduced-motion: no-preference guards for all decorative animations."
     ],
     "donts": [
-      "Don't use purple, violet, or blue-purple anywhere. MediQ is not a SaaS productivity tool for knowledge workers.",
+      "Don't use purple, violet, or blue-purple anywhere. Hygia is not a SaaS productivity tool for knowledge workers.",
       "Don't use hospital blue (#0078D4, #1890FF) or white-dominant clinical layouts with stethoscope/heart iconography.",
       "Don't use gradient text (background-clip: text with a gradient). Use a single solid color.",
       "Don't use border-left or border-right greater than 1px as a colored stripe accent on cards, callouts, or alerts.",

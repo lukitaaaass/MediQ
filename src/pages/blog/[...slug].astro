@@ -37,7 +37,7 @@ const schema = {
   author: { '@type': 'Organization', name: post.data.author },
   publisher: {
     '@type': 'Organization',
-    name: 'MediQ',
+    name: 'Hygia',
     logo: { '@type': 'ImageObject', url: 'https://medi-q-bice.vercel.app/favicon.svg' },
   },
   datePublished: isoPublish,
@@ -49,7 +49,7 @@ const schema = {
 ---
 
 <Layout
-  title={`${post.data.title} — MediQ`}
+  title={`${post.data.title} — Hygia`}
   description={post.data.description}
   navActive="/blog"
   ogImage={post.data.ogImage}

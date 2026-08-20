@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
 <Layout
-  title="Mi cuenta — MediQ"
+  title="Mi cuenta — Hygia"
   navActive="/account"
   noindex={true}
 >
@@ -373,7 +373,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
         if (data.status === 'active' || data.status === 'trialing') {
           const active = data.status === 'active';
           statusEl.innerHTML = `<span class="plan-badge ${active ? 'active' : 'trial'}"><span class="plan-dot"></span>${active ? 'Activo' : 'Prueba gratuita'}</span>`;
-          nameEl.textContent = 'MediQ Pro · ' + (data.plan_id?.includes('annual') ? 'Anual' : 'Mensual');
+          nameEl.textContent = 'Hygia Pro · ' + (data.plan_id?.includes('annual') ? 'Anual' : 'Mensual');
           if (data.current_period_end) {
             renewsEl.textContent = new Date(data.current_period_end * 1000)
               .toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });

@@ -1,8 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <!--
-    MediQ favicon — lupa con "Q" estilizada.
+    Hygia favicon — lupa clinica.
     Sin fondo (transparente) para que se adapte al tema del navegador.
     Ring en teal, barra y mango en navy oscuro.
+
+    PENDIENTE DE DECISION: la barra vertical central se dibujo para convertir
+    la "O" del anillo en la "Q" de MediQ. Con el nombre Hygia esa letra ya no
+    existe, asi que la barra quedo huerfana. La geometria se mantiene sin tocar
+    a proposito — rediseñar la marca es decision de Lucas, no un efecto
+    colateral del rename. La lupa sola sigue leyendose como busqueda clinica.
   -->
 
   <!-- Mango de la lupa (dibujado primero para que el anillo lo tape en la union) -->

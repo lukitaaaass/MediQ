@@ -4,7 +4,7 @@ const SUPABASE_URL      = import.meta.env.PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ---
 
-<Layout title="Chat compartido — MediQ" navActive="" noindex={true}>
+<Layout title="Chat compartido — Hygia" navActive="" noindex={true}>
   <style is:global>
     .share-wrap { max-width: 760px; margin: 48px auto; padding: 0 var(--pad) 80px; }
     .share-head { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
@@ -53,8 +53,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       </div>
       <div class="share-msgs" id="share-msgs"></div>
       <div class="share-actions">
-        <a href="/chat" class="btn btn-primary">Usar MediQ →</a>
-        <span style="font-family:var(--f-mono); font-size:11px; color:var(--ink-mute);">Compartido desde MediQ</span>
+        <a href="/chat" class="btn btn-primary">Usar Hygia →</a>
+        <span style="font-family:var(--f-mono); font-size:11px; color:var(--ink-mute);">Compartido desde Hygia</span>
       </div>
       <p class="share-disclaimer">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -98,7 +98,7 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
               <div class="av">${m.role === 'user' ? escHtml((m.text||'U')[0].toUpperCase()) : ''}</div>
               <div class="body">
                 <div class="role-line">
-                  <span>${m.role === 'ai' ? 'MediQ' : 'Tú'}</span>·<span>${time}</span>
+                  <span>${m.role === 'ai' ? 'Hygia' : 'Tú'}</span>·<span>${time}</span>
                 </div>
                 <div class="content">${content}</div>
               </div>`;
