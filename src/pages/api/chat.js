@@ -37,6 +37,17 @@ const MAX_TOKENS = Number(import.meta.env.GEMINI_MAX_TOKENS) || 8192;
    el numero de documentos no esta limitado en train.astro. */
 const MAX_SYSTEM_CHARS = 256_000;
 
+// Mismos codigos de error que api/chat.js — ver alli el porque. Los dos endpoints
+// tienen que devolver exactamente lo mismo o el cliente se comporta distinto en
+// local y en produccion, que es el fallo que este proyecto ya ha tenido antes.
+const CODES = {
+  BAD_REQUEST:       'bad_request',
+  RATE_LIMITED:      'rate_limited',
+  CONTEXT_TOO_LARGE: 'context_too_large',
+  NOT_CONFIGURED:    'not_configured',
+  UPSTREAM_ERROR:    'upstream_error',
+};
+
 const rateMap = new Map();
 const RATE_LIMIT  = 20;
 const RATE_WINDOW = 60_000;
@@ -56,16 +67,14 @@ export async function POST({ request }) {
   const rate = checkRate(ip);
 
   if (!rate.ok) {
-    return new Response(
-      JSON.stringify({ error: `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.` }),
+    return jsonErr(
+      `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.`,
+      429,
+      CODES.RATE_LIMITED,
       {
-        status: 429,
-        headers: {
-          'content-type': 'application/json',
-          'Retry-After': String(rate.reset),
-          'X-RateLimit-Limit': String(RATE_LIMIT),
-          'X-RateLimit-Remaining': '0',
-        },
+        'Retry-After': String(rate.reset),
+        'X-RateLimit-Limit': String(RATE_LIMIT),
+        'X-RateLimit-Remaining': '0',
       }
     );
   }
@@ -77,13 +86,13 @@ export async function POST({ request }) {
   try {
     body = await request.json();
   } catch (_) {
-    return jsonErr('Cuerpo de la petición inválido: se esperaba JSON.', 400);
+    return jsonErr('Cuerpo de la petición inválido: se esperaba JSON.', 400, CODES.BAD_REQUEST);
   }
 
   const { system, messages } = body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return jsonErr('Parámetros inválidos: messages vacío', 400);
+    return jsonErr('Parámetros inválidos: messages vacío', 400, CODES.BAD_REQUEST);
   }
 
   const safeMessages = messages.filter(
@@ -91,7 +100,7 @@ export async function POST({ request }) {
   );
 
   if (safeMessages.length === 0) {
-    return jsonErr('Parámetros inválidos: ningún mensaje utilizable', 400);
+    return jsonErr('Parámetros inválidos: ningún mensaje utilizable', 400, CODES.BAD_REQUEST);
   }
 
   const systemText = typeof system === 'string' ? system : '';
@@ -99,13 +108,14 @@ export async function POST({ request }) {
   if (systemText.length > MAX_SYSTEM_CHARS) {
     return jsonErr(
       'Tu base de conocimiento es demasiado grande para enviarla en cada consulta. Quita algún documento en Entrenar y vuelve a intentarlo.',
-      413
+      413,
+      CODES.CONTEXT_TOO_LARGE
     );
   }
 
   const apiKey = import.meta.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return jsonErr('El servidor no está configurado: falta GEMINI_API_KEY.', 500);
+    return jsonErr('El servidor no está configurado: falta GEMINI_API_KEY.', 500, CODES.NOT_CONFIGURED);
   }
 
   const aiMessages = [
@@ -130,7 +140,7 @@ export async function POST({ request }) {
     });
   } catch (err) {
     console.error('[/api/chat] fetch error:', err);
-    return jsonErr(String(err.message || err), 500);
+    return jsonErr(String(err.message || err), 500, CODES.UPSTREAM_ERROR);
   }
 
   if (!aiRes.ok) {
@@ -141,7 +151,9 @@ export async function POST({ request }) {
     let msg = raw;
     try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
     console.error('[/api/chat] Gemini error', aiRes.status, msg);
-    return jsonErr(`Gemini ${aiRes.status}: ${msg}`, aiRes.status);
+    // Un 429 aqui es la cuota de Google, no el limitador de este endpoint: va
+    // como upstream_error a proposito. Ver api/chat.js.
+    return jsonErr(`Gemini ${aiRes.status}: ${msg}`, aiRes.status, CODES.UPSTREAM_ERROR);
   }
 
   return new Response(aiRes.body, {
@@ -155,9 +167,9 @@ export async function POST({ request }) {
   });
 }
 
-function jsonErr(msg, status) {
-  return new Response(JSON.stringify({ error: msg }), {
+function jsonErr(msg, status, code, extraHeaders = {}) {
+  return new Response(JSON.stringify({ error: msg, code }), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...extraHeaders },
   });
 }

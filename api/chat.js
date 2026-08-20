@@ -75,9 +75,32 @@ setInterval(() => {
   }
 }, 60_000);
 
+/* Toda respuesta de error lleva `code` ademas de `error`.
+   El motivo: el status HTTP por si solo no discrimina justo donde mas falta hace.
+   Un 429 puede ser el rate limit de aqui (esperar y reintentar sirve) o el
+   passthrough de una cuota de Google (esperar no sirve). Un 500 puede ser que
+   falte la API key (el usuario no puede hacer nada, hay que decirselo asi) o un
+   fetch que revento (transitorio, reintentar tiene sentido). Mismo status,
+   mensajes de usuario distintos.
+   Con `code` el cliente ramifica por un valor estable en vez de por substring
+   del mensaje. `error` se mantiene tal cual estaba: esto no rompe a nadie. */
+const CODES = {
+  METHOD_NOT_ALLOWED: 'method_not_allowed',
+  BAD_REQUEST:        'bad_request',
+  RATE_LIMITED:       'rate_limited',      // el limitador de este endpoint
+  CONTEXT_TOO_LARGE:  'context_too_large', // system prompt por encima del techo
+  NOT_CONFIGURED:     'not_configured',    // falta GEMINI_API_KEY en el entorno
+  UPSTREAM_ERROR:     'upstream_error',    // fallo del proveedor, incluida su cuota
+};
+
+function fail(res, status, code, error, headers = {}) {
+  for (const [k, v] of Object.entries(headers)) res.setHeader(k, v);
+  return res.status(status).json({ error, code });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return fail(res, 405, CODES.METHOD_NOT_ALLOWED, 'Method not allowed');
   }
 
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
@@ -88,10 +111,11 @@ export default async function handler(req, res) {
   res.setHeader('X-RateLimit-Remaining', String(rate.remaining));
 
   if (!rate.ok) {
-    res.setHeader('Retry-After', String(rate.reset));
-    return res.status(429).json({
-      error: `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.`,
-    });
+    return fail(
+      res, 429, CODES.RATE_LIMITED,
+      `Demasiadas peticiones. Espera ${rate.reset}s antes de volver a intentarlo.`,
+      { 'Retry-After': String(rate.reset) }
+    );
   }
 
   /* `|| {}` no es decorativo: sin el, una peticion sin cuerpo JSON (o con un
@@ -100,7 +124,7 @@ export default async function handler(req, res) {
   const { system, messages } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
-    return res.status(400).json({ error: 'Parámetros inválidos: messages vacío' });
+    return fail(res, 400, CODES.BAD_REQUEST, 'Parámetros inválidos: messages vacío');
   }
 
   // Nos quedamos solo con turnos bien formados; un elemento corrupto no debe
@@ -110,20 +134,21 @@ export default async function handler(req, res) {
   );
 
   if (safeMessages.length === 0) {
-    return res.status(400).json({ error: 'Parámetros inválidos: ningún mensaje utilizable' });
+    return fail(res, 400, CODES.BAD_REQUEST, 'Parámetros inválidos: ningún mensaje utilizable');
   }
 
   const systemText = typeof system === 'string' ? system : '';
 
   if (systemText.length > MAX_SYSTEM_CHARS) {
-    return res.status(413).json({
-      error: 'Tu base de conocimiento es demasiado grande para enviarla en cada consulta. Quita algún documento en Entrenar y vuelve a intentarlo.',
-    });
+    return fail(
+      res, 413, CODES.CONTEXT_TOO_LARGE,
+      'Tu base de conocimiento es demasiado grande para enviarla en cada consulta. Quita algún documento en Entrenar y vuelve a intentarlo.'
+    );
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'El servidor no está configurado: falta GEMINI_API_KEY.' });
+    return fail(res, 500, CODES.NOT_CONFIGURED, 'El servidor no está configurado: falta GEMINI_API_KEY.');
   }
 
   const aiMessages = [
@@ -148,7 +173,7 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error('[/api/chat] fetch error:', err);
-    return res.status(500).json({ error: String(err.message || err) });
+    return fail(res, 500, CODES.UPSTREAM_ERROR, String(err.message || err));
   }
 
   if (!aiRes.ok) {
@@ -159,7 +184,11 @@ export default async function handler(req, res) {
     let msg = raw;
     try { msg = JSON.parse(raw)?.error?.message || raw; } catch (_) {}
     console.error('[/api/chat] Gemini error', aiRes.status, msg);
-    return res.status(aiRes.status).json({ error: `Gemini ${aiRes.status}: ${msg}` });
+    /* Ojo al 429 de aqui: es la cuota de Google, NO el limitador de este
+       endpoint. Por eso va como upstream_error y no como rate_limited — para el
+       usuario esperar unos segundos no lo arregla igual. Esa es exactamente la
+       distincion que el status por si solo no daba. */
+    return fail(res, aiRes.status, CODES.UPSTREAM_ERROR, `Gemini ${aiRes.status}: ${msg}`);
   }
 
   res.setHeader('Content-Type', 'text/event-stream');

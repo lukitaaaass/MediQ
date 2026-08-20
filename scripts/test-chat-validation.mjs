@@ -28,43 +28,60 @@ function mockReq({ method = 'POST', body } = {}) {
   return { method, body, headers: { 'x-forwarded-for': `10.0.0.${ipCounter}` }, socket: {} };
 }
 
+// Este test asume que GEMINI_API_KEY NO esta definida, para poder ejercitar la
+// rama not_configured sin llegar nunca a la red.
+delete process.env.GEMINI_API_KEY;
+
+const OK_BODY = { system: 'eres un asistente', messages: [{ role: 'user', content: 'hola' }] };
+
 const cases = [
   {
-    desc: 'metodo GET -> 405',
+    desc: 'metodo GET -> 405 method_not_allowed',
     req: () => mockReq({ method: 'GET' }),
-    expect: (r) => r.statusCode === 405,
+    expect: (r) => r.statusCode === 405 && r.body.code === 'method_not_allowed',
   },
   {
-    desc: 'req.body undefined -> 400, NO TypeError (el bug original)',
+    desc: 'req.body undefined -> 400 bad_request, NO TypeError (el bug original)',
     req: () => mockReq({ body: undefined }),
-    expect: (r) => r.statusCode === 400 && /messages/.test(r.body.error),
+    expect: (r) => r.statusCode === 400 && r.body.code === 'bad_request' && /messages/.test(r.body.error),
   },
   {
-    desc: 'messages no es array -> 400',
+    desc: 'messages no es array -> 400 bad_request',
     req: () => mockReq({ body: { messages: 'hola' } }),
-    expect: (r) => r.statusCode === 400,
+    expect: (r) => r.statusCode === 400 && r.body.code === 'bad_request',
   },
   {
-    desc: 'messages vacio -> 400',
+    desc: 'messages vacio -> 400 bad_request',
     req: () => mockReq({ body: { messages: [] } }),
-    expect: (r) => r.statusCode === 400,
+    expect: (r) => r.statusCode === 400 && r.body.code === 'bad_request',
   },
   {
-    desc: 'todos los turnos malformados -> 400',
+    desc: 'todos los turnos malformados -> 400 bad_request',
     req: () => mockReq({ body: { messages: [{ role: 'system', content: 1 }, null] } }),
-    expect: (r) => r.statusCode === 400 && /utilizable/.test(r.body.error),
+    expect: (r) => r.statusCode === 400 && r.body.code === 'bad_request' && /utilizable/.test(r.body.error),
   },
   {
-    desc: 'system gigante (300k) -> 413 accionable',
+    desc: 'system gigante (300k) -> 413 context_too_large, accionable',
     req: () => mockReq({
       body: { system: 'x'.repeat(300_000), messages: [{ role: 'user', content: 'hola' }] },
     }),
-    expect: (r) => r.statusCode === 413 && /base de conocimiento/.test(r.body.error),
+    expect: (r) => r.statusCode === 413 && r.body.code === 'context_too_large'
+                && /base de conocimiento/.test(r.body.error),
+  },
+  {
+    desc: 'sin GEMINI_API_KEY -> 500 not_configured (no transitorio)',
+    req: () => mockReq({ body: OK_BODY }),
+    expect: (r) => r.statusCode === 500 && r.body.code === 'not_configured',
   },
   {
     desc: 'cabeceras de rate limit presentes en toda respuesta',
     req: () => mockReq({ body: { messages: [] } }),
     expect: (r) => r.headers['X-RateLimit-Limit'] === '20' && 'X-RateLimit-Remaining' in r.headers,
+  },
+  {
+    desc: 'toda respuesta de error trae code ademas de error',
+    req: () => mockReq({ body: { messages: [] } }),
+    expect: (r) => typeof r.body.code === 'string' && typeof r.body.error === 'string',
   },
 ];
 
@@ -84,6 +101,26 @@ for (const c of cases) {
   console.log(`${pass ? 'PASA ' : 'FALLA'}  ${c.desc}`);
   if (threw) console.log(`      lanzo excepcion: ${threw.message}`);
   else if (!pass) console.log(`      status=${res.statusCode} body=${JSON.stringify(res.body)}`);
+}
+
+/* El rate limit necesita varias peticiones desde la MISMA IP, asi que no encaja
+   en la tabla de arriba (que usa una IP distinta por caso a proposito).
+   Importa que salga rate_limited y no upstream_error: son el mismo 429 para el
+   cliente, pero solo en este caso tiene sentido que el usuario espere y reintente. */
+{
+  const fixedIp = { 'x-forwarded-for': '203.0.113.7' };
+  let last = null;
+  for (let i = 0; i < 21; i++) {
+    last = mockRes();
+    await handler({ method: 'POST', body: OK_BODY, headers: fixedIp, socket: {} }, last);
+  }
+
+  const pass = last.statusCode === 429
+    && last.body.code === 'rate_limited'
+    && 'Retry-After' in last.headers;
+  pass ? ok++ : fail++;
+  console.log(`${pass ? 'PASA ' : 'FALLA'}  peticion 21 desde la misma IP -> 429 rate_limited + Retry-After`);
+  if (!pass) console.log(`      status=${last.statusCode} body=${JSON.stringify(last.body)}`);
 }
 
 console.log(`\n${ok} pasan, ${fail} fallan`);
