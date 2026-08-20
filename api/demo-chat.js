@@ -1,5 +1,5 @@
 /**
- * Endpoint de la demo publica de MediQ.
+ * Endpoint de la demo publica de Hygia.
  * Vercel serverless function (auto-detectada desde /api).
  *
  * Rate-limit persistente en Supabase (RPC atomica check_demo_usage).
@@ -23,7 +23,7 @@ function hashIp(ip, salt) {
   return crypto.createHmac('sha256', salt).update(String(ip)).digest('hex');
 }
 
-const DEMO_SYSTEM_PROMPT = `Eres MediQ, un asistente clinico con IA para medicos hispanohablantes. Esta es una DEMO publica limitada a 3 consultas.
+const DEMO_SYSTEM_PROMPT = `Eres Hygia, un asistente clinico con IA para medicos hispanohablantes. Esta es una DEMO publica limitada a 3 consultas.
 
 REGLAS DE LA DEMO:
 - Responde en espanol de forma directa, con lenguaje medico profesional.

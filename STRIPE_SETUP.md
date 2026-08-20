@@ -67,7 +67,7 @@ Después de añadirlas, **Vercel → Deployments → Redeploy** el último deplo
 Stripe Dashboard → Developers → Webhooks → Add endpoint:
 
 - **Endpoint URL:** `https://<tu-dominio>/api/stripe-webhook`
-- **Description:** MediQ production webhook
+- **Description:** Hygia production webhook
 - **Events to send:** seleccionar estos cinco:
   - `checkout.session.completed`
   - `customer.subscription.updated`
@@ -128,7 +128,7 @@ Si los 6 pasos van bien, la integración funciona.
 Solo cuando el test end-to-end esté verde:
 
 1. Stripe → toggle a **Live mode**
-2. Crear los productos MediQ en Live (los de Test no se transfieren automáticamente)
+2. Crear los productos Hygia en Live (los de Test no se transfieren automáticamente)
 3. Copiar los nuevos Price IDs → actualizar `PRICE_IDS` en [`stripe-checkout.js`](src/pages/api/stripe-checkout.js) → commit + push
 4. En Vercel, cambiar `STRIPE_SECRET_KEY` de `sk_test_...` a `sk_live_...`
 5. En Stripe Live → crear un nuevo webhook con la misma URL, mismos eventos, y copiar su `whsec_...` a `STRIPE_WEBHOOK_SECRET` en Vercel

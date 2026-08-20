@@ -70,7 +70,7 @@ where table_schema='public' and table_name='analitica_kb';
 
 ## 2. Seed inicial (5 min)
 
-Pegar en el SQL Editor. Son 10 parámetros de laboratorio de los más frecuentes en analíticas rutinarias en España. Contenido redactado por MediQ basándose en referencias SEQC, NICE y UpToDate patient info. **REQUIERE REVISIÓN MÉDICA ANTES DE CONSIDERARSE VALIDADO** — dejamos `reviewed_by` NULL para marcarlo como borrador.
+Pegar en el SQL Editor. Son 10 parámetros de laboratorio de los más frecuentes en analíticas rutinarias en España. Contenido redactado por Hygia basándose en referencias SEQC, NICE y UpToDate patient info. **REQUIERE REVISIÓN MÉDICA ANTES DE CONSIDERARSE VALIDADO** — dejamos `reviewed_by` NULL para marcarlo como borrador.
 
 ```sql
 insert into public.analitica_kb
