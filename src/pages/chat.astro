@@ -920,6 +920,8 @@ const SUPABASE_ANON_KEY = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 ${ambitoBlock}
 INSTRUCCIONES GENERALES:
 - Responde SIEMPRE en español, en lenguaje natural y profesional médico.
+- FORMATO: escribe en Markdown sencillo. NO uses LaTeX ni notación matemática: ni expresiones encerradas entre signos de dólar, ni comandos precedidos de barra invertida (text, frac, ge, le, times). Escribe los símbolos directamente ("Puntuación = 0", "CHA2DS2-VASc ≥ 2", "±", "≤", "×") y los subíndices en línea ("CHA2DS2-VASc", nunca "CHA_2DS_2"). La interfaz no compone fórmulas: cualquier LaTeX que escribas lo lee el médico como código fuente en mitad de la recomendación.
+- Para las viñetas usa siempre el guion "- " al principio de línea.
 ${structureBlock}
 ${citeBlock}
 - Si la consulta es de farmacología, incluye dosis estándar y ajuste por función renal/hepática y embarazo cuando aplique, y aplica SIEMPRE la sección de seguridad farmacológica de más abajo.
@@ -1673,8 +1675,62 @@ ${msgsHtml}
       return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
+    /* Simbolos LaTeX que el modelo usa con mas frecuencia al hablar de
+       puntuaciones, rangos y dosis. */
+    const MATH_SYMBOLS = {
+      ge: '≥', geq: '≥', le: '≤', leq: '≤', ne: '≠', neq: '≠',
+      pm: '±', mp: '∓', times: '×', cdot: '·', div: '÷',
+      approx: '≈', sim: '~', propto: '∝', infty: '∞',
+      rightarrow: '→', to: '→', leftarrow: '←', Rightarrow: '⇒',
+      alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', Delta: 'Δ',
+      lambda: 'λ', mu: 'µ', sigma: 'σ', omega: 'ω',
+    };
+
+    /* Traduce el interior de una expresion LaTeX a texto plano legible. */
+    function plainMath(expr) {
+      let s = expr;
+      // \text{Puntuacion} -> Puntuacion
+      s = s.replace(/\\(?:text|textbf|textit|mathrm|mathbf|mathit|operatorname)\s*\{([^{}]*)\}/g, '$1');
+      // \frac{a}{b} -> a/b
+      s = s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '$1/$2');
+      // Subindices y superindices: CHA_2DS_2-VASc -> CHA2DS2-VASc
+      s = s.replace(/[_^]\s*\{([^{}]*)\}/g, '$1');
+      s = s.replace(/[_^]([A-Za-z0-9])/g, '$1');
+      // Los simbolos conocidos se traducen; los que no estan en la tabla
+      // pierden la barra pero conservan el nombre, que informa mas que
+      // borrarlos en silencio.
+      s = s.replace(/\\([A-Za-z]+)/g, (m, name) => MATH_SYMBOLS[name] ?? name);
+      s = s.replace(/[{}]/g, '');
+      return s.replace(/\s+/g, ' ').trim();
+    }
+
+    /* Retira la notacion matematica de LaTeX.
+
+       El modelo envuelve en $...$ cualquier cosa que le huela a matematicas
+       ("$\text{Puntuacion} \ge 2$"). Es un reflejo aprendido que aqui solo
+       ensucia la pantalla: este renderizador no compone formulas, asi que el
+       medico acaba leyendo codigo fuente en mitad de una recomendacion
+       clinica. El system prompt ya pide no usar LaTeX, pero una instruccion
+       de prompt no es una garantia — el modelo se desvia y el fallo vuelve.
+       Esto es la red de seguridad.
+
+       Solo se toca lo que hay DENTRO de los delimitadores: fuera de ellos
+       '_' y '^' son markdown corriente y no deben alterarse. */
+    function unwrapMath(s) {
+      s = s.replace(/\$\$([\s\S]+?)\$\$/g, (_, e) => plainMath(e));
+      s = s.replace(/\\\[([\s\S]+?)\\\]/g, (_, e) => plainMath(e));
+      s = s.replace(/\\\(([\s\S]+?)\\\)/g, (_, e) => plainMath(e));
+      // Exigir apertura y cierre en la misma linea evita confundir un importe
+      // suelto ("cuesta 20$") con el principio de una formula.
+      s = s.replace(/\$([^$\n]+?)\$/g, (_, e) => plainMath(e));
+      return s;
+    }
+
     function md(text) {
       let s = escapeHtml(text);
+      /* Lo primero: si quedara LaTeX crudo, las reglas de abajo lo trataran
+         como texto corriente y llegaria intacto a la pantalla. */
+      s = unwrapMath(s);
       s = s.replace(/```([\s\S]*?)```/g, (_, c) => `<pre style="background:var(--bg-2); padding:10px 12px; border-radius:8px; overflow-x:auto; font-family:var(--f-mono); font-size:13px;">${c}</pre>`);
       s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
       s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -1702,8 +1758,11 @@ ${msgsHtml}
         else if (/^\s*🟢/.test(inner)) level = ' callout-green';
         return '\n<blockquote class="callout' + level + '">' + inner + '</blockquote>';
       });
-      s = s.replace(/(?:^|\n)((?:- .+\n?)+)/g, (m, block) => {
-        const items = block.trim().split(/\n/).map(l => '<li>' + l.replace(/^- /, '') + '</li>').join('');
+      /* Vinetas: se aceptan '-', '*' y '•'. El modelo alterna entre las tres
+         y antes solo se reconocia el guion, asi que una lista con asteriscos
+         se quedaba en texto plano con el simbolo a la vista. */
+      s = s.replace(/(?:^|\n)((?:[-*•] .+\n?)+)/g, (m, block) => {
+        const items = block.trim().split(/\n/).map(l => '<li>' + l.replace(/^[-*•] /, '') + '</li>').join('');
         return '\n<ul>' + items + '</ul>';
       });
       s = s.replace(/(?:^|\n)((?:\d+\. .+\n?)+)/g, (m, block) => {
